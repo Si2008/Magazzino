@@ -1,0 +1,41 @@
+# File di esempio della configurazione: copiare in config.toml e
+# sostituire i valori segnaposto con quelli reali.
+# NON commitare config.toml: contiene le credenziali del database.
+
+[database]
+host = "localhost"
+porta = 5432
+utente = "postgres"
+password = "LA_TUA_PASSWORD"
+dbname = "magazzino_profili"
+
+# Dimensioni dell'etichetta in millimetri: l'etichetta si adatta a
+# qualsiasi stampante per etichette Windows.
+[etichette]
+larghezza_mm = 60
+altura_mm = 30
+
+# Backup automatico: cartella, intervallo (ore) e numero di backup conservati.
+[backup]
+cartella = "backup"
+intervallo_ore = 6
+max_backup = 7
+pg_dump = "C:/percorso/a/pg_dump.exe"
+
+# Server web per la scansione dal telefono (solo remoto, HTTPS obbligatorio).
+# Il server ascolta su tutte le interfacce (host 0.0.0.0) per essere
+# raggiungibile da internet: l'esposizione del PC su internet (port
+# forwarding o servizio di tunnel) è una configurazione di RETE esterna a
+# questo file, non gestita dal codice.
+[web]
+host = "0.0.0.0"
+porta = 8443
+# Percorso dei file certificato (.pem) e chiave privata (.key) per TLS.
+# Attenzione: in TOML il backslash è carattere di escape — usare gli slash
+# (funzionano anche su Windows) oppure backslash doppi (es. "C:\\certs\\c.pem").
+certificato_pem = "C:/percorso/al/certificato.pem"
+chiave_privata = "C:/percorso/a/chiave_privata.key"
+# Durata del token di sessione, in secondi (default: 3600 = 1 ora).
+durata_token_secondi = 3600
+# Segrete lunga e casuale (almeno 32 caratteri) usata per firmare i token.
+segrete_token = "SEGRETE_LUNGA_E_CASUALE_MINIMO_32_CARATTERI"

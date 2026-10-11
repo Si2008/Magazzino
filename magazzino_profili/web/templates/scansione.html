@@ -1,0 +1,88 @@
+<!doctype html>
+<!--
+  Pagina di scansione barcode dal telefono — Magazzino Profili.
+
+  NOTA (HTTPS obbligatorio): la fotocamera del telefono (API
+  getUserMedia) è disponibile solo in un "secure context": questa
+  pagina va quindi SEMPRE aperta tramite HTTPS, mai in HTTP chiaro.
+
+  NOTA (token in memoria): il token di sessione resta solo in una
+  variabile JavaScript (static/scansione.js): NON viene scritto in
+  localStorage, per ridurre il rischio in caso di telefono perso o
+  rubato. Chiudendo la scheda del browser la sessione viene persa.
+-->
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Magazzino — scansione</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f4f6f8; color: #1c2733; }
+    main { max-width: 480px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 1.35rem; margin: 8px 0; }
+    section { background: #fff; border-radius: 12px; padding: 16px; margin-top: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    label { display: block; margin: 14px 0 4px; font-weight: 600; }
+    input { width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #c6cdd6; border-radius: 8px; }
+    button { width: 100%; padding: 14px; font-size: 1.05rem; border: 0; border-radius: 8px; margin-top: 12px; cursor: pointer; }
+    .riga { display: flex; gap: 10px; }
+    .riga button { flex: 1; }
+    #btn-carico { background: #1d7a3e; color: #fff; }
+    #btn-scarico { background: #b3261e; color: #fff; }
+    #btn-accedi { background: #17497a; color: #fff; }
+    #btn-esci { background: #6b7684; color: #fff; }
+    .esito { margin-top: 14px; padding: 12px; border-radius: 8px; background: #eef1f4; white-space: pre-line; min-height: 1.2em; }
+    .esito.successo { background: #e3f3e8; }
+    .esito.errore { background: #f9e4e2; }
+    #lettore-barcode { width: 100%; margin-top: 14px; }
+    #lettore-barcode video { width: 100%; border-radius: 8px; }
+    .info { font-size: .92rem; color: #51606f; margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Magazzino Profili — scansione</h1>
+
+    <!-- Zona login -->
+    <section id="zona-login">
+      <form id="form-login">
+        <label for="campo-utente">Nome utente</label>
+        <input id="campo-utente" name="utente" autocomplete="username" required>
+
+        <label for="campo-password">Password</label>
+        <input id="campo-password" name="password" type="password" autocomplete="current-password" required>
+
+        <button id="btn-accedi" type="submit">Accedi</button>
+      </form>
+      <div id="esito-login" class="esito" aria-live="polite"></div>
+    </section>
+
+    <!-- Zona operazioni (visibile dopo il login) -->
+    <section id="zona-operazione" hidden>
+      <p class="info">Accesso effettuato come <b id="nome-utente"></b> (<span id="ruolo-utente"></span>)</p>
+      <p class="info">Scegliere l'operazione, impostare la quantità, poi puntare la fotocamera sul barcode del pezzo.</p>
+
+      <label for="campo-quantita">Quantità</label>
+      <input id="campo-quantita" type="number" min="1" step="1" value="1" inputmode="numeric">
+
+      <label for="campo-causale">Causale (facoltativa)</label>
+      <input id="campo-causale" type="text" placeholder="es. ordine 42" maxlength="512">
+
+      <div class="riga">
+        <button id="btn-carico" type="button">Carico</button>
+        <button id="btn-scarico" type="button">Scarico</button>
+      </div>
+
+      <!-- Qui il lettore html5-qrcode inserisce il video della fotocamera -->
+      <div id="lettore-barcode"></div>
+
+      <div id="esito" class="esito" aria-live="polite"></div>
+      <button id="btn-esci" type="button">Esci</button>
+    </section>
+  </main>
+
+  <!-- html5-qrcode via CDN: lettura barcode da fotocamera (vedi static/scansione.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="/static/scansione.js"></script>
+</body>
+</html>

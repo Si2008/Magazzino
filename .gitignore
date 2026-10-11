@@ -1,0 +1,26 @@
+# Python: bytecode e cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Build ed eseguibili
+dist/
+build/
+*.spec
+
+# Dati di sessione e artefatti locali
+session_data.json
+pi-session-*.html
+userprompts.txt
+
+# Configurazione con credenziali (usare config.example.toml come riferimento)
+config.toml
+
+# Ambiente virtuale e packaging
+.venv/
+*.egg-info/
+
+# Backup del database: non devono MAI entrare in un repository o in uno
+# zip condiviso
+*.dump
+backup/*.dump
