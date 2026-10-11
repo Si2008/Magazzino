@@ -16,9 +16,10 @@ riattivarlo.
 from __future__ import annotations
 
 import os
+import sys
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QKeySequence, QShortcut
+from PySide6.QtGui import QAction, QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -71,6 +72,9 @@ class DialogoAccesso(QWidget):
         self._factory = factory
         self._utente = None
         self.setWindowTitle("Accesso")
+        icona = _icona_applicazione()
+        if icona is not None:
+            self.setWindowIcon(icona)
         self.setFixedWidth(px(380))
         t = tema.tema_attivo()
 
@@ -124,6 +128,22 @@ class DialogoAccesso(QWidget):
         return self._utente
 
 
+def _icona_applicazione() -> QIcon | None:
+    """Icona dell'app: cercata in _MEIPASS (eseguibile) o nella radice del progetto."""
+    radici = []
+    if getattr(sys, "frozen", False):
+        radici.append(os.path.dirname(sys.executable))
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        radici.append(meipass)
+    radici.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    for radice in radici:
+        percorso = os.path.join(radice, "icona.ico")
+        if os.path.exists(percorso):
+            return QIcon(percorso)
+    return None
+
+
 class FinestraPrincipale(QWidget):
     """Finestra principale con le schede di magazzino."""
 
@@ -140,6 +160,9 @@ class FinestraPrincipale(QWidget):
         self._nome_utente = nome_utente
 
         self.setWindowTitle("Magazzino Profili")
+        icona = _icona_applicazione()
+        if icona is not None:
+            self.setWindowIcon(icona)
         self.resize(px(1150), px(720))
         self._applica_tema()
 
