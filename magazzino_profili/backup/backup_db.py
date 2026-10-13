@@ -13,6 +13,7 @@ esposta al processo ``pg_dump`` tramite la variabile d'ambiente
 
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 import threading
@@ -22,6 +23,8 @@ from datetime import datetime
 from pathlib import Path
 
 PERCORSO_CONFIG_PREDEFINITO = Path(__file__).resolve().parents[2] / "config.toml"
+
+logger = logging.getLogger(__name__)
 
 # Prefisso comune dei file di backup.
 PREFISSO_FILE = "magazzino_profili_"
@@ -167,14 +170,16 @@ class PianificatoreBackup:
         self._attivo = False
 
     def _esegui_e_ripiani(self) -> None:
+        # Qualunque esito (anche un errore imprevisto) viene registrato e il
+        # backup successivo resta pianificato: un errore non può fermare il piano.
         try:
             self.azione_backup()
-        except BackupErrore:
-            # In caso di errore (es. pg_dump assente) il backup non
-            # interrompe il programma: il tentativo successivo avverrà
-            # comunque allo scadere dell'intervallo.
-            pass
-        self._pianifica_prossimo()
+        except BackupErrore as errore:
+            logger.error("Backup automatico non riuscito: %s", errore)
+        except Exception:
+            logger.exception("Errore imprevisto durante il backup automatico")
+        finally:
+            self._pianifica_prossimo()
 
     def _pianifica_prossimo(self) -> None:
         with self._blocco:

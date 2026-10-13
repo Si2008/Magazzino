@@ -29,10 +29,15 @@ def scarica(
     - in caso di successo crea un Movimento di tipo SCARICO e
       decrementa la giacenza nella stessa transazione.
     """
-    barcode_pulito = barcode.strip()
+    barcode_pulito = barcode.strip().upper()
 
     with session.begin():
-        pezzo = session.scalar(select(Pezzo).where(Pezzo.barcode == barcode_pulito))
+        pezzo = session.scalar(
+            select(Pezzo)
+            .where(Pezzo.barcode == barcode_pulito)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
         if pezzo is None:
             raise PezzoNonTrovatoError(f"barcode '{barcode_pulito}' non presente in magazzino")
 

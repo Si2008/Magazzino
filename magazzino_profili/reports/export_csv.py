@@ -1,10 +1,12 @@
-"""Esport and import of the inventory in CSV.
+"""Esportazione e importazione dell'inventario in CSV.
 
-The CSV has the same columns as the Excel export (:data:`INTESTAZIONI`):
-it is the format to exchange the inventory with external software.
-The import reads the CSV row by row and calls the service
-``carica``, so the business rules (normalization, automatic creation of
-colour and piece, Movement) remain in the domain.
+Il CSV ha le stesse colonne dell'export Excel (:data:`INTESTAZIONI`):
+è il formato per scambiare l'inventario con altri programmi.
+
+L'import legge e valida TUTTE le righe prima di scrivere qualsiasi
+dato: se una riga è non valida o un profilo non esiste in anagrafica,
+nulla viene importato. Ogni riga valida viene poi caricata con il
+servizio ``carica``, quindi le regole di business restano nel dominio.
 """
 
 from __future__ import annotations
@@ -12,11 +14,13 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ..db.normalizzazione import normalizza_codice
+from ..domain import Profilo
 from ..services.carico import carica
 from ..services.consultazione import lista_pezzi
-from ..domain import Profilo
 from ..services.eccezioni import ProfiloNonTrovatoError
 
 INTESTAZIONI = (
@@ -31,10 +35,10 @@ INTESTAZIONI = (
 
 
 def esporta_inventario_csv(session: Session, percorso_output: str | Path) -> Path:
-    """Esport the complete inventory in a CSV file (UTF-8, header).
+    """Esporta l'inventario completo in un file CSV (UTF-8, ``;``, intestazione).
 
-    One row per piece, with the same columns as the Excel export.
-    Returns the path of the created file.
+    Una riga per pezzo, con le stesse colonne dell'export Excel.
+    Restituisce il percorso del file creato.
     """
     percorso = Path(percorso_output)
     percorso.parent.mkdir(parents=True, exist_ok=True)
@@ -42,19 +46,59 @@ def esporta_inventario_csv(session: Session, percorso_output: str | Path) -> Pat
     with open(percorso, "w", encoding="utf-8", newline="") as file:
         writer = csv.writer(file, delimiter=";")
         writer.writerow(INTESTAZIONI)
-        for pieza in lista_pezzi(session):
+        for pezzo in lista_pezzi(session):
             writer.writerow(
                 (
-                    pieza.profilo.codice,
-                    pieza.profilo.descrizione,
-                    pieza.colore.nome_visualizzato,
-                    pieza.lunghezza_mm,
-                    pieza.quantita,
-                    pieza.ubicazione or "",
-                    pieza.barcode,
+                    pezzo.profilo.codice,
+                    pezzo.profilo.descrizione,
+                    pezzo.colore.nome_visualizzato,
+                    pezzo.lunghezza_mm,
+                    pezzo.quantita,
+                    pezzo.ubicazione or "",
+                    pezzo.barcode,
                 )
             )
     return percorso
+
+
+def _leggi_righe(percorso: Path) -> list[tuple[int, str, str, int, int, str | None]]:
+    """Legge e valida il CSV. Solleva ``ValueError`` indicando la riga errata."""
+    with open(percorso, encoding="utf-8", newline="") as file:
+        reader = csv.DictReader(file, delimiter=";")
+        if reader.fieldnames is None:
+            raise ValueError("Intestazione del CSV vuota")
+        header = {nome.strip(): nome for nome in reader.fieldnames}
+        for obbligatoria in ("Codice profil", "Colore", "Lunghezza (mm)", "Quantita"):
+            if obbligatoria not in header:
+                raise ValueError(f"Intestazione CSV mancante: '{obbligatoria}'")
+
+        righe = []
+        for numero_riga, riga in enumerate(reader, start=2):
+            codice = (riga.get(header["Codice profil"]) or "").strip()
+            colore = (riga.get(header["Colore"]) or "").strip()
+            if not codice or not colore:
+                continue
+            lunghezza_testo = (riga.get(header["Lunghezza (mm)"]) or "").strip()
+            quantita_testo = (riga.get(header["Quantita"]) or "").strip()
+            try:
+                lunghezza = int(lunghezza_testo)
+                quantita = int(quantita_testo)
+            except ValueError as errore:
+                raise ValueError(
+                    f"Errore alla riga {numero_riga} del CSV: lunghezza e quantità "
+                    f"devono essere numeri interi (trovato '{lunghezza_testo}' / "
+                    f"'{quantita_testo}')."
+                ) from errore
+            if lunghezza <= 0 or quantita <= 0:
+                raise ValueError(
+                    f"Errore alla riga {numero_riga} del CSV: lunghezza e quantità "
+                    "devono essere maggiori di zero."
+                )
+            ubicazione = None
+            if "Ubicazione" in header:
+                ubicazione = (riga.get(header["Ubicazione"]) or "").strip() or None
+            righe.append((numero_riga, codice, colore, lunghezza, quantita, ubicazione))
+    return righe
 
 
 def importa_peczi_csv(
@@ -63,44 +107,37 @@ def importa_peczi_csv(
     utente: str = "",
     causale: str = "Importazione csv",
 ) -> int:
-    """Import a CSV inventory: every row is a ``carica``.
+    """Importa un inventario CSV: ogni riga è un ``carica``.
 
-    The header must contain :data:`INTESTAZIONI` (the order of the
-    columns is not important). Every row calls :func:`carica` with the
-    profile code, the colour, the length and the quantity: the rules of
-    the business remain in the service, so a row with an unknown profile
-    raises :class:`ProfiloNonTrovatoError` and nothing is saved.
+    Prima della scrittura si verificano tutte le righe: formato dei numeri,
+    valori positivi, e presenza di ogni profilo in anagrafica. Se una
+    verifica fallisce, nulla viene importato e l'errore indica la riga.
 
-    Returns the number of imported rows.
+    Restituisce il numero di righe importate.
     """
     percorso = Path(percorso_input)
     if not percorso.is_file():
-        raise FileNotFoundError(f"Csv not found: {percorso}")
+        raise FileNotFoundError(f"File CSV non trovato: {percorso}")
 
-    with open(percorso, encoding="utf-8", newline="") as file:
-        reader = csv.DictReader(file, delimiter=";")
-        if reader.fieldnames is None:
-            raise ValueError("Csv header vuoto")
-        header = {nome.strip(): nome for nome in reader.fieldnames}
-        for intestazione in ("Codice profil", "Colore", "Lunghezza (mm)", "Quantita"):
-            if intestazione not in header:
-                raise ValueError(f"Csv header without {intestazione}")
+    righe = _leggi_righe(percorso)
 
-        imported = 0
-        for row in reader:
-            codice = (row.get(header["Codice profil"]) or "").strip()
-            colore = (row.get(header["Colore"]) or "").strip()
-            if not codice or not colore:
-                continue
-            carica(
-                session,
-                codice,
-                colore,
-                int(row[header["Lunghezza (mm)"]]),
-                int(row[header["Quantita"]]),
-                utente,
-                causale,
-            )
-            imported += 1
+    # Lettura su una sessione separata: la sessione del chiamante non viene
+    # toccata e ``carica`` può aprire le sue transazioni.
+    with Session(bind=session.get_bind()) as lettura:
+        codici_noti = set(lettura.scalars(select(Profilo.codice)))
+    mancanti = sorted({normalizza_codice(r[1]) for r in righe} - codici_noti)
+    if mancanti:
+        raise ProfiloNonTrovatoError(", ".join(mancanti))
 
-    return imported
+    importate = 0
+    for numero_riga, codice, colore, lunghezza, quantita, ubicazione in righe:
+        try:
+            carica(session, codice, colore, lunghezza, quantita, utente, causale, ubicazione)
+        except Exception as errore:
+            # Errore imprevisto del database: le righe precedenti restano salvate.
+            raise RuntimeError(
+                f"Importazione interrotta alla riga {numero_riga} del CSV: {errore}. "
+                f"Le prime {importate} righe risultano già salvate."
+            ) from errore
+        importate += 1
+    return importate

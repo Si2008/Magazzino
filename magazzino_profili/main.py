@@ -14,7 +14,9 @@ Esecuzione::
 
 from __future__ import annotations
 
+import logging
 import sys
+from pathlib import Path
 
 from .backup import PianificatoreBackup, leggi_config_backup
 from .db import crea_engine, crea_session_factory, crea_tabelle, leggi_config
@@ -25,6 +27,7 @@ from .ui import FinestraPrincipale
 
 
 def main() -> int:
+    _configura_log()
     # Import ritardato: PySide6 serve solo quando si apre l'interfaccia.
     from PySide6.QtWidgets import QApplication, QMessageBox
 
@@ -36,7 +39,8 @@ def main() -> int:
         QMessageBox.critical(
             None,
             "Database",
-            "Impossibile to read the configurazione file: check the path and the syntax di config.toml."
+            "Impossibile leggere il file config.toml: verificare percorso e sintassi."
+            + chr(10) + f"Dettaglio: {errore}"
         )
         return 1
 
@@ -52,8 +56,9 @@ def main() -> int:
         QMessageBox.critical(
             None,
             "Database",
-            "Impossibile to connect to the database: check che the PostgreSQL server is started and che the parametri tra config.toml are correct."
-            + chr(10) + chr(10) + "Execute setup_database.py to start the server." + chr(10) + f"Details: {errore}",
+            "Impossibile connettersi al database: verificare che il server PostgreSQL sia avviato "
+            "e che i parametri in config.toml siano corretti."
+            + chr(10) + chr(10) + "Eseguire setup_database.py per avviare il server." + chr(10) + f"Dettaglio: {errore}",
         )
         return 1
 
@@ -101,6 +106,26 @@ def _esegui_backup_singolo(
         max_backup=max_backup,
         comando_base=(pg_dump,),
     )
+
+
+def _configura_log() -> None:
+    """Registro su file in %LOCALAPPDATA%\\magazzino_profili\\app.log.
+
+    Se il file non è scrivibile, i messaggi restano su stderr e viene
+    segnalato il motivo: non si ignora in silenzio.
+    """
+    cartella = Path.home() / "AppData" / "Local" / "magazzino_profili"
+    try:
+        cartella.mkdir(parents=True, exist_ok=True)
+        logging.basicConfig(
+            filename=cartella / "app.log",
+            level=logging.INFO,
+            format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+            encoding="utf-8",
+        )
+    except OSError as errore:
+        logging.basicConfig(level=logging.INFO)
+        logging.getLogger(__name__).warning("Log su file non disponibile: %s", errore)
 
 
 if __name__ == "__main__":

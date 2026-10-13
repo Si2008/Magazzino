@@ -15,6 +15,7 @@ Usage::
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import secrets
@@ -120,17 +121,60 @@ def _ensure_db(password: str) -> None:
     print("database created")
 
 
+def _imposta_chiavi(testo: str, sezione: str, valori: dict[str, str], sovrascrivi: bool = True) -> str:
+    """Imposta chiavi TOML solo dentro la sezione indicata.
+
+    ``valori`` contiene già la forma TOML (es. ``'"localhost"'``, ``'5432'``).
+    Le altre sezioni non vengono toccate. Le chiavi mancanti vengono
+    inserite subito dopo l'intestazione della sezione (creata se assente).
+    Con ``sovrascrivi=False`` una chiave già presente resta invariata.
+    """
+    nl = "\n"
+    fuori: list[str] = []
+    trovate: set[str] = set()
+    dentro = False
+    intestazione_idx: int | None = None
+    for riga in testo.splitlines(keepends=True):
+        stripped = riga.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            dentro = stripped == f"[{sezione}]"
+            if dentro:
+                intestazione_idx = len(fuori)
+            fuori.append(riga)
+            continue
+        if dentro:
+            corrispondenza = re.match(r"^(\s*)([A-Za-z_]\w*)\s*=", riga)
+            if corrispondenza and corrispondenza.group(2) in valori:
+                chiave = corrispondenza.group(2)
+                trovate.add(chiave)
+                if sovrascrivi:
+                    fuori.append(f"{corrispondenza.group(1)}{chiave} = {valori[chiave]}{nl}")
+                else:
+                    fuori.append(riga)
+                continue
+        fuori.append(riga)
+    mancanti = [k for k in valori if k not in trovate]
+    if mancanti:
+        if intestazione_idx is None:
+            fuori.append(f"{nl}[{sezione}]{nl}")
+            intestazione_idx = len(fuori) - 1
+        fuori[intestazione_idx + 1:intestazione_idx + 1] = [f"{k} = {valori[k]}{nl}" for k in mancanti]
+    return "".join(fuori)
+
+
 def _write_config(password: str) -> None:
     with open("config.toml", encoding="utf-8") as file:
         content = file.read()
-    content = re.sub(r'host = "[^"]+"', 'host = "localhost"', content)
-    content = re.sub(r"porta = \d+", f"porta = {PG_PORT}", content)
-    content = re.sub(r'utente = "[^"]+"', f'utente = "{PG_USER}"', content)
-    content = re.sub(r'password = "[^"]+"', f'password = "{password}"', content)
-    content = re.sub(r'dbname = "[^"]+"', f'dbname = "{PG_NAME}"', content)
-    if "pg_dump" not in content:
-        riga = "pg_dump = '" + _exe("pg_dump") + "'"
-        content = content.rstrip() + chr(10) + riga + chr(10)
+    content = _imposta_chiavi(content, "database", {
+        "host": json.dumps("localhost"),
+        "porta": str(PG_PORT),
+        "utente": json.dumps(PG_USER),
+        "password": json.dumps(password),
+        "dbname": json.dumps(PG_NAME),
+    })
+    content = _imposta_chiavi(
+        content, "backup", {"pg_dump": json.dumps(_exe("pg_dump"))}, sovrascrivi=False
+    )
     with open("config.toml", "w", encoding="utf-8") as file:
         file.write(content)
     print("config.toml updated")

@@ -30,6 +30,23 @@ from ..services import consultazione
 from .tema import px, tema_attivo
 
 
+def _etichetta_sezione(testo: str, parent: QWidget) -> QLabel:
+    t = tema_attivo()
+    lab = QLabel(testo, parent)
+    lab.setStyleSheet(f"color: {t.testo_dim}; font-size: {px(13)}px; font-weight: 600;")
+    return lab
+
+
+def _campo_con_etichetta(testo: str, campo: QWidget, parent: QWidget) -> QWidget:
+    contenitore = QWidget(parent)
+    v = QVBoxLayout(contenitore)
+    v.setContentsMargins(0, 0, 0, 0)
+    v.setSpacing(px(4))
+    v.addWidget(_etichetta_sezione(testo, contenitore))
+    v.addWidget(campo)
+    return contenitore
+
+
 class SchedaProfilo(QWidget):
     """Gestione profili (sezione + peso per metro)."""
 
@@ -65,16 +82,23 @@ class SchedaProfilo(QWidget):
         vl.setSpacing(px(10))
 
         self.codice = QLineEdit(form)
-        self.codice.setPlaceholderText("codice (es. AB12) — obbligatorio, immutabile")
+        self.codice.setPlaceholderText("Es. AB12")
         self.descrizione = QLineEdit(form)
-        self.descrizione.setPlaceholderText("descrizione (es. Angolo 40x40) — obbligatoria")
+        self.descrizione.setPlaceholderText("Es. Angolo 40x40")
         self.peso = QLineEdit(form)
-        self.peso.setPlaceholderText("peso kg/metro (es. 1,28) — obbligatorio")
+        self.peso.setPlaceholderText("Es. 1,28")
         self.lunghezza = QLineEdit(form)
-        self.lunghezza.setPlaceholderText("lunghezza standard (mm) — obbligatoria")
+        self.lunghezza.setPlaceholderText("Es. 6000")
         for c in (self.codice, self.descrizione, self.peso, self.lunghezza):
             c.setStyleSheet(f"font-size: {px(14)}px; padding: {px(9)} {px(11)};")
-            vl.addWidget(c)
+        for etichetta, campo in (
+            ("Codice profilo (obbligatorio, non modificabile dopo il salvataggio)", self.codice),
+            ("Descrizione (obbligatoria)", self.descrizione),
+            ("Peso al metro, kg/m (obbligatorio)", self.peso),
+            ("Lunghezza standard, mm (obbligatoria)", self.lunghezza),
+        ):
+            vl.addWidget(_campo_con_etichetta(etichetta, campo, form))
+        vl.addWidget(_etichetta_sezione("Immagine della sezione (PNG)", form))
 
         riga_img = QHBoxLayout()
         self._anteprima = QLabel("—", form)
@@ -184,6 +208,18 @@ class SchedaProfilo(QWidget):
 
     def _rimuovi_immagine(self) -> None:
         """Segna la rimozione dell'immagine (il file resta su disco)."""
+        from .messaggi import chiedi_conferma
+
+        if not chiedi_conferma(
+            self,
+            "Rimuovi immagine",
+            "Rimuovere l'immagine della sezione da questo profilo?\n"
+            "Il file PNG non viene cancellato dal disco; la rimozione diventa definitiva "
+            "solo quando salvi il profilo.",
+            "Rimuovi",
+            pericolosa=True,
+        ):
+            return
         self._rimossa_in_locales = True
         self._immagine_locale = None
         self._anteprima.setText("—")
@@ -231,8 +267,10 @@ class SchedaProfilo(QWidget):
                     anagrafica.associa_immagine_sezione(sessione, p.id, self._immagine_locale)
             finally:
                 sessione.close()
-        except Exception as errore:  # noqa: BLE001
-            QMessageBox.critical(self, "Profili", f"Errore: {errore}")
+        except Exception as errore:  # noqa: BLE001 - spiegato all'utente, dettaglio nel log
+            from .messaggi import mostra_errore
+
+            mostra_errore(self, "Profili", errore, "Il salvataggio del profilo")
             return
 
         self._rinfresca_elenco()

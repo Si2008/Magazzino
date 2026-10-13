@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QPointF, QRectF, QSize
 from PySide6.QtGui import QColor, QIcon, QLinearGradient, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
@@ -53,6 +53,93 @@ def icona_colore(codice: str, diametro: int | None = None, sbiadita: bool = Fals
     return QIcon(_disegna_pallino(hx, d))
 
 
+def _disegna_icona(nome: str, p: QPainter) -> None:
+    """Disegno a tratto dell'icona ``nome`` su griglia logica 24x24 (stile del mockup)."""
+    pt = QPointF
+    if nome == "grid":
+        for x, y in ((3, 3), (13, 3), (3, 13), (13, 13)):
+            p.drawRoundedRect(QRectF(x, y, 8, 8), 1.5, 1.5)
+    elif nome == "arrow-up":
+        p.drawLine(pt(12, 19), pt(12, 5))
+        p.drawPolyline([pt(5.5, 11.5), pt(12, 5), pt(18.5, 11.5)])
+    elif nome == "arrow-down":
+        p.drawLine(pt(12, 5), pt(12, 19))
+        p.drawPolyline([pt(5.5, 12.5), pt(12, 19), pt(18.5, 12.5)])
+    elif nome == "alert":
+        p.drawPolygon([pt(12, 3.5), pt(21.5, 20), pt(2.5, 20)])
+        p.drawLine(pt(12, 9.5), pt(12, 13.5))
+        p.drawLine(pt(12, 17), pt(12, 17.2))
+    elif nome == "layers":
+        p.drawPolygon([pt(12, 3), pt(21, 8), pt(12, 13), pt(3, 8)])
+        p.drawPolyline([pt(3, 13), pt(12, 18), pt(21, 13)])
+        p.drawPolyline([pt(3, 17.5), pt(12, 22), pt(21, 17.5)])
+    elif nome == "tag":
+        p.drawPolygon([pt(3, 3), pt(12.5, 3), pt(21, 11.5), pt(12.5, 20), pt(3, 11.5)])
+        p.drawEllipse(pt(8, 8), 1.6, 1.6)
+    elif nome == "weight":
+        p.drawPolygon([pt(5, 8), pt(19, 8), pt(21, 21), pt(3, 21)])
+        p.drawPolyline([pt(9, 8), pt(9, 5.5), pt(15, 5.5), pt(15, 8)])
+    elif nome == "search":
+        p.drawEllipse(pt(11, 11), 7, 7)
+        p.drawLine(pt(16.2, 16.2), pt(21, 21))
+    elif nome == "layout":
+        p.drawRoundedRect(QRectF(3, 3, 18, 18), 2, 2)
+        p.drawLine(pt(3, 9), pt(21, 9))
+        p.drawLine(pt(9, 9), pt(9, 21))
+
+
+def icona_linea(nome: str, colore_hx: str, d: int | None = None, margine: float = 0.22) -> QIcon:
+    """Icona a tratto disegnata con QPainter (nessuna risorsa esterna).
+
+    ``margine`` è la frazione di spazio vuoto attorno al disegno (0 = a filo).
+    """
+    d = d or px(20)
+    img = QPixmap(d, d)
+    img.fill(Qt.transparent)
+    p = QPainter(img)
+    p.setRenderHint(QPainter.Antialiasing)
+    scala = d * (1.0 - 2 * margine) / 24.0
+    p.translate(d * margine, d * margine)
+    p.scale(scala, scala)
+    pen = QPen(QColor(colore_hx), 2.0)
+    pen.setCapStyle(Qt.RoundCap)
+    pen.setJoinStyle(Qt.RoundJoin)
+    p.setPen(pen)
+    p.setBrush(Qt.NoBrush)
+    _disegna_icona(nome, p)
+    p.end()
+    return QIcon(img)
+
+
+def _rgba(hx: str, alfa: float) -> str:
+    c = QColor(hx)
+    return f"rgba({c.red()}, {c.green()}, {c.blue()}, {alfa})"
+
+
+def pillola(testo: str, variante: str = "neutro") -> QLabel:
+    """Etichetta a pillola per lo stato: ``ok``, ``avviso``, ``pericolo`` o ``neutro``.
+
+    Non riceve eventi del mouse, così il click arriva alla riga della tabella.
+    """
+    t = tema_attivo()
+    colori = {
+        "ok": (t.ok, _rgba(t.ok, 0.14)),
+        "avviso": (t.avviso, _rgba(t.avviso, 0.15)),
+        "pericolo": (t.pericolo, _rgba(t.pericolo, 0.14)),
+        "neutro": (t.testo_dim, t.carta2),
+    }
+    primo, sfondo = colori.get(variante, colori["neutro"])
+    etichetta = QLabel(testo)
+    etichetta.setObjectName("Pillola")
+    etichetta.setAlignment(Qt.AlignCenter)
+    etichetta.setAttribute(Qt.WA_TransparentForMouseEvents)
+    etichetta.setStyleSheet(
+        f"color: {primo}; background: {sfondo}; border-radius: {px(10)}px;"
+        f" padding: {px(2)}px {px(10)}px; font-size: {px(12.5)}px; font-weight: 700;"
+    )
+    return etichetta
+
+
 def icona_tessera(testo: str, colore_hx: str, diametro: int | None = None) -> QIcon:
     """Tessera quadrata con una sigla al centro (icone card KPI)."""
     from PySide6.QtGui import QFont
@@ -92,6 +179,10 @@ class CardKPI(QWidget):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
+        # Stile applicato solo a questo widget (vedi #CardKPI in tema.qss_globale):
+        # uno stylesheet senza selettore si propagherebbe alle etichette figlie.
+        self.setObjectName("CardKPI")
+        self.setAttribute(Qt.WA_StyledBackground, True)
         t = tema_attivo()
         colore_variante = {
             "ok": t.ok,

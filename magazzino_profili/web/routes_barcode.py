@@ -86,7 +86,7 @@ def crea_router(
     """
 
     router = APIRouter(prefix="/api")
-    utente_autenticato = crea_dipendenza_utente(segrete_token)
+    utente_autenticato = crea_dipendenza_utente(segrete_token, session_factory)
 
     @router.post("/login")
     def login(credenziali: CadenzeLogin) -> dict:
@@ -119,7 +119,7 @@ def crea_router(
         barcode inesistente → 404, nessun pezzo viene creato.
         """
         verifica_permesso(utente, "carico")
-        barcode = payload.barcode.strip()
+        barcode = payload.barcode.strip().upper()
 
         # 1) Pre-verifica in una propria transazione: il barcode deve
         #    corrispondere a un pezzo già presente in magazzino.
@@ -152,9 +152,10 @@ def crea_router(
                     quantita=payload.quantita,
                     utente=utente.username,
                     causale=payload.causale or "Carico da telefono",
+                    crea_se_mancante=False,
                 )
-            except ProfiloNonTrovatoError as errore:
-                # Cancellato nel frattempo dal desktop: si risponde 404.
+            except (ProfiloNonTrovatoError, PezzoNonTrovatoError) as errore:
+                # Cancellato nel frattempo dal desktop: si risponde 404, nulla viene creato.
                 raise HTTPException(status_code=404, detail=str(errore)) from errore
             return _dettagli_pezzo(pezzo, "Carico registrato.")
 
@@ -169,7 +170,7 @@ def crea_router(
         409 con giacenza e movimenti invariati (transazione annullata).
         """
         verifica_permesso(utente, "scarico")
-        barcode = payload.barcode.strip()
+        barcode = payload.barcode.strip().upper()
 
         with session_factory() as session:
             try:

@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..services import consultazione
+from .componenti import pillola
 from .tema import px, tema_attivo
 
 
@@ -62,6 +63,9 @@ class SchedaAvvisi(QWidget):
             ["Codice", "Colore", "Lunghezza (mm)", "Giacenza", "Scorta minima", "Stato", ""]
         )
         self._tabella.verticalHeader().setVisible(False)
+        self._tabella.verticalHeader().setDefaultSectionSize(px(44))
+        from PySide6.QtWidgets import QHeaderView as _QHV
+        self._tabella.horizontalHeader().setSectionResizeMode(5, _QHV.ResizeMode.ResizeToContents)
         self._tabella.setAlternatingRowColors(True)
         pal = self._tabella.palette()
         pal.setColor(QPalette.AlternateBase, QColor(tema_attivo().carta))
@@ -114,18 +118,30 @@ class SchedaAvvisi(QWidget):
                 testo, hx = "Esaurito", t.pericolo
             else:
                 testo, hx = "Sotto scorta", t.avviso
-            cella = _item(testo)
-            cella.setForeground(QColor(hx))
-            tab.setItem(riga, 5, cella)
+            variante = "pericolo" if stato == "esaurito" else "avviso"
+            stato_item = _item("")  # la cella mostra il badge; il testo resta in UserRole
+            stato_item.setData(Qt.UserRole, testo)
+            tab.setItem(riga, 5, stato_item)
+            badge = QWidget()
+            badge.setAttribute(Qt.WA_TransparentForMouseEvents)
+            riga_badge = QHBoxLayout(badge)
+            riga_badge.setContentsMargins(px(8), px(4), px(8), px(4))
+            riga_badge.addWidget(pillola(testo, variante), 0, Qt.AlignLeft | Qt.AlignVCenter)
+            tab.setCellWidget(riga, 5, badge)
 
             puls = QPushButton("Dettagli")
             puls.setCursor(Qt.PointingHandCursor)
+            puls.setFixedSize(px(96), px(30))
             puls.setStyleSheet(
                 f"background: {t.carta2}; border: 1px solid {t.accento}; color: {t.testo};\n"
-                f"border-radius: {px(7)}px; padding: {px(4)} {px(11)}; font-weight: 700;"
+                f"border-radius: {px(7)}px; padding: 0 {px(8)}px; font-weight: 700;"
             )
             puls.clicked.connect(lambda _c=False, cid=z.colore.id: self.vai_a_colore.emit(cid))
-            tab.setCellWidget(riga, 6, puls)
+            contenitore_puls = QWidget()
+            riga_puls = QHBoxLayout(contenitore_puls)
+            riga_puls.setContentsMargins(px(8), px(3), px(8), px(3))
+            riga_puls.addWidget(puls, 0, Qt.AlignLeft | Qt.AlignVCenter)
+            tab.setCellWidget(riga, 6, contenitore_puls)
 
         n = tab.rowCount()
         if n == 0:

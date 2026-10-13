@@ -18,8 +18,9 @@ from dataclasses import dataclass
 from typing import Callable
 
 from fastapi import Header, HTTPException
+from sqlalchemy import select
 
-from ..sicurezza import Ruolo, autentica, puo
+from ..sicurezza import Ruolo, Utente, autentica, puo
 
 MESSAGGIO_NON_AUTENTICATO = "Non autenticato: effettuare il login."
 MESSAGGIO_TOKEN_INVALIDO = "Sessione scaduta o non valida: effettuare nuovamente il login."
@@ -121,12 +122,17 @@ def verifica_permesso(utente: UtenteAutenticato, azione: str) -> None:
         )
 
 
-def crea_dipendenza_utente(segrete: bytes) -> Callable:
+def crea_dipendenza_utente(segrete: bytes, session_factory=None) -> Callable:
     """Crea la dipendenza FastAPI che valida il token Bearer di ogni richiesta.
 
     Gestisce: intestazione assente, formato non ``Bearer <token>``,
     token alterato e token scaduto — in tutti i casi HTTP 401 con
     messaggio in italiano.
+
+    Se ``session_factory`` è fornita, a ogni richiesta l'utente viene
+    riletto dal database: un utente cancellato non è più accettato
+    (401) e il ruolo usato è quello attuale, non quello nel token (che
+    resta valido per un'ora dopo un cambio di permessi).
     """
 
     def utente_da_token(
@@ -143,6 +149,16 @@ def crea_dipendenza_utente(segrete: bytes) -> Callable:
         utente = verifica_token(parti[1].strip(), segrete)
         if utente is None:
             raise HTTPException(status_code=401, detail=MESSAGGIO_TOKEN_INVALIDO)
+        if session_factory is not None:
+            with session_factory() as sessione:
+                attuale = sessione.scalar(select(Utente).where(Utente.username == utente.username))
+            if attuale is None:
+                raise HTTPException(status_code=401, detail=MESSAGGIO_TOKEN_INVALIDO)
+            utente = UtenteAutenticato(
+                username=attuale.username,
+                ruolo=attuale.ruolo,
+                scadenza=utente.scadenza,
+            )
         return utente
 
     return utente_da_token

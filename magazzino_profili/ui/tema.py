@@ -155,6 +155,7 @@ QWidget {{
     font-size: {css(15)};
 }}
 QMainWindow, QDialog {{ background: {t.sfondo}; }}
+QLabel {{ background: transparent; }}
 
 QTabWidget::pane {{
     border: 1px solid {t.bordo};
@@ -293,6 +294,13 @@ QMenu::item {{
 }}
 QMenu::item:selected {{ background: {t.accento_sfondo}; }}
 QMenu::separator {{ height: 1px; background: {t.bordo}; margin: {css(4)} {css(6)}; }}
+
+#CardKPI {{
+    background: {t.carta};
+    border: 1px solid {t.bordo};
+    border-radius: {css(10)};
+}}
+QTableWidget QWidget {{ background: transparent; }}
 
 QLabel#TitoloSezione {{
     font-size: {css(17)};

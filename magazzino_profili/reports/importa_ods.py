@@ -21,6 +21,7 @@ contate come "saltate".
 
 from __future__ import annotations
 
+import re
 import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -70,6 +71,21 @@ def _riga_valori(riga: ET.Element) -> list[str]:
         ripeti = int(cella.get("{%s}number-repeated" % NS["table"]) or 1)
         valori.extend([_cell_text(cella)] * ripeti)
     return valori
+
+
+def _ubicazione_da_vassoio(valore: str) -> str | None:
+    """Ubicazione dal valore della colonna Vassoio.
+
+    Un numero (anche ``4.0`` da foglio di calcolo) diventa ``Vassoio 4``.
+    Un testo diverso dal solo numero viene usato così com'è.
+    """
+    testo = (valore or "").strip()
+    if not testo:
+        return None
+    corrispondenza = re.fullmatch(r"(\d+)(?:\.0+)?", testo)
+    if corrispondenza:
+        return f"Vassoio {int(corrispondenza.group(1))}"
+    return testo
 
 
 def _intero(testo: str) -> int | None:
@@ -206,10 +222,13 @@ def importa_ods_file(
                             colore=colore,
                             lunghezza_mm=lunghezza,
                             quantita=0,
-                            ubicazione=(f"Vassoio {vassoio}" if vassoio else None),
+                            ubicazione=_ubicazione_da_vassoio(vassoio),
                             barcode=barcode,
                         )
                         sessione.add(pezzo)
+                    elif _ubicazione_da_vassoio(vassoio) and not (pezzo.ubicazione or "").strip():
+                        # Pezzo già esistente senza ubicazione: la riceve dal vassoio.
+                        pezzo.ubicazione = _ubicazione_da_vassoio(vassoio)
 
                     # 4) CARICO con traccia contabile.
                     dettagli = []

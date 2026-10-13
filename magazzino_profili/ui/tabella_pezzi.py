@@ -38,11 +38,12 @@ from PySide6.QtWidgets import (
 )
 
 from ..services import consultazione
-from .componenti import CardKPI, icona_colore, icona_tessera
+from .componenti import CardKPI, icona_colore, icona_linea, icona_tessera, pillola
 from .tema import px, qss_globale, tema_attivo
 
 _COLONNE = ["Barcode", "Profilo", "Colore", "Lunghezza (mm)", "Quantità", "Peso (kg)", "Ubicazione", "Stato"]
 _COLORE = 2  # indice colonna "Colore"
+_TUTTE_UBICAZIONI = "Tutte le ubicazioni"
 
 _STATI_COMBO = [
     ("Tutti", None),
@@ -57,6 +58,16 @@ _STATO_INFO = {
     "sotto": ("Sotto scorta", "avviso"),
     "esaurito": ("Esaurito", "pericolo"),
 }
+
+
+def _cella_pillola(testo: str, variante: str) -> QWidget:
+    """Badge di stato centrato nella cella (la cella resta cliccabile)."""
+    contenitore = QWidget()
+    contenitore.setAttribute(Qt.WA_TransparentForMouseEvents)
+    riga = QHBoxLayout(contenitore)
+    riga.setContentsMargins(px(8), px(4), px(8), px(4))
+    riga.addWidget(pillola(testo, variante), 0, Qt.AlignLeft | Qt.AlignVCenter)
+    return contenitore
 
 
 class TabellaPezzi(QWidget):
@@ -119,18 +130,12 @@ class TabellaPezzi(QWidget):
         h = QHBoxLayout()
         h.setSpacing(px(10))
 
-        def tessera(testo: str, hx: str) -> "object":
-            return icona_tessera(testo, hx)
-
-        self.kpi_pezzi = CardKPI(tessera("P", t.accento), "0", "Pezzi in giacenza", "good")
-        self.kpi_profili = CardKPI(tessera("R", t.testo_dim), "0", "Referenze", "neutro")
-        self.kpi_peso = CardKPI(tessera("kg", t.ok), "0 kg", "Peso totale", "ok")
-        self.kpi_riordino = CardKPI(tessera("!", t.pericolo), "0", "Da riordinare", "bad")
+        self.kpi_pezzi = CardKPI(icona_linea("layers", t.accento, px(34)), "0", "Pezzi in giacenza", "good")
+        self.kpi_profili = CardKPI(icona_linea("tag", t.testo_dim, px(34)), "0", "Referenze", "neutro")
+        self.kpi_peso = CardKPI(icona_linea("weight", t.ok, px(34)), "0 kg", "Peso totale", "ok")
+        self.kpi_riordino = CardKPI(icona_linea("alert", t.pericolo, px(34)), "0", "Da riordinare", "bad")
 
         for card in (self.kpi_pezzi, self.kpi_profili, self.kpi_peso, self.kpi_riordino):
-            card.setStyleSheet(
-                f"background: {t.carta}; border: 1px solid {t.bordo}; border-radius: {px(10)}px;"
-            )
             h.addWidget(card, 1)
         return h
 
@@ -140,7 +145,7 @@ class TabellaPezzi(QWidget):
         bar.setExpanding(False)
         bar.setDrawBase(False)
         bar.setUsesScrollButtons(True)
-        bar.setElideMode(Qt.ElideRight)
+        bar.setElideMode(Qt.ElideNone)  # i nomi dei colori non vanno troncati
         bar.setStyleSheet(f"""
             QTabBar {{ background: transparent; }}
             QTabBar::tab {{
@@ -178,6 +183,7 @@ class TabellaPezzi(QWidget):
         self.cerca = QLineEdit(w)
         self.cerca.setPlaceholderText("Cerca: barcode, profilo, colore, ubicazione…")
         self.cerca.setClearButtonEnabled(True)
+        self.cerca.addAction(icona_linea("search", t.testo_dim, px(16), 0.1), QLineEdit.LeadingPosition)
         h.addWidget(self.cerca, 2)
 
         self.combo_profilo = QComboBox(w)
@@ -187,7 +193,7 @@ class TabellaPezzi(QWidget):
         self.combo_ubicazione = QComboBox(w)
         self.combo_ubicazione.setEditable(True)
         self.combo_ubicazione.setInsertPolicy(QComboBox.NoInsert)
-        self.combo_ubicazione.setPlaceholderText("Ubicazione")
+        self.combo_ubicazione.lineEdit().setPlaceholderText("Ubicazione")
         self.combo_ubicazione.setMinimumWidth(px(140))
         h.addWidget(self.combo_ubicazione)
 
@@ -216,7 +222,9 @@ class TabellaPezzi(QWidget):
         tab.setShowGrid(False)
         tab.setSortingEnabled(False)
         tab.setWordWrap(False)
+        tab.verticalHeader().setDefaultSectionSize(px(38))
         header = tab.horizontalHeader()
+        header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)  # intestazioni a sinistra (mockup)
         from PySide6.QtWidgets import QHeaderView
 
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
@@ -304,7 +312,7 @@ class TabellaPezzi(QWidget):
         testo_ub = self.combo_ubicazione.currentText().strip()
         self.combo_ubicazione.blockSignals(True)
         self.combo_ubicazione.clear()
-        self.combo_ubicazione.addItem("Tutte", "")
+        self.combo_ubicazione.addItem(_TUTTE_UBICAZIONI, "")
         for u in ubicazioni:
             self.combo_ubicazione.addItem(u, u)
         self.combo_ubicazione.blockSignals(False)
@@ -314,23 +322,22 @@ class TabellaPezzi(QWidget):
                 self.combo_ubicazione.setCurrentIndex(i)
             else:
                 self.combo_ubicazione.setEditText(testo_ub)
+        else:
+            self.combo_ubicazione.setCurrentIndex(0)
 
     # ------------------------------------------------------------------
     # tabella
     # ------------------------------------------------------------------
     def _ubicazione_filtro(self) -> str | None:
-        """Valore del filtro ubicazione: testo digitato o voce selezionata.
+        """Valore del filtro ubicazione: il testo visibile nel campo.
 
-        L'indice -1 (testo libero digitato) usa ``currentText()``; un
-        indice >= 0 usa il ``data`` della voce ("" per "Tutte").
+        Vale sia per la voce selezionata sia per il testo digitato. La voce
+        "Tutte le ubicazioni" equivale a nessun filtro.
         """
-        indice = self.combo_ubicazione.currentIndex()
-        if indice >= 0:
-            valore = self.combo_ubicazione.itemData(indice) or ""
-        else:
-            valore = self.combo_ubicazione.currentText()
-        valore = (valore or "").strip()
-        return valore or None
+        testo = (self.combo_ubicazione.currentText() or "").strip()
+        if not testo or testo == _TUTTE_UBICAZIONI:
+            return None
+        return testo
 
     def _rinfresca_tabella(self) -> None:
         stato = self.combo_stato.currentData()
@@ -388,9 +395,11 @@ class TabellaPezzi(QWidget):
 
             stato_riga = consultazione.stato_scorta(z)
             testo_stato, chiave = _STATO_INFO.get(stato_riga, ("OK", "ok"))
-            cella = _item(testo_stato)
-            cella.setForeground(QColor(getattr(t, chiave)))
-            tab.setItem(riga, 7, cella)
+            # testo in UserRole (leggibile da codice); la cella mostra solo il badge
+            stato_item = _item("")
+            stato_item.setData(Qt.UserRole, testo_stato)
+            tab.setItem(riga, 7, stato_item)
+            tab.setCellWidget(riga, 7, _cella_pillola(testo_stato, chiave))
 
         self._applica_colonna_colore()
         totale = (
@@ -399,9 +408,10 @@ class TabellaPezzi(QWidget):
             else len(pezzi)
         )
         ora = datetime.now().strftime("%H:%M:%S")
-        self._footer.setText(
-            f"{len(pezzi):,} di {int(totale or 0):,} referenze   ·   aggiornamento {ora}"
-        )
+        testo_footer = f"{len(pezzi):,} di {int(totale or 0):,} referenze   ·   aggiornamento {ora}"
+        if not pezzi and int(totale or 0) > 0:
+            testo_footer += "   ·   nessun risultato con i filtri attuali (usa Azzera)"
+        self._footer.setText(testo_footer)
 
     def _applica_colonna_colore(self) -> None:
         """La colonna 'Colore' è ridondante quando è attivo un tab colore."""

@@ -53,6 +53,12 @@ def pezzi_sotto_scora(session: Session) -> list[Pezzo]:
     )
 
 
+def _like_escapato(testo: str) -> str:
+    """Testo utente come pattern LIKE: ``%`` e ``_`` diventano letterali."""
+    escapato = testo.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escapato}%"
+
+
 def cerca_pezzi(
     session: Session,
     testo: str = "",
@@ -81,14 +87,14 @@ def cerca_pezzi(
         parola = parola.strip()
         if not parola:
             continue
-        like = f"%{parola.upper()}%"
+        like = _like_escapato(parola.upper())
         condizioni.append(
             or_(
-                Pezzo.barcode.ilike(like),
-                Pezzo.profilo.has(Profilo.codice.ilike(like)),
-                Pezzo.profilo.has(Profilo.descrizione.ilike(like)),
-                Pezzo.colore.has(Colore.nome_visualizzato.ilike(like)),
-                Pezzo.ubicazione.ilike(like),
+                Pezzo.barcode.ilike(like, escape="\\"),
+                Pezzo.profilo.has(Profilo.codice.ilike(like, escape="\\")),
+                Pezzo.profilo.has(Profilo.descrizione.ilike(like, escape="\\")),
+                Pezzo.colore.has(Colore.nome_visualizzato.ilike(like, escape="\\")),
+                Pezzo.ubicazione.ilike(like, escape="\\"),
             )
         )
 
@@ -256,6 +262,29 @@ def pezzo_per_combinazione(
             Pezzo.lunghezza_mm == lunghezza_mm,
         )
     )
+
+
+def candidati_da_barcode(session: Session, barcode: str) -> list[tuple[str, str, int]]:
+    """Scomposizioni possibili di ``CODICE-COLORE-LUNGHEZZA`` con codice in anagrafica.
+
+    Restituisce tuple ``(codice, colore, lunghezza)`` per ogni punto di taglio
+    in cui il prefisso è un codice profilo esistente. Un barcode con codici
+    che contengono ``-`` può avere più scomposizioni valide.
+    """
+    parti = barcode.split("-")
+    if len(parti) < 3 or not parti[-1].isdigit():
+        return []
+    lunghezza = int(parti[-1])
+    risultati: list[tuple[str, str, int]] = []
+    for taglio in range(1, len(parti) - 1):
+        codice = normalizza_codice("-".join(parti[:taglio]))
+        colore = normalizza_colore("-".join(parti[taglio:-1]))
+        if not codice or not colore:
+            continue
+        esiste = session.scalar(select(Profilo.id).where(Profilo.codice == codice))
+        if esiste is not None:
+            risultati.append((codice, colore, lunghezza))
+    return risultati
 
 
 def _chiave_naturale(testo: str):

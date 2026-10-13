@@ -144,6 +144,13 @@ def _icona_applicazione() -> QIcon | None:
     return None
 
 
+def _icona_scheda(nome: str):
+    """Icona a tratto della scheda (stile del mockup)."""
+    from .componenti import icona_linea
+
+    return icona_linea(nome, tema.tema_attivo().testo_dim, px(18), 0.08)
+
+
 class FinestraPrincipale(QWidget):
     """Finestra principale con le schede di magazzino."""
 
@@ -243,26 +250,26 @@ class FinestraPrincipale(QWidget):
 
         if "Inventario" in consentite:
             self.scheda_inventario = TabellaPezzi(self._factory)
-            self._tab.addTab(self.scheda_inventario, "Inventario")
+            self._tab.addTab(self.scheda_inventario, _icona_scheda("grid"), "Inventario")
         def _collega_cambiato(scheda) -> None:
             if self.scheda_inventario is not None:
                 scheda.cambiato.connect(self.scheda_inventario.aggiorna)
 
         if "Carico" in consentite:
             self.scheda_carico = SchedaCarico(self._factory, self._nome_utente)
-            self._tab.addTab(self.scheda_carico, "Carico")
+            self._tab.addTab(self.scheda_carico, _icona_scheda("arrow-up"), "Carico")
             _collega_cambiato(self.scheda_carico)
         if "Scarico" in consentite:
             self.scheda_scarico = SchedaScarico(self._factory, self._nome_utente)
-            self._tab.addTab(self.scheda_scarico, "Scarico")
+            self._tab.addTab(self.scheda_scarico, _icona_scheda("arrow-down"), "Scarico")
             _collega_cambiato(self.scheda_scarico)
         if "Profili" in consentite:
             self.scheda_profilo = SchedaProfilo(self._factory)
-            self._tab.addTab(self.scheda_profilo, "Profili")
+            self._tab.addTab(self.scheda_profilo, _icona_scheda("layout"), "Profili")
             _collega_cambiato(self.scheda_profilo)
         if "Avvisi" in consentite:
             self.scheda_avvisi = SchedaAvvisi(self._factory)
-            self._tab.addTab(self.scheda_avvisi, "Avvisi")
+            self._tab.addTab(self.scheda_avvisi, _icona_scheda("alert"), "Avvisi")
             # Avvisi -> "Dettagli": passa all'Inventario sulla scheda colore
             self.scheda_avvisi.vai_a_colore.connect(self._vai_a_colore_davvisi)
 
