@@ -1,7 +1,8 @@
 """Tema grafico dell'interfaccia (design "grande" del mockup).
 
-Tutte le misure numeriche dell'UI passano da :func:`px` (API Qt intere)
-o da :func:`css` (stringhe di foglio di stile, con i decimali).
+Tutte le misure numeriche dell'UI passano da :func:`rem` (mockup,
+``html{font-size:24px}``) o da :func:`px` (pixel di design, per le API Qt
+interne) o da :func:`css` (stringhe di foglio di stile).
 I valori di riferimento sono i pixel del mockup; ``SCALA`` permette di
 ingrandire/ridurre l'intera interfaccia in un colpo solo.
 """
@@ -13,6 +14,102 @@ from dataclasses import dataclass
 from PySide6.QtGui import QColor
 
 SCALA: float = 1.0
+
+ROOT_PX: int = 24  # html{font-size:24px} del mockup: 1rem = 24 px
+
+
+def rem(valore: float) -> int:
+    """Misura del mockup (in rem) convertita in pixel interi."""
+    return max(1, int(round(valore * ROOT_PX * SCALA)))
+
+
+def alfa(hx: str, a: float) -> str:
+    """Colore ``rgba(r, g, b, A)`` con A INTERO 0-255 (Qt non garantisce gli alfa decimali)."""
+    c = QColor(hx)
+    return f"rgba({c.red()}, {c.green()}, {c.blue()}, {int(round(a * 255))})"
+
+
+class M:
+    """Tutte le misure dell'interfaccia, ricavate dal mockup (rem x 24). NON scrivere numeri a mano altrove."""
+
+    # font
+    FONT = rem(0.8438)         # 20  body
+    FONT_BTN = rem(0.8125)     # 20
+    FONT_BTN_LG = rem(0.875)   # 21
+    FONT_BTN_SM = rem(0.75)    # 18
+    FONT_H2 = rem(0.9375)      # 22
+    FONT_HINT = rem(0.7812)    # 19
+    FONT_SMALL = rem(0.75)     # 18
+    FONT_XS = rem(0.7188)      # 17
+    # raggi
+    R = rem(0.75)              # 18  card, tessere
+    R_SM = rem(0.5)            # 12  campi, pulsanti
+    R_MENU = rem(0.625)        # 15  menu, righe avviso, tab, toast
+    R_DLG = rem(0.875)         # 21  finestre di dialogo
+    # pulsanti
+    BTN_PV, BTN_PH = rem(0.5), rem(0.8125)            # 12, 20
+    BTN_LG_PV, BTN_LG_PH = rem(0.75), rem(1.0)        # 18, 24
+    BTN_SM_PV, BTN_SM_PH = rem(0.3125), rem(0.625)    # 8, 15
+    BTN_ICONA = rem(2.25)                             # 54
+    # barra del titolo / schede / pagina
+    TITOLO_PV, TITOLO_PH = rem(0.625), rem(1.125)     # 15, 27
+    LOGO = rem(1.875)                                 # 45
+    FONT_BRAND = rem(0.9375)                          # 22
+    TAB_PV, TAB_PH = rem(0.625), rem(1.0625)          # 15, 26
+    CONTA = rem(1.1875)                               # 28 (badge contatore)
+    FONT_CONTA = rem(0.6875)                          # 16
+    PAG_T, PAG_H, PAG_B = rem(1.25), rem(1.375), rem(1.75)   # 30, 33, 42
+    CARD_PAD = rem(1.125)                             # 27
+    GAP = rem(0.875)                                  # 21
+    GAP_SM = rem(0.75)                                # 18
+    # KPI
+    KPI_PV, KPI_PH = rem(0.875), rem(1.0)             # 21, 24
+    KPI_ICO = rem(2.375)                              # 57
+    KPI_ICO_R = rem(0.625)                            # 15
+    KPI_ICO_SVG = rem(1.25)                           # 30
+    KPI_GAP = rem(0.8125)                             # 20
+    FONT_KPI_V = rem(1.3125)                          # 32
+    # inventario
+    ASIDE_W = rem(20.625)                             # 495
+    TOOLBAR_PAD = rem(0.875)                          # 21
+    TOOLBAR_GAP = rem(0.5)                            # 12
+    CAMPO_PV, CAMPO_PH = rem(0.5625), rem(0.625)      # 14, 15
+    TH_PV, TH_PH = rem(0.6875), rem(0.875)            # 16, 21
+    TD_PV, TD_PH = rem(0.625), rem(0.875)             # 15, 21
+    PILL_PV, PILL_PH = rem(0.125), rem(0.5625)        # 3, 14
+    PILL_PUNTO = rem(0.375)                           # 9
+    RIGA_INV = 76                                     # altezza riga inventario (verificata a screenshot)
+    # colonna laterale
+    LAT_PV, LAT_PH = rem(1.0), rem(1.125)             # 24, 27
+    FONT_LAT_TITOLO = rem(1.125)                      # 27
+    # form
+    CAMPO_GAP = rem(0.375)                            # 9
+    CAMPO_MB = rem(0.875)                             # 21
+    BIG_FONT = rem(1.125)                             # 27
+    BIG_PV, BIG_PH = rem(0.8125), rem(0.875)          # 20, 21
+    SPLIT_SX = rem(27.5)                              # 660 (colonna form)
+    PROF_DX = rem(22.5)                               # 540
+    IMG_BOX_H = rem(12.5)                             # 300
+    CHIP_PV, CHIP_PH = rem(0.25), rem(0.6875)         # 6, 16
+    CHIP_R = 16                                       # raggio chip: Qt IGNORA border-radius > altezza/2 (chip alti ~35 px)
+    ANT_PV, ANT_PH = rem(0.75), rem(0.875)            # 18, 21
+    FONT_FLUSSO = rem(0.9375)                         # 22
+    MSG_PV, MSG_PH = rem(0.5625), rem(0.75)           # 14, 18
+    STEP_BTN = rem(2.375)                             # 57
+    # avvisi / movimenti / stato / toast
+    AVV_PV, AVV_PH = rem(0.8125), rem(1.0)            # 20, 24
+    AVV_ICO = rem(2.25)                               # 54
+    METER_H = rem(0.3125)                             # 8
+    METER_MAXW = rem(18.75)                           # 450
+    MOV_ICO = rem(1.75)                               # 42
+    MOV_PV = rem(0.5625)                              # 14
+    MOV_GAP = rem(0.6875)                             # 16
+    STATO_PV, STATO_PH = rem(0.5), rem(1.125)         # 12, 27
+    TOAST_DX = rem(1.125)                             # 27
+    TOAST_BASSO = rem(3.25)                           # 78
+    TOAST_BORDO = rem(0.25)                           # 6
+    TOAST_MAXW = rem(26.25)                           # 630
+    MENU_MINW = rem(16.875)                           # 405
 
 
 def px(valore: float | int) -> int:
@@ -41,6 +138,14 @@ class Tema:
     ok: str
     avviso: str
     pericolo: str
+    # inchiostro (testo sopra pulsanti pieni) e veli (sfondi tenui, alfa INTERO)
+    accento_inchiostro: str
+    ok_inchiostro: str
+    pericolo_inchiostro: str
+    accento_vel: str
+    ok_vel: str
+    avviso_vel: str
+    pericolo_vel: str
 
 
 SCURO = Tema(
@@ -58,23 +163,37 @@ SCURO = Tema(
     ok="#3ccb82",
     avviso="#f0b04a",
     pericolo="#f0605a",
+    accento_inchiostro="#0b1633",
+    ok_inchiostro="#06261a",
+    pericolo_inchiostro="#2c0a08",
+    accento_vel="rgba(91, 141, 255, 36)",
+    ok_vel="rgba(60, 203, 130, 36)",
+    avviso_vel="rgba(240, 176, 74, 38)",
+    pericolo_vel="rgba(240, 96, 90, 36)",
 )
 
 CHIARO = Tema(
     sfondo="#e9ecf2",
-    superficie="#f4f6fa",
+    superficie="#f3f5f9",
     carta="#ffffff",
-    carta2="#f2f4f9",
-    bordo="#dde2ec",
-    bordo_forte="#c4ccdb",
-    testo="#1c2230",
-    testo_dim="#5a6478",
-    testo_debole="#8d96a8",
+    carta2="#f1f3f8",
+    bordo="#dde1ea",
+    bordo_forte="#c6ccda",
+    testo="#161a22",
+    testo_dim="#556073",
+    testo_debole="#7b8698",
     accento="#2b62e0",
     accento_sfondo="#e3ebfc",
-    ok="#149e63",
-    avviso="#b57d1e",
-    pericolo="#d64545",
+    ok="#168a53",
+    avviso="#9c6200",
+    pericolo="#c43832",
+    accento_inchiostro="#ffffff",
+    ok_inchiostro="#ffffff",
+    pericolo_inchiostro="#ffffff",
+    accento_vel="rgba(43, 98, 224, 26)",
+    ok_vel="rgba(22, 138, 83, 28)",
+    avviso_vel="rgba(201, 125, 0, 36)",
+    pericolo_vel="rgba(196, 56, 50, 26)",
 )
 
 ATTUALE: Tema = SCURO
@@ -97,27 +216,18 @@ def tema_attivo() -> Tema:
 # ---------------------------------------------------------------------------
 
 _NOTI: dict[str, str] = {
-    "AN007": "#2f3238",
+    "AN007": "#a9aeb7",
     "AN001": "#b9bec9",
-    "RAL9010": "#f5f6f7",
-    "RAL9005": "#252525",
+    "RAL9010": "#f2f1ea",
+    "RAL9005": "#0e0e10",
+    "RAL7016": "#383e42",
+    "RAL8014": "#4a3728",
     "ROSSO": "#c8443c",
     "BLU": "#33619e",
     "GRIGIO": "#8a909b",
     "NERO": "#232529",
     "BIANCO": "#f0f1f3",
 }
-
-
-def colore_di_codice(codice: str) -> str:
-    """Colore esadecimale associato a un codice colore (deterministico)."""
-    t = (codice or "").upper().strip()
-    if t in _NOTI:
-        return _NOTI[t]
-    h = 0
-    for i, carattere in enumerate(t):
-        h = (h * 31 + ord(carattere) * 7) % 360
-    return _hsl(h, 18, 55)
 
 
 def _hsl(h: int, s: int, l: int) -> str:
@@ -128,6 +238,15 @@ def _hsl(h: int, s: int, l: int) -> str:
     a = s * min(l, 1.0 - l)
     f = lambda d: l - a * max(-1.0, min(k(d) - 3.0, min(9.0 - k(d), 1.0)))
     return "#%02x%02x%02x" % tuple(int(round(f(d) * 255)) for d in (0, 8, 4))
+
+
+def colore_di_codice(codice: str) -> str:
+    """Colore esadecimale associato a un codice colore (deterministico)."""
+    t = (codice or "").upper().strip()
+    if t in _NOTI:
+        return _NOTI[t]
+    h = sum(ord(c) * 7 for c in t) % 360
+    return _hsl(h, 18, 55)
 
 
 def colore_sbiadito(hx: str, sfondo: str, peso: float = 0.65) -> str:
@@ -144,172 +263,232 @@ def colore_sbiadito(hx: str, sfondo: str, peso: float = 0.65) -> str:
 # Foglio di stile globale
 # ---------------------------------------------------------------------------
 
+def colore_da_css(valore: str) -> QColor:
+    """QColor da ``#rrggbb`` oppure da ``rgba(r, g, b, A)`` (A intero 0-255)."""
+    if valore.startswith("rgba"):
+        r, g, b, a = (int(x) for x in valore[valore.index("(") + 1 : valore.index(")")].split(","))
+        return QColor(r, g, b, a)
+    return QColor(valore)
+
+
+def schiarisci(hx: str, percento: int = 108) -> str:
+    """Equivalente di ``filter: brightness(1.08)`` per l'hover dei pulsanti pieni."""
+    return QColor(hx).lighter(percento).name()
+
+
 def qss_globale(t: Tema) -> str:
-    """Foglio di stile globale dell'applicazione."""
+    """Foglio di stile globale. Le misure vengono SOLO da ``M`` (mockup, rem x 24)."""
+    from .icone import percorso_icona_png
+
+    chev = percorso_icona_png("chev", t.testo_dim, rem(0.875))
+    chev_t = percorso_icona_png("chev", t.testo, rem(0.875))
     return f"""
 * {{ outline: none; }}
 QWidget {{
-    background: {t.sfondo};
     color: {t.testo};
-    font-family: "Segoe UI Variable Text", "Segoe UI", "Noto Sans", sans-serif;
-    font-size: {css(15)};
+    font-family: "Segoe UI Variable", "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif;
+    font-size: {M.FONT}px;
 }}
-QMainWindow, QDialog {{ background: {t.sfondo}; }}
+QWidget#Finestra {{ background: {t.sfondo}; }}
+QDialog, QMessageBox {{ background: {t.carta}; }}
 QLabel {{ background: transparent; }}
 
-QTabWidget::pane {{
-    border: 1px solid {t.bordo};
-    border-radius: {css(10)};
-    background: {t.superficie};
-    top: -1px;
-}}
-QTabBar {{ background: transparent; }}
-QTabBar::tab {{
-    background: transparent;
-    color: {t.testo_dim};
-    padding: {css(9)} {css(14)};
-    margin-right: {css(2)};
-    border: 1px solid transparent;
-    border-bottom: none;
-    border-top-left-radius: {css(9)};
-    border-top-right-radius: {css(9)};
-    font-size: {css(14.5)};
-    font-weight: 600;
-}}
-QTabBar::tab:selected {{
-    background: {t.superficie};
-    color: {t.testo};
-    border-color: {t.bordo};
-}}
-QTabBar::tab:hover:!selected {{ color: {t.testo}; background: {t.carta}; }}
+/* ---------- barra del titolo ---------- */
+QFrame#Titlebar {{ background: {t.carta}; border: none; border-bottom: 1px solid {t.bordo}; }}
+QLabel#Logo {{ background: {t.accento}; border-radius: {rem(0.5625)}px; }}
+QLabel#BrandNome {{ font-size: {M.FONT_BRAND}px; font-weight: 700; }}
+QLabel#BrandSotto {{ color: {t.testo_debole}; font-size: {M.FONT_XS}px; }}
 
-QLineEdit, QComboBox {{
-    background: {t.carta2};
-    border: 1px solid {t.bordo};
-    border-radius: {css(8)};
-    padding: {css(8)} {css(11)};
-    selection-background-color: {t.accento_sfondo};
+/* ---------- schede principali ---------- */
+QTabWidget::pane {{ border: none; border-top: 1px solid {t.bordo}; background: {t.superficie}; top: -1px; }}
+QTabWidget::tab-bar {{ left: {M.TITOLO_PH}px; }}
+QTabBar {{ background: transparent; }}
+QTabBar#TabPrincipali::tab {{
+    background: transparent; color: {t.testo_dim};
+    padding: {M.TAB_PV}px {M.TAB_PH}px; margin-right: 2px;
+    border: 1px solid transparent; border-bottom: none;
+    border-top-left-radius: {M.R_MENU}px; border-top-right-radius: {M.R_MENU}px;
+    font-size: {M.FONT}px; font-weight: 600;
+}}
+QTabBar#TabPrincipali::tab:selected {{ background: {t.superficie}; color: {t.testo}; border-color: {t.bordo}; }}
+QTabBar#TabPrincipali::tab:hover:!selected {{ color: {t.testo}; }}
+QLabel#Conta {{
+    background: {t.pericolo}; color: #ffffff; font-size: {M.FONT_CONTA}px; font-weight: 700;
+    border-radius: {M.CONTA // 2}px; min-width: {M.CONTA}px; max-height: {M.CONTA}px; min-height: {M.CONTA}px;
+    padding: 0 {rem(0.375)}px;
+}}
+
+/* ---------- schede colore (chip) dell'Inventario ---------- */
+QTabBar#TabColori::tab {{
+    background: {t.carta2}; color: {t.testo_dim}; border: 1px solid {t.bordo};
+    border-radius: {M.CHIP_R}px;
+    padding: {M.CHIP_PV}px {M.CHIP_PH}px; margin: 0 {rem(0.375)}px 0 0;
+    font-size: {M.FONT_SMALL}px; font-weight: 400;
+}}
+QTabBar#TabColori::tab:selected {{ background: {t.accento_vel}; border-color: {t.accento}; color: {t.testo}; }}
+QTabBar#TabColori::tab:hover:!selected {{ border-color: {t.accento}; color: {t.testo}; }}
+QTabBar#TabColori::scroller {{ width: {rem(1.5)}px; }}
+
+/* ---------- card, barre, anteprime ---------- */
+QFrame#Card {{ background: {t.carta}; border: 1px solid {t.bordo}; border-radius: {M.R}px; }}
+QFrame#CardKPI {{ background: {t.carta}; border: 1px solid {t.bordo}; border-radius: {M.R}px; }}
+QFrame#CardKPI[cliccabile="true"]:hover {{ border-color: {t.accento}; }}
+QLabel#KpiIco {{ background: {t.accento_vel}; border-radius: {M.KPI_ICO_R}px; }}
+QLabel#KpiIco[tono="bad"] {{ background: {t.pericolo_vel}; }}
+QLabel#KpiIco[tono="good"] {{ background: {t.ok_vel}; }}
+QLabel#KpiValore {{ font-size: {M.FONT_KPI_V}px; font-weight: 700; }}
+QLabel#KpiEtichetta {{ font-size: {M.FONT_SMALL}px; color: {t.testo_dim}; }}
+QFrame#BarraStrumenti {{ background: transparent; border: none; border-bottom: 1px solid {t.bordo}; }}
+QLabel#Piede {{ color: {t.testo_dim}; font-size: {M.FONT_SMALL}px; border-top: 1px solid {t.bordo};
+    padding: {rem(0.6875)}px {M.TD_PH}px; }}
+QFrame#Lat {{ background: transparent; border: none; border-bottom: 1px solid {t.bordo}; }}
+QLabel#LatTitolo {{ font-size: {M.FONT_LAT_TITOLO}px; font-weight: 700; }}
+QLabel#LatSezione {{ font-size: {M.FONT_XS}px; color: {t.testo_debole}; font-weight: 600; }}
+QLabel#Dim {{ color: {t.testo_dim}; }}
+QLabel#Debole {{ color: {t.testo_debole}; }}
+QLabel#Etichetta {{ color: {t.testo_dim}; font-size: {M.FONT_SMALL}px; font-weight: 600; }}
+QLabel#Suggerimento {{ color: {t.testo_dim}; font-size: {M.FONT_HINT}px; }}
+QLabel#TitoloCard {{ font-size: {M.FONT_H2}px; font-weight: 700; }}
+QLabel#Divisore {{ color: {t.testo_debole}; font-size: {M.FONT_SMALL}px; }}
+QFrame#Linea {{ background: {t.bordo}; border: none; max-height: 1px; min-height: 1px; }}
+QFrame#CasellaBarcode {{ background: {t.superficie}; border: 1px dashed {t.bordo_forte}; border-radius: {rem(0.5625)}px; }}
+QLabel#BoxImmagine {{ background: {t.superficie}; border: 1px dashed {t.bordo_forte}; border-radius: {M.R_MENU}px;
+    color: {t.testo_debole}; font-size: {M.FONT_HINT}px; }}
+QFrame#Anteprima {{ background: {t.superficie}; border: 1px solid {t.bordo}; border-radius: {M.R_MENU}px; }}
+QFrame#Anteprima QLabel {{ color: {t.testo_dim}; font-size: {M.FONT_HINT}px; }}
+QFrame#Messaggio {{ background: {t.pericolo_vel}; border: none; border-radius: {M.R_SM}px; }}
+QFrame#Messaggio QLabel {{ color: {t.pericolo}; font-size: {M.FONT_HINT}px; font-weight: 600; }}
+QFrame#RigaMov {{ background: transparent; border: none; border-bottom: 1px solid {t.bordo}; }}
+QLabel#MovIco {{ border-radius: {rem(0.5)}px; background: {t.carta2}; }}
+QLabel#MovIco[tono="ok"] {{ background: {t.ok_vel}; }}
+QLabel#MovIco[tono="pericolo"] {{ background: {t.pericolo_vel}; }}
+QLabel#MovIco[tono="avviso"] {{ background: {t.avviso_vel}; }}
+QLabel#MovTitolo {{ font-weight: 600; }}
+QLabel#MovSotto {{ color: {t.testo_dim}; font-size: {M.FONT_SMALL}px; }}
+QLabel#MovOra {{ color: {t.testo_debole}; font-size: {M.FONT_XS}px; }}
+QLabel#MovQta {{ font-weight: 700; }}
+QLabel#MovQta[tono="ok"] {{ color: {t.ok}; }}
+QLabel#MovQta[tono="pericolo"] {{ color: {t.pericolo}; }}
+QLabel#MovQta[tono="avviso"] {{ color: {t.avviso}; }}
+
+/* righe di avviso */
+QFrame#RigaAvviso {{ background: {t.carta}; border: 1px solid {t.bordo}; border-radius: {M.R_MENU}px; }}
+QFrame#RigaAvviso[gravita="pericolo"] {{ background: {t.pericolo_vel}; border-color: {t.pericolo}; }}
+QLabel#AvvIco {{ border-radius: {M.KPI_ICO_R}px; background: {t.avviso_vel}; }}
+QLabel#AvvIco[gravita="pericolo"] {{ background: {t.pericolo_vel}; }}
+QLabel#AvvTitolo {{ font-weight: 700; }}
+QLabel#AvvSotto {{ color: {t.testo_dim}; font-size: {M.FONT_HINT}px; }}
+QFrame#MeterSfondo {{ background: {t.bordo}; border: none; border-radius: {M.METER_H // 2}px; }}
+QFrame#MeterBarra {{ background: {t.avviso}; border: none; border-radius: {M.METER_H // 2}px; }}
+QFrame#MeterBarra[gravita="pericolo"] {{ background: {t.pericolo}; }}
+
+/* barra di stato e toast */
+QFrame#Statusbar {{ background: {t.carta}; border: none; border-top: 1px solid {t.bordo}; }}
+QFrame#Statusbar QLabel {{ color: {t.testo_dim}; font-size: {M.FONT_SMALL}px; }}
+QFrame#Toast {{ background: {t.carta}; border: 1px solid {t.bordo_forte}; border-left: {M.TOAST_BORDO}px solid {t.ok};
+    border-radius: {M.R_MENU}px; }}
+QFrame#Toast[tono="warn"] {{ border-left-color: {t.avviso}; }}
+QFrame#Toast[tono="info"] {{ border-left-color: {t.accento}; }}
+QFrame#Toast[tono="danger"] {{ border-left-color: {t.pericolo}; }}
+QFrame#Toast QLabel {{ font-weight: 600; }}
+
+/* ---------- campi ---------- */
+QLineEdit, QComboBox, QSpinBox {{
+    background: {t.superficie}; border: 1px solid {t.bordo}; border-radius: {M.R_SM}px;
+    padding: {M.CAMPO_PV}px {M.CAMPO_PH}px; selection-background-color: {t.accento_vel}; selection-color: {t.testo};
 }}
 QLineEdit:focus, QComboBox:focus {{ border-color: {t.accento}; }}
-QComboBox::drop-down {{
-    border: none; width: {css(26)};
+QLineEdit:disabled, QComboBox:disabled {{ color: {t.testo_debole}; }}
+QLineEdit[classe="grande"] {{
+    font-family: "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+    font-size: {M.BIG_FONT}px; padding: {M.BIG_PV}px {M.BIG_PH}px;
+    border-color: {t.accento}; background: {t.accento_vel};
 }}
+QLineEdit[classe="stepper"] {{
+    border-radius: 0; border-left: none; border-right: none; font-weight: 700; background: {t.superficie};
+}}
+QComboBox::drop-down {{ border: none; width: {rem(1.25)}px; }}
+QComboBox::down-arrow {{ image: url("{chev}"); width: {rem(0.875)}px; height: {rem(0.875)}px; }}
 QComboBox QAbstractItemView {{
-    background: {t.carta};
-    border: 1px solid {t.bordo_forte};
-    selection-background-color: {t.accento_sfondo};
-    outline: none;
+    background: {t.carta}; border: 1px solid {t.bordo_forte}; selection-background-color: {t.accento_vel};
+    selection-color: {t.testo}; outline: none;
 }}
 
+/* ---------- pulsanti ---------- */
 QPushButton {{
-    background: {t.carta2};
-    border: 1px solid {t.bordo};
-    color: {t.testo};
-    border-radius: {css(8)};
-    padding: {css(8)} {css(14)};
-    font-weight: 600;
+    background: {t.carta2}; border: 1px solid {t.bordo}; color: {t.testo}; border-radius: {M.R_SM}px;
+    padding: {M.BTN_PV}px {M.BTN_PH}px; font-weight: 600; font-size: {M.FONT_BTN}px;
 }}
-QPushButton:hover {{ border-color: {t.bordo_forte}; background: {t.carta}; }}
-QPushButton:pressed {{ background: {t.accento_sfondo}; }}
-QPushButton:disabled {{ color: {t.testo_debole}; }}
-
-QPushButton[classe="primario"] {{
-    background: {t.accento};
-    border: 1px solid {t.accento};
-    color: #ffffff;
+QPushButton:hover {{ border-color: {t.accento}; }}
+QPushButton:disabled {{ color: {t.testo_debole}; border-color: {t.bordo}; }}
+QPushButton[dim="sm"] {{ padding: {M.BTN_SM_PV}px {M.BTN_SM_PH}px; font-size: {M.FONT_BTN_SM}px; }}
+QPushButton[dim="lg"] {{ padding: {M.BTN_LG_PV}px {M.BTN_LG_PH}px; font-size: {M.FONT_BTN_LG}px; }}
+QPushButton[dim="icona"] {{ padding: 0; }}
+QPushButton[classe="primario"] {{ background: {t.accento}; border-color: {t.accento}; color: {t.accento_inchiostro}; }}
+QPushButton[classe="primario"]:hover {{ background: {schiarisci(t.accento)}; }}
+QPushButton[classe="ok"] {{ background: {t.ok}; border-color: {t.ok}; color: {t.ok_inchiostro}; }}
+QPushButton[classe="ok"]:hover {{ background: {schiarisci(t.ok)}; }}
+QPushButton[classe="pericolo"] {{ background: {t.pericolo}; border-color: {t.pericolo}; color: {t.pericolo_inchiostro}; }}
+QPushButton[classe="pericolo"]:hover {{ background: {schiarisci(t.pericolo)}; }}
+QPushButton[classe="primario"]:disabled, QPushButton[classe="ok"]:disabled, QPushButton[classe="pericolo"]:disabled {{
+    background: {t.carta2}; color: {t.testo_debole}; border-color: {t.bordo};
 }}
-QPushButton[classe="primario"]:hover {{ background: #6d9aff; }}
-QPushButton[classe="primario"]:pressed {{ background: #4a7ceb; }}
-QPushButton[classe="primario"]:disabled {{ background: {t.carta2}; color: {t.testo_debole}; border-color: {t.bordo}; }}
-
-QPushButton[classe="pericolo"] {{
-    background: {t.carta};
-    border: 1px solid {t.pericolo};
-    color: {t.pericolo};
+QPushButton[classe="chip"] {{
+    background: {t.carta2}; border: 1px solid {t.bordo}; color: {t.testo_dim}; font-size: {M.FONT_SMALL}px; font-weight: 400;
+    border-radius: {M.CHIP_R}px; padding: {M.CHIP_PV}px {M.CHIP_PH}px;
 }}
-QPushButton[classe="pericolo"]:hover {{ background: {t.pericolo}; color: #ffffff; }}
+QPushButton[classe="chip"]:hover {{ border-color: {t.accento}; color: {t.testo}; }}
+QPushButton[classe="stepper"] {{ background: {t.carta2}; border: 1px solid {t.bordo}; border-radius: 0; padding: 0; }}
+QPushButton[classe="stepper"][lato="sx"] {{ border-top-left-radius: {M.R_SM}px; border-bottom-left-radius: {M.R_SM}px; }}
+QPushButton[classe="stepper"][lato="dx"] {{ border-top-right-radius: {M.R_SM}px; border-bottom-right-radius: {M.R_SM}px; }}
+QPushButton::menu-indicator {{
+    image: url("{chev_t}"); width: {rem(0.875)}px; height: {rem(0.875)}px;
+    subcontrol-origin: padding; subcontrol-position: right center; right: {M.BTN_PH}px;
+}}
+QPushButton[menu="true"] {{ padding-right: {M.BTN_PH * 2 + rem(0.875)}px; }}
+QPushButton[classe="link"] {{ background: transparent; border: none; color: {t.accento}; padding: 0; font-weight: 600; }}
+QPushButton[classe="link"]:hover {{ text-decoration: underline; }}
 
+/* ---------- tabelle ---------- */
 QTableWidget {{
-    background: {t.superficie};
-    border: 1px solid {t.bordo};
-    border-radius: {css(10)};
-    gridline-color: {t.bordo};
-    selection-background-color: {t.accento_sfondo};
-    selection-color: {t.testo};
+    background: transparent; border: none; gridline-color: transparent;
+    selection-background-color: {t.accento_vel}; selection-color: {t.testo};
 }}
-QTableWidget::item {{ padding: {css(6)}; border: none; }}
+QTableWidget::item {{ padding: {M.TD_PV}px {M.TD_PH}px; border: none; border-bottom: 1px solid {t.bordo}; }}
+QTableWidget::item:hover {{ background: {t.accento_vel}; }}
+QTableWidget::item:selected {{ background: {t.accento_vel}; color: {t.testo}; }}
+QTableWidget QWidget {{ background: transparent; }}
+QHeaderView {{ background: {t.carta}; }}
 QHeaderView::section {{
-    background: {t.carta};
-    color: {t.testo_dim};
-    border: none;
-    border-bottom: 1px solid {t.bordo};
-    border-right: 1px solid {t.bordo};
-    padding: {css(8)} {css(10)};
-    font-weight: 700;
-    font-size: {css(13)};
+    background: {t.carta}; color: {t.testo_dim}; border: none; border-bottom: 1px solid {t.bordo_forte};
+    padding: {M.TH_PV}px {M.TH_PH}px; font-weight: 600; font-size: {M.FONT_SMALL}px;
 }}
 QTableCornerButton::section {{ background: {t.carta}; border: none; }}
 
-QScrollBar:vertical {{ background: transparent; width: {css(12)}; margin: 0; }}
-QScrollBar::handle:vertical {{
-    background: {t.bordo_forte}; border-radius: {css(6)}; min-height: {css(30)};
-}}
+QScrollArea {{ background: transparent; border: none; }}
+QScrollBar:vertical {{ background: transparent; width: {rem(0.5)}px; margin: 0; }}
+QScrollBar::handle:vertical {{ background: {t.bordo_forte}; border-radius: {rem(0.25)}px; min-height: {rem(1.25)}px; }}
 QScrollBar::handle:vertical:hover {{ background: {t.testo_debole}; }}
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: transparent; }}
-QScrollBar:horizontal {{ background: transparent; height: {css(12)}; margin: 0; }}
-QScrollBar::handle:horizontal {{
-    background: {t.bordo_forte}; border-radius: {css(6)}; min-width: {css(30)};
-}}
+QScrollBar:horizontal {{ background: transparent; height: {rem(0.5)}px; margin: 0; }}
+QScrollBar::handle:horizontal {{ background: {t.bordo_forte}; border-radius: {rem(0.25)}px; min-width: {rem(1.25)}px; }}
 QScrollBar::handle:horizontal:hover {{ background: {t.testo_debole}; }}
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; }}
 QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{ background: transparent; }}
 
-QStatusBar {{
-    background: {t.carta};
-    border-top: 1px solid {t.bordo};
-    color: {t.testo_dim};
-    font-size: {css(13)};
-}}
-QStatusBar::item {{ border: none; }}
-
 QToolTip {{
-    background: {t.carta2};
-    color: {t.testo};
-    border: 1px solid {t.bordo_forte};
-    padding: {css(6)} {css(9)};
-    font-size: {css(13)};
+    background: {t.carta2}; color: {t.testo}; border: 1px solid {t.bordo_forte};
+    padding: {rem(0.25)}px {rem(0.375)}px; font-size: {M.FONT_SMALL}px;
 }}
-
 QMenu {{
-    background: {t.carta};
-    border: 1px solid {t.bordo_forte};
-    border-radius: {css(9)};
-    padding: {css(5)};
+    background: {t.carta}; border: 1px solid {t.bordo_forte}; border-radius: {M.R_MENU}px;
+    padding: {rem(0.375)}px; min-width: {M.MENU_MINW}px;
 }}
-QMenu::item {{
-    padding: {css(7)} {css(14)};
-    border-radius: {css(6)};
-    color: {t.testo};
-}}
-QMenu::item:selected {{ background: {t.accento_sfondo}; }}
-QMenu::separator {{ height: 1px; background: {t.bordo}; margin: {css(4)} {css(6)}; }}
-
-#CardKPI {{
-    background: {t.carta};
-    border: 1px solid {t.bordo};
-    border-radius: {css(10)};
-}}
-QTableWidget QWidget {{ background: transparent; }}
-
-QLabel#TitoloSezione {{
-    font-size: {css(17)};
-    font-weight: 800;
-    letter-spacing: -0.2px;
-}}
-QLabel#SottotitoloSezione {{ color: {t.testo_dim}; font-size: {css(13.5)}; }}
-QLabel#TestoDebole {{ color: {t.testo_debole}; }}
-QLabel#TestoDim {{ color: {t.testo_dim}; }}
+QMenu::item {{ padding: {rem(0.5625)}px {rem(0.625)}px {rem(0.5625)}px {rem(0.625)}px; border-radius: {rem(0.4375)}px; color: {t.testo}; }}
+QMenu::item:selected {{ background: {t.accento_vel}; }}
+QMenu::icon {{ padding-left: {rem(0.25)}px; }}
+QMenu::separator {{ height: 1px; background: {t.bordo}; margin: {rem(0.3125)}px {rem(0.25)}px; }}
 """
 
 
