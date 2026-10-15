@@ -1,12 +1,12 @@
-"""Finestra principale: barra superiore, schede e barra di stato.
+"""Finestra principale: barra del titolo, schede e barra di stato.
 
 Layout (come nel mockup):
 
-- barra superiore: brand "Magazzino Profili" + pulsante "Report"
-  (menu PDF/Excel) + pulsante tema (scuro/chiaro);
-- tab: Inventario, Carico, Scarico, Profili, Avvisi (con badge di
-  conteggio);
-- barra di stato: ultimo messaggio + conteggio referenze/pezzi.
+- barra del titolo: logo + "Magazzino Profili / Giacenza profili · Tre-D Lab",
+  pulsante "Report" (menu Excel/PDF) e pulsante tema (sole/luna);
+- schede: Inventario, Carico, Scarico, Profili, Avvisi (badge di conteggio);
+- barra di stato: messaggio, utente, stato database, referenze/pezzi;
+- toast in basso a destra per i movimenti registrati.
 
 L'accesso utente (username/ruolo) è gestito da ``main.py`` prima di
 aprire la finestra; ``DialogoAccesso`` resta disponibile per
@@ -19,16 +19,15 @@ import os
 import sys
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QIcon, QKeySequence, QShortcut
+from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QApplication,
     QFileDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QMenu,
     QMessageBox,
-    QPushButton,
+    QTabBar,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -36,12 +35,22 @@ from PySide6.QtWidgets import (
 
 from ..sicurezza import Ruolo, autentica, schede_consenti as _schede_ruolo
 from . import tema
-from .tema import px
+from .tema import M, tema_attivo
+from .icone import ic_px, icona_svg, pixmap_icona
 from .avvisi import SchedaAvvisi
+from .componenti import Toast, bottone
 from .scheda_carico import SchedaCarico
 from .scheda_profilo import SchedaProfilo
 from .scheda_scarico import SchedaScarico
 from .tabella_pezzi import TabellaPezzi
+
+_NOME_ICONA_SCHEDE = {
+    "Inventario": "grid",
+    "Carico": "up",
+    "Scarico": "down",
+    "Profili": "profili",
+    "Avvisi": "alert",
+}
 
 
 def schede_consenti(ruolo: Ruolo | str) -> tuple[str, ...]:
@@ -75,15 +84,15 @@ class DialogoAccesso(QWidget):
         icona = _icona_applicazione()
         if icona is not None:
             self.setWindowIcon(icona)
-        self.setFixedWidth(px(380))
+        self.setFixedWidth(M.PROF_DX)
         t = tema.tema_attivo()
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(px(18), px(18), px(18), px(18))
-        layout.setSpacing(px(10))
+        layout.setContentsMargins(M.CARD_PAD, M.CARD_PAD, M.CARD_PAD, M.CARD_PAD)
+        layout.setSpacing(M.GAP_SM)
 
         titolo = QLabel("Magazzino Profili", self)
-        titolo.setStyleSheet(f"font-size: {px(18)}px; font-weight: 800;")
+        titolo.setObjectName("TitoloCard")
         layout.addWidget(titolo)
 
         self.nome = QLineEdit(self)
@@ -96,19 +105,16 @@ class DialogoAccesso(QWidget):
         layout.addWidget(self.password)
 
         self.messaggio = QLabel("", self)
-        self.messaggio.setStyleSheet(f"color: {t.pericolo}; font-size: {px(13)}px;")
+        self.messaggio.setObjectName("Debole")
         layout.addWidget(self.messaggio)
 
-        ok = QPushButton("Entra", self)
-        ok.setProperty("classe", "primario")
+        ok = bottone("Entra", classe="primario", parent=self)
         ok.clicked.connect(self._prova)
         layout.addWidget(ok)
         self.nome.setFocus()
 
     def _prova(self) -> None:
-        t = tema.tema_attivo()
         if self._factory is None:
-            self.messaggio.setStyleSheet(f"color: {t.pericolo}; font-size: {px(13)}px;")
             self.messaggio.setText("Accesso non disponibile (nessun database)")
             return
         sessione = self._factory()
@@ -117,7 +123,6 @@ class DialogoAccesso(QWidget):
         finally:
             sessione.close()
         if self._utente is None:
-            self.messaggio.setStyleSheet(f"color: {t.pericolo}; font-size: {px(13)}px;")
             self.messaggio.setText("Credenziali non valide")
             self.password.clear()
             return
@@ -128,8 +133,10 @@ class DialogoAccesso(QWidget):
         return self._utente
 
 
-def _icona_applicazione() -> QIcon | None:
+def _icona_applicazione():
     """Icona dell'app: cercata in _MEIPASS (eseguibile) o nella radice del progetto."""
+    from PySide6.QtGui import QIcon
+
     radici = []
     if getattr(sys, "frozen", False):
         radici.append(os.path.dirname(sys.executable))
@@ -144,11 +151,19 @@ def _icona_applicazione() -> QIcon | None:
     return None
 
 
-def _icona_scheda(nome: str):
-    """Icona a tratto della scheda (stile del mockup)."""
-    from .componenti import icona_linea
+def _pallino(hx: str, d: int) -> "object":
+    """Piccolo cerchio colorato (stato database)."""
+    from PySide6.QtGui import QColor, QPainter, QPixmap
 
-    return icona_linea(nome, tema.tema_attivo().testo_dim, px(18), 0.08)
+    img = QPixmap(d, d)
+    img.fill(Qt.GlobalColor.transparent)
+    p = QPainter(img)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor(hx))
+    p.drawEllipse(0, 0, d, d)
+    p.end()
+    return img
 
 
 class FinestraPrincipale(QWidget):
@@ -165,31 +180,40 @@ class FinestraPrincipale(QWidget):
         self._factory = factory
         self._ruolo = Ruolo(ruolo)
         self._nome_utente = nome_utente
+        self._toast: list[Toast] = []
+        self._badge_avvisi: QLabel | None = None
+        self._icone_nomi: list[str] = []
 
+        self.setObjectName("Finestra")
         self.setWindowTitle("Magazzino Profili")
         icona = _icona_applicazione()
         if icona is not None:
             self.setWindowIcon(icona)
-        self.resize(px(1150), px(720))
+        self.resize(1280, 760)
+        self.setMinimumSize(1280, 760)
         self._applica_tema()
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(px(14), px(12), px(14), px(8))
-        layout.setSpacing(px(10))
+        self._radice = QVBoxLayout(self)
+        self._radice.setContentsMargins(0, 0, 0, 0)
+        self._radice.setSpacing(0)
 
-        layout.addWidget(self._costruisci_barra_superiore())
+        self._barra_titolo: QWidget | None = None
+        self._barra_stato: QLabel
+        self._stato_db: QLabel
+        self._conta_riepilogo: QLabel
+        self._barra_stato_frame: QWidget | None = None
+        self._costruisci_barra_titolo()
 
         self._tab = QTabWidget(self)
         self._tab.setDocumentMode(True)
-        layout.addWidget(self._tab, 1)
+        self._tab.tabBar().setObjectName("TabPrincipali")
+        self._tab.tabBar().setDrawBase(False)
+        self._tab.setIconSize(_icona_schede())
+        self._tab.currentChanged.connect(self._aggiorna_icone_schede)
+        self._radice.addWidget(self._tab, 1)
 
-        self._barra_stato = QLabel(self)
+        self._costruisci_barra_stato()
         self._crea_schede()
-        self._barra_stato.setObjectName("TestoDim")
-        self._barra_stato.setStyleSheet(
-            f"border-top: 1px solid {tema.tema_attivo().bordo}; padding-top: {px(7)}px; font-size: {px(12.5)}px;"
-        )
-        layout.addWidget(self._barra_stato)
 
         # Scorciatoie globali: Ctrl+Alt+Freccia sinistra/destra cambia la
         # scheda colore nella scheda Inventario.
@@ -204,82 +228,169 @@ class FinestraPrincipale(QWidget):
         self._aggiorna_stato_riepilogo()
 
     # ------------------------------------------------------------------
-    # barra superiore
+    # barra del titolo
     # ------------------------------------------------------------------
-    def _costruisci_barra_superiore(self) -> QWidget:
-        t = tema.tema_attivo()
-        w = QWidget(self)
-        h = QHBoxLayout(w)
-        h.setContentsMargins(0, 0, 0, 0)
-        h.setSpacing(px(10))
+    def _costruisci_barra_titolo(self) -> None:
+        t = tema_attivo()
+        barra = QWidget(self)
+        barra.setObjectName("Titlebar")
+        h = QHBoxLayout(barra)
+        h.setContentsMargins(M.TITOLO_PH, M.TITOLO_PV, M.TITOLO_PH, M.TITOLO_PV)
+        h.setSpacing(M.GAP_SM)
 
-        brand = QLabel("Magazzino Profili", w)
-        brand.setStyleSheet(f"font-size: {px(19)}px; font-weight: 800;")
-        h.addWidget(brand)
-        h.addSpacing(px(6))
-        chi = QLabel(f"utente: {self._nome_utente} · {self._ruolo.value}", w)
-        chi.setStyleSheet(f"font-size: {px(12.5)}px; color: {t.testo_debole};")
-        h.addWidget(chi)
+        logo = QLabel(barra)
+        logo.setObjectName("Logo")
+        logo.setFixedSize(M.LOGO, M.LOGO)
+        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        logo.setPixmap(pixmap_icona("box", t.accento_inchiostro, ic_px(18)))
+        h.addWidget(logo)
+
+        brand = QVBoxLayout()
+        brand.setContentsMargins(0, 0, 0, 0)
+        brand.setSpacing(0)
+        nome = QLabel("Magazzino Profili", barra)
+        nome.setObjectName("BrandNome")
+        sotto = QLabel("Giacenza profili · Tre-D Lab", barra)
+        sotto.setObjectName("BrandSotto")
+        brand.addWidget(nome)
+        brand.addWidget(sotto)
+        h.addLayout(brand)
         h.addStretch(1)
 
-        self.puls_report = QPushButton("Report  ▾", w)
+        self.puls_report = bottone("Report", icona="file", parent=barra)
+        self.puls_report.setProperty("menu", "true")
         menu = QMenu(self.puls_report)
-        self._azione_pdf = QAction("Esporta PDF inventario", menu)
-        self._azione_pdf.triggered.connect(self._esporta_pdf)
-        self._azione_excel = QAction("Esporta Excel inventario", menu)
+        self._azione_excel = QAction("Esporta inventario in Excel", menu)
+        self._azione_excel.setIcon(icona_svg("download", t.testo, ic_px(14)))
         self._azione_excel.triggered.connect(self._esporta_excel)
-        menu.addAction(self._azione_pdf)
+        self._azione_pdf = QAction("Esporta inventario in PDF", menu)
+        self._azione_pdf.setIcon(icona_svg("file", t.testo, ic_px(14)))
+        self._azione_pdf.triggered.connect(self._esporta_pdf)
         menu.addAction(self._azione_excel)
+        menu.addAction(self._azione_pdf)
         self.puls_report.setMenu(menu)
         h.addWidget(self.puls_report)
 
-        self.puls_tema = QPushButton("Tema", w)
+        icona_tema = "moon" if t is tema.CHIARO else "sun"
+        self.puls_tema = bottone("", dim="icona", icona=icona_tema, parent=barra)
+        self.puls_tema.setFixedSize(M.BTN_ICONA, M.BTN_ICONA)
         self.puls_tema.setToolTip("Cambia tema scuro/chiaro")
         self.puls_tema.clicked.connect(self._cambia_tema)
         h.addWidget(self.puls_tema)
-        return w
+
+        self._barra_titolo = barra
+        self._radice.insertWidget(0, barra)
+
+    # ------------------------------------------------------------------
+    # barra di stato
+    # ------------------------------------------------------------------
+    def _costruisci_barra_stato(self) -> None:
+        t = tema_attivo()
+        barra = QWidget(self)
+        barra.setObjectName("Statusbar")
+        h = QHBoxLayout(barra)
+        h.setContentsMargins(M.STATO_PH, M.STATO_PV, M.STATO_PH, M.STATO_PV)
+        h.setSpacing(M.GAP_SM)
+
+        ico = QLabel(barra)
+        ico.setPixmap(pixmap_icona("check", t.ok, ic_px(14)))
+        h.addWidget(ico)
+
+        self._barra_stato = QLabel(barra)
+        h.addWidget(self._barra_stato, 1)
+
+        utente = QLabel(f"utente: {self._nome_utente} · {self._ruolo.value}", barra)
+        utente.setObjectName("Debole")
+        h.addWidget(utente)
+
+        self._pallino_db = QLabel(barra)
+        self._pallino_db.setPixmap(_pallino(t.testo_debole, M.PILL_PUNTO))
+        h.addWidget(self._pallino_db)
+        self._stato_db = QLabel("…", barra)
+        h.addWidget(self._stato_db)
+
+        self._conta_riepilogo = QLabel(barra)
+        h.addWidget(self._conta_riepilogo)
+
+        self._barra_stato_frame = barra
+        self._radice.addWidget(barra)
 
     # ------------------------------------------------------------------
     # schede
     # ------------------------------------------------------------------
     def _crea_schede(self) -> None:
         self._tab.clear()
+        self._icone_nomi.clear()
+        self._badge_avvisi = None
 
         consentite = schede_consenti(self._ruolo)
         self.scheda_inventario: TabellaPezzi | None = None
+        self.scheda_avvisi: SchedaAvvisi | None = None
+        nomi = []
 
         if "Inventario" in consentite:
             self.scheda_inventario = TabellaPezzi(self._factory)
-            self._tab.addTab(self.scheda_inventario, _icona_scheda("grid"), "Inventario")
+            nomi.append((self.scheda_inventario, "Inventario"))
+        else:
+            self.scheda_inventario = None
+
         def _collega_cambiato(scheda) -> None:
+            if not hasattr(scheda, "cambiato") or scheda is self.scheda_avvisi:
+                if hasattr(scheda, "messaggio"):
+                    scheda.messaggio.connect(self.mostra_toast)
+                return
             if self.scheda_inventario is not None:
                 scheda.cambiato.connect(self.scheda_inventario.aggiorna)
+            if self.scheda_avvisi is not None:
+                scheda.cambiato.connect(self.scheda_avvisi.aggiorna)
+            if hasattr(scheda, "messaggio"):
+                scheda.messaggio.connect(self.mostra_toast)
 
         if "Carico" in consentite:
             self.scheda_carico = SchedaCarico(self._factory, self._nome_utente)
-            self._tab.addTab(self.scheda_carico, _icona_scheda("arrow-up"), "Carico")
-            _collega_cambiato(self.scheda_carico)
+            nomi.append((self.scheda_carico, "Carico"))
         if "Scarico" in consentite:
             self.scheda_scarico = SchedaScarico(self._factory, self._nome_utente)
-            self._tab.addTab(self.scheda_scarico, _icona_scheda("arrow-down"), "Scarico")
-            _collega_cambiato(self.scheda_scarico)
+            nomi.append((self.scheda_scarico, "Scarico"))
         if "Profili" in consentite:
             self.scheda_profilo = SchedaProfilo(self._factory)
-            self._tab.addTab(self.scheda_profilo, _icona_scheda("layout"), "Profili")
-            _collega_cambiato(self.scheda_profilo)
+            nomi.append((self.scheda_profilo, "Profili"))
         if "Avvisi" in consentite:
             self.scheda_avvisi = SchedaAvvisi(self._factory)
-            self._tab.addTab(self.scheda_avvisi, _icona_scheda("alert"), "Avvisi")
-            # Avvisi -> "Dettagli": passa all'Inventario sulla scheda colore
-            self.scheda_avvisi.vai_a_colore.connect(self._vai_a_colore_davvisi)
+            nomi.append((self.scheda_avvisi, "Avvisi"))
 
-        # gli avvisi vanno aggiornati dopo ogni movimento
-        for nome in ("scheda_carico", "scheda_scarico", "scheda_profilo"):
-            scheda = getattr(self, nome, None)
-            if scheda is not None and getattr(self, "scheda_avvisi", None) is not None:
-                scheda.cambiato.connect(self.scheda_avvisi.aggiorna)
+        for scheda, nome in nomi:
+            self._tab.addTab(scheda, nome)
+            self._icone_nomi.append(_NOME_ICONA_SCHEDE.get(nome, "list"))
+            _collega_cambiato(scheda)
+            if nome == "Avvisi":
+                # Avvisi -> "Dettagli": passa all'Inventario sulla scheda colore
+                self.scheda_avvisi.vai_a_colore.connect(self._vai_a_colore_davvisi)
 
+        # Inventario -> Carico/Scarico: "Carica"/"Scarica" compilano il barcode
+        if self.scheda_inventario is not None:
+            self.scheda_inventario.vai_a_scheda.connect(self._vai_a_scheda)
+
+        self._aggiorna_icone_schede()
         self._aggiorna_badge_avvisi()
+
+    def _aggiorna_icone_schede(self) -> None:
+        """Scheda attiva con icona in ``t.accento``, le altre in ``t.testo_dim``."""
+        t = tema_attivo()
+        for i, nome in enumerate(self._icone_nomi):
+            colore = t.accento if i == self._tab.currentIndex() else t.testo_dim
+            self._tab.setTabIcon(i, icona_svg(nome, colore, ic_px(16)))
+
+    def _vai_a_scheda(self, nome: str, barcode: str) -> None:
+        """Da Inventario: apre Carico/Scarico con il barcode compilato."""
+        scheda = self.scheda_carico if nome == "Carico" else (self.scheda_scarico if nome == "Scarico" else None)
+        if scheda is None:
+            return
+        self._tab.setCurrentWidget(scheda)
+        campo = getattr(scheda, "barcode", None)
+        if campo is not None and barcode:
+            campo.setText(barcode)
+        self._messaggio(f"{nome}: barcode compilato")
 
     def _vai_a_colore_davvisi(self, colore_id: int) -> None:
         """Da Avvisi: vai alla scheda Inventario sul colore indicato."""
@@ -303,15 +414,28 @@ class FinestraPrincipale(QWidget):
     # tema / stato
     # ------------------------------------------------------------------
     def _applica_tema(self) -> None:
+        from PySide6.QtWidgets import QApplication
+
         app = QApplication.instance()
         if app is not None:
-            app.setStyleSheet(tema.qss_globale(tema.tema_attivo()))
+            app.setStyleSheet(tema.qss_globale(tema_attivo()))
 
     def _cambia_tema(self) -> None:
         tema.alterna_tema()
         self._applica_tema()
-        # ricostruisce le schede perché i colori sono applicati alla creazione
+        # ricostruisce barra del titolo, schede e barra di stato (i colori
+        # delle icone e dei pallini sono applicati alla creazione)
+        if self._barra_titolo is not None:
+            self._radice.removeWidget(self._barra_titolo)
+            self._barra_titolo.deleteLater()
+            self._barra_titolo = None
+        if self._barra_stato_frame is not None:
+            self._radice.removeWidget(self._barra_stato_frame)
+            self._barra_stato_frame.deleteLater()
+            self._barra_stato_frame = None
+        self._costruisci_barra_titolo()
         self._crea_schede()
+        self._costruisci_barra_stato()
         nome = "chiaro" if tema.tema_attivo() is tema.CHIARO else "scuro"
         self._messaggio(f"Tema cambiato: {nome}")
         self._aggiorna_stato_riepilogo()
@@ -322,36 +446,69 @@ class FinestraPrincipale(QWidget):
     def _aggiorna_stato_riepilogo(self) -> None:
         from ..services import consultazione
 
-        sessione = self._factory()
+        t = tema_attivo()
+        r = None
         try:
-            r = consultazione.riepilogo_inventario(sessione)
-        finally:
-            sessione.close()
-        base = self._barra_stato.text()
-        base = base.split("  ·  ")[0] if "  ·  " in base else base
-        self._barra_stato.setText(
-            f"{base}   ·   {r['referenze']} referenze · {r['pezzi_totali']} pezzi in giacenza"
-        )
+            sessione = self._factory()
+            try:
+                r = consultazione.riepilogo_inventario(sessione)
+            finally:
+                sessione.close()
+            ok = True
+        except Exception:
+            ok = False
+        self._stato_db.setText("PostgreSQL" if ok else "Database non raggiungibile")
+        self._pallino_db.setPixmap(_pallino(t.ok if ok else t.pericolo, M.PILL_PUNTO))
+        if r is not None:
+            self._conta_riepilogo.setText(f"{r['referenze']} referenze · {r['pezzi_totali']} pezzi")
 
     def _aggiorna_badge_avvisi(self) -> None:
         from ..services import consultazione
 
-        sessione = self._factory()
         try:
-            n = len(consultazione.pezzi_da_riordinare(sessione))
-        finally:
-            sessione.close()
+            sessione = self._factory()
+            try:
+                n = len(consultazione.pezzi_da_riordinare(sessione))
+            finally:
+                sessione.close()
+        except Exception:
+            n = 0
         for i in range(self._tab.count()):
-            if self._tab.tabText(i) == "Avvisi":
-                etichetta = "Avvisi" if n == 0 else f"Avvisi ({n})"
-                self._tab.setTabText(i, etichetta)
-                break
+            if self._tab.tabText(i) != "Avvisi":
+                continue
+            if self._badge_avvisi is None:
+                self._badge_avvisi = QLabel("0", self)
+                self._badge_avvisi.setObjectName("Conta")
+                self._badge_avvisi.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self._badge_avvisi.setText(str(n))
+            self._badge_avvisi.setVisible(n > 0)
+            self._tab.tabBar().setTabButton(i, QTabBar.ButtonPosition.RightSide, self._badge_avvisi)
+            break
+
+    # ------------------------------------------------------------------
+    # toast
+    # ------------------------------------------------------------------
+    def mostra_toast(self, testo: str, tono: str = "ok") -> None:
+        """Notifica in basso a destra (massimo 3 visibili) + messaggio di stato."""
+        self._messaggio(testo)
+        attive = [x for x in self._toast if x.isVisible()]
+        while len(attive) >= Toast.MASSIMO_VISIBILI:
+            attive.pop(0).close()
+        toast = Toast(testo, tono, parent=self)
+        self._toast.append(toast)
+        toast.destroyed.connect(lambda _o, t=toast: self._toast.remove(t) if t in self._toast else None)
+        toast.mostra(self)
+
+    def resizeEvent(self, evento) -> None:  # noqa: N802
+        super().resizeEvent(evento)
+        for toast in self._toast:
+            if toast.isVisible():
+                toast.mostra(self)
 
     # ------------------------------------------------------------------
     # report
     # ------------------------------------------------------------------
     def _esporta_pdf(self) -> None:
-        t = tema.tema_attivo()
         try:
             from ..reports import genera_pdf_inventario
         except Exception as errore:  # report non disponibile
@@ -402,3 +559,10 @@ class FinestraPrincipale(QWidget):
         finally:
             sessione.close()
         self._messaggio(f"Report Excel generato: {percorso}")
+
+
+def _icona_schede() -> "object":
+    """Dimensione icona delle schede principali (24 px logici)."""
+    from PySide6.QtCore import QSize
+
+    return QSize(ic_px(16), ic_px(16))

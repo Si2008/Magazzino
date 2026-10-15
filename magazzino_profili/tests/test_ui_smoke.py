@@ -208,7 +208,7 @@ def test_card_kpi_coerenti(qapp, factory, dati) -> None:
     scheda = TabellaPezzi(factory)
     assert scheda.kpi_pezzi._valore.text() == "15"
     assert scheda.kpi_profili._valore.text() == "2"
-    assert scheda.kpi_peso._valore.text() == "112.5 kg"  # (10+5) * 6 m * 1,25 kg/m
+    assert scheda.kpi_peso._valore.text() == "112,5 kg"  # (10+5) * 6 m * 1,25 kg/m (formato italiano)
     assert scheda.kpi_riordino._valore.text() == "1"  # RAL sotto scorta
 
 

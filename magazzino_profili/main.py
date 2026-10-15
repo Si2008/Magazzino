@@ -83,7 +83,7 @@ def main() -> int:
 
     # 5) Finestra principale con i permessi del ruolo.
     finestra = FinestraPrincipale(factory, utente.ruolo, utente.username)
-    finestra.show()
+    finestra.showMaximized()
 
     codice_uscita = app.exec()
     pianificatore.ferma()
