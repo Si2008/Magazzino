@@ -9,7 +9,10 @@ import sys
 from decimal import Decimal
 from pathlib import Path
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+# Default: piattaforma reale (windows), perché la piattaforma "offscreen"
+# di PySide6 su questa macchina non carica NESSUNA famiglia di font (testi
+# a quadretto). "offscreen" resta disponibile forzando QT_QPA_PLATFORM.
+# La finestra NON viene mostrata: usiamo solo widget.grab().
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 

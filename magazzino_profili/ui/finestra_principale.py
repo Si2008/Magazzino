@@ -372,6 +372,8 @@ class FinestraPrincipale(QWidget):
             if nome == "Avvisi":
                 # Avvisi -> "Dettagli": passa all'Inventario sulla scheda colore
                 self.scheda_avvisi.vai_a_colore.connect(self._vai_a_colore_davvisi)
+                # Avvisi -> "Carica": passa al Carico con il barcode compilato
+                self.scheda_avvisi.vai_a_scheda.connect(self._vai_a_scheda)
 
         # Inventario -> Carico/Scarico: "Carica"/"Scarica" compilano il barcode
         if self.scheda_inventario is not None:

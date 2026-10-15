@@ -62,7 +62,16 @@ class SchedaCarico(QWidget):
         card = QFrame(self)
         card.setObjectName("Card")
         card.setFixedWidth(M.SPLIT_SX)
-        v = QVBoxLayout(card)
+        # Il form è alto più dello schermo: come nel mockup (`.main{overflow:auto}`)
+        # il contenuto scorre dentro la card invece di essere compresso.
+        vcard = QVBoxLayout(card)
+        vcard.setContentsMargins(0, 0, 0, 0)
+        scroller = QScrollArea(card)
+        scroller.setObjectName("ScorrimentoCard")
+        scroller.setWidgetResizable(True)
+        scroller.setFrameShape(QFrame.Shape.NoFrame)
+        contenuto = QWidget()
+        v = QVBoxLayout(contenuto)
         v.setContentsMargins(M.CARD_PAD, M.CARD_PAD, M.CARD_PAD, M.CARD_PAD)
         v.setSpacing(M.GAP_SM)
 
@@ -141,6 +150,8 @@ class SchedaCarico(QWidget):
         self.salva = bottone("Salva carico", "ok", "lg", "plus", card)
         self.salva.clicked.connect(self.salva_carico)
         v.addWidget(self.salva)
+        scroller.setWidget(contenuto)
+        vcard.addWidget(scroller)
 
         # ---------------- colonna destra: movimenti recenti ----------------
         lato = QFrame(self)
