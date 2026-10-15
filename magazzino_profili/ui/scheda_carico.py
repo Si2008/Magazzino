@@ -12,53 +12,32 @@ Comportamento:
 
 from __future__ import annotations
 
-import html
-from datetime import datetime
-
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (
     QComboBox,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QMessageBox,
-    QPushButton,
-    QTextEdit,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
-from ..services import consultazione
-from ..services import ProfiloNonTrovatoError, carica
+from ..services import consultazione, carica
+from .componenti import (
+    Anteprima,
+    ListaMovimenti,
+    MessaggioErrore,
+    Stepper,
+    bottone,
+    campo_con_etichetta,
+    chip,
+    divisore,
+)
 from .messaggi import mostra_errore
-from .tema import px, tema_attivo
-
-
-def _etichetta(testo: str, parent: QWidget) -> QLabel:
-    """Etichetta visibile sopra un campo (il testo segnaposto non basta)."""
-    t = tema_attivo()
-    lab = QLabel(testo, parent)
-    lab.setWordWrap(True)
-    lab.setStyleSheet(f"color: {t.testo_dim}; font-size: {px(13)}px; font-weight: 600;")
-    return lab
-
-
-def _con_etichetta(testo: str, widget: QWidget) -> QWidget:
-    contenitore = QWidget()
-    v = QVBoxLayout(contenitore)
-    v.setContentsMargins(0, 0, 0, 0)
-    v.setSpacing(px(4))
-    v.addWidget(_etichetta(testo, contenitore))
-    v.addWidget(widget)
-    return contenitore
-
-
-_TIPO_MOVIMENTO = {
-    "CARICO": ("▲ CARICATO", "ok", "+"),
-    "SCARICO": ("▼ SCARICATO", "pericolo", "−"),
-    "RETTIFICA": ("● RETTIFICA", "avviso", "−"),
-}
+from .tema import M, rem, tema_attivo
 
 
 class SchedaCarico(QWidget):
@@ -75,98 +54,117 @@ class SchedaCarico(QWidget):
         super().__init__(parent)
         self._factory = factory
         self._utente = utente
-        t = tema_attivo()
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(px(14), px(14), px(14), px(14))
-        layout.setSpacing(px(14))
+        radice = QHBoxLayout(self)
+        radice.setContentsMargins(M.PAG_H, M.PAG_T, M.PAG_H, M.PAG_B)
+        radice.setSpacing(M.GAP)
 
-        # ---------------- colonna sinistra: form ----------------
-        form = QWidget(self)
-        vf = QVBoxLayout(form)
-        vf.setContentsMargins(0, 0, 0, 0)
-        vf.setSpacing(px(10))
+        card = QFrame(self)
+        card.setObjectName("Card")
+        card.setFixedWidth(M.SPLIT_SX)
+        v = QVBoxLayout(card)
+        v.setContentsMargins(M.CARD_PAD, M.CARD_PAD, M.CARD_PAD, M.CARD_PAD)
+        v.setSpacing(M.GAP_SM)
 
-        titolo = QLabel("Carico", form)
-        titolo.setStyleSheet(f"font-size: {px(20)}px; font-weight: 800;")
-        vf.addWidget(titolo)
+        titolo = QLabel("Carico merce", card)
+        titolo.setObjectName("TitoloCard")
+        v.addWidget(titolo)
 
-        vf.addWidget(_etichetta("Barcode", form))
-        self.barcode = QLineEdit(form)
-        self.barcode.setPlaceholderText("Scansiona o digita il barcode…")
-        self.barcode.setStyleSheet(
-            f"font-size: {px(17)}px; font-weight: 700; padding: {px(11)} {px(13)};"
+        suggerimento = QLabel(
+            "Scansiona il barcode di un pezzo già presente: i dati si compilano da soli. "
+            "Per un pezzo nuovo inserisci codice, colore e lunghezza a mano.",
+            card,
         )
+        suggerimento.setObjectName("Suggerimento")
+        suggerimento.setWordWrap(True)
+        v.addWidget(suggerimento)
+
+        self.barcode = QLineEdit(card)
+        self.barcode.setProperty("classe", "grande")
+        self.barcode.setPlaceholderText("Scansiona o digita il barcode…")
+        self.barcode.setMinimumHeight(rem(3.0))
         self.barcode.returnPressed.connect(self._su_invio)
         self.barcode.textChanged.connect(self._su_texto_barcode)
-        vf.addWidget(self.barcode)
-        vf.addWidget(_etichetta("Oppure inserisci i dati a mano (per un pezzo nuovo servono codice, colore e lunghezza)", form))
+        v.addWidget(campo_con_etichetta("Barcode", self.barcode, card))
 
-        self.codice = QLineEdit(form)
+        v.addWidget(divisore("oppure inserisci i dati a mano", card))
+
+        self.codice = QLineEdit(card)
         self.codice.setPlaceholderText("Es. AB12")
-        self.colore = QLineEdit(form)
+        self.colore = QLineEdit(card)
         self.colore.setPlaceholderText("Es. AN007")
-        riga_codici = QHBoxLayout()
-        riga_codici.addWidget(_con_etichetta("Codice profilo", self.codice), 1)
-        riga_codici.addWidget(_con_etichetta("Colore", self.colore), 1)
-        vf.addLayout(riga_codici)
+        riga = QHBoxLayout()
+        riga.setSpacing(M.GAP_SM)
+        riga.addWidget(campo_con_etichetta("Codice profilo", self.codice, card), 1)
+        riga.addWidget(campo_con_etichetta("Colore", self.colore, card), 1)
+        v.addLayout(riga)
 
-        self.lunghezza = QLineEdit(form)
+        self.lunghezza = QLineEdit(card)
         self.lunghezza.setPlaceholderText("Es. 6000")
-        self.lunghezza.setValidator(QIntValidator(1, 99_999_999, self))
-        self.quantita = QLineEdit(form)
-        self.quantita.setPlaceholderText("Es. 12")
-        self.quantita.setValidator(QIntValidator(1, 99_999_999, self))
-        self.quantita.setText("1")
-        riga_lung_quant = QHBoxLayout()
-        riga_lung_quant.addWidget(_con_etichetta("Lunghezza (mm)", self.lunghezza), 1)
-        riga_lung_quant.addWidget(_con_etichetta("Quantità (pz)", self.quantita), 1)
-        vf.addLayout(riga_lung_quant)
+        self.lunghezza.setValidator(QIntValidator(1, 99_999_999, card))
+        stepper = Stepper(valore=1, minimo=1, parent=card)
+        self.quantita = stepper.campo  # quantita.text()/setText continuano a funzionare
+        riga_lq = QHBoxLayout()
+        riga_lq.setSpacing(M.GAP_SM)
+        riga_lq.addWidget(campo_con_etichetta("Lunghezza (mm)", self.lunghezza, card), 1)
+        riga_lq.addWidget(campo_con_etichetta("Quantità (pz)", stepper, card), 1)
+        v.addLayout(riga_lq)
 
-        self.ubicazione = QComboBox(form)
+        self.ubicazione = QComboBox(card)
         self.ubicazione.setEditable(True)
         self.ubicazione.setInsertPolicy(QComboBox.NoInsert)
         self.ubicazione.lineEdit().setPlaceholderText("Es. Vassoio 3")
-        self.causale = QLineEdit(form)
+        self.causale = QLineEdit(card)
         self.causale.setPlaceholderText("Es. Arrivo fornitore")
-        riga_ubic_caus = QHBoxLayout()
-        riga_ubic_caus.addWidget(
-            _con_etichetta("Ubicazione (se il pezzo non ne ha una)", self.ubicazione), 1
-        )
-        riga_ubic_caus.addWidget(_con_etichetta("Causale (facoltativa)", self.causale), 1)
-        vf.addLayout(riga_ubic_caus)
+        riga_uc = QHBoxLayout()
+        riga_uc.setSpacing(M.GAP_SM)
+        riga_uc.addWidget(campo_con_etichetta("Ubicazione (se il pezzo non ne ha una)", self.ubicazione, card), 1)
+        riga_uc.addWidget(campo_con_etichetta("Causale (facoltativa)", self.causale, card), 1)
+        v.addLayout(riga_uc)
 
-        vf.addStretch(1)
+        chips = QHBoxLayout()
+        chips.setSpacing(rem(0.375))
+        for nome in ("Arrivo fornitore", "Reso", "Rettifica inventario"):
+            chips.addWidget(chip(nome, self.causale, card))
+        chips.addStretch(1)
+        v.addLayout(chips)
 
-        self.salva = QPushButton("Salva carico", form)
-        self.salva.setProperty("classe", "primario")
-        self.salva.setStyleSheet(f"font-size: {px(15)}px; padding: {px(11)} {px(18)};")
+        self.messaggio = MessaggioErrore(card)
+        v.addWidget(self.messaggio)
+
+        self.anteprima = Anteprima(card)
+        self.anteprima.setText("Compila profilo e colore per vedere l'anteprima della giacenza.")
+        v.addWidget(self.anteprima)
+
+        v.addStretch(1)
+
+        self.salva = bottone("Salva carico", "ok", "lg", "plus", card)
         self.salva.clicked.connect(self.salva_carico)
-        vf.addWidget(self.salva, alignment=Qt.AlignLeft)
+        v.addWidget(self.salva)
 
         # ---------------- colonna destra: movimenti recenti ----------------
-        lato = QWidget(self)
+        lato = QFrame(self)
+        lato.setObjectName("Card")
         vl = QVBoxLayout(lato)
-        vl.setContentsMargins(px(14), px(0), px(0), px(0))
-        vl.setSpacing(px(8))
+        vl.setContentsMargins(M.CARD_PAD, M.CARD_PAD, M.CARD_PAD, M.CARD_PAD)
+        vl.setSpacing(M.GAP_SM)
         titolo_m = QLabel("Ultimi movimenti", lato)
-        titolo_m.setStyleSheet(f"font-size: {px(15)}px; font-weight: 700;")
+        titolo_m.setObjectName("TitoloCard")
         vl.addWidget(titolo_m)
-        self.movimenti = QTextEdit(lato)
-        self.movimenti.setReadOnly(True)
-        self.movimenti.setStyleSheet(
-            f"background: {t.carta}; border: 1px solid {t.bordo}; border-radius: {px(9)}px;"
-        )
-        vl.addWidget(self.movimenti, 1)
+        self.movimenti = ListaMovimenti(lato)
+        area = QScrollArea(lato)
+        area.setWidgetResizable(True)
+        area.setWidget(self.movimenti)
+        vl.addWidget(area, 1)
 
-        layout.addWidget(form, 3)
-        layout.addWidget(lato, 2)
+        radice.addWidget(card)
+        radice.addWidget(lato, 1)
 
         self._popola_ubicazioni()
         self._mostra_movimenti()
         self.barcode.setFocus()
 
-    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------ dati
     def _popola_ubicazioni(self) -> None:
         sessione = self._factory()
         try:
@@ -189,33 +187,13 @@ class SchedaCarico(QWidget):
             movimenti = consultazione.ultimi_movimenti(sessione, limite=12)
         finally:
             sessione.close()
-        t = tema_attivo()
-        righe = []
-        for m in movimenti:
-            etichetta_tipo, variante, segno = _TIPO_MOVIMENTO.get(m.tipo.value, (m.tipo.value, "neutro", ""))
-            colore = {"ok": t.ok, "pericolo": t.pericolo, "avviso": t.avviso}.get(variante, t.testo_dim)
-            data_ora = m.data_ora if isinstance(m.data_ora, datetime) else datetime.fromisoformat(m.data_ora)
-            data = data_ora.strftime("%d/%m %H:%M")
-            righe.append(
-                f'<span style="color:{colore};font-weight:700">{etichetta_tipo}</span> &nbsp; '
-                f'<span style="color:{colore};font-weight:700">{segno} {m.quantita}</span> '
-                f'{html.escape(m.pezzo.profilo.codice)} · {html.escape(m.pezzo.colore.nome_visualizzato)} · {m.pezzo.lunghezza_mm} mm<br>'
-                f'<span style="color:{t.testo_debole};font-size:{px(12.5)}px">'
-                f'{html.escape(data)} · {html.escape(m.utente or "")} · {html.escape(m.causale or "")}</span>'
-            )
-        if righe:
-            self.movimenti.setHtml("<br>".join(righe))
-        else:
-            self.movimenti.setHtml(f'<span style="color:{t.testo_debole}">Nessun movimento</span>')
+        self.movimenti.imposta(movimenti)
 
-    # ------------------------------------------------------------------
-    # scansione
-    # ------------------------------------------------------------------
-    def _su_texto_barcode(self, testo: str) -> None:
+    # ------------------------------------------------------------------ scansione
+    def _su_texto_barcode(self, _testo: str) -> None:
         """Lo scanner "digita" il barcode: compila i campi appena leggibile."""
-        if self._compila_dal_barcode(testo):
-            # non toccare il focus: lo scanner può continuare a scrivere
-            pass
+        self._compila_dal_barcode(self.barcode.text())
+        self._aggiorna_anteprima()
 
     def _su_invio(self) -> None:
         """Invio sul campo barcode: salva se i campi sono già compilati."""
@@ -261,19 +239,63 @@ class SchedaCarico(QWidget):
             self.quantita.setText("1")
         return True
 
-    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------ anteprima
+    def _aggiorna_anteprima(self) -> None:
+        """Anteprima della giacenza dopo il carico (senza scrivere nulla)."""
+        codice = self.codice.text().strip().upper()
+        colore = self.colore.text().strip().upper()
+        if not (codice and colore):
+            self.anteprima.setText("Compila profilo e colore per vedere l'anteprima della giacenza.")
+            return
+        try:
+            lunghezza = int(self.lunghezza.text())
+        except ValueError:
+            lunghezza = 0
+        if lunghezza <= 0:
+            self.anteprima.setText("Compila profilo e colore per vedere l'anteprima della giacenza.")
+            return
+        try:
+            quantita = int(self.quantita.text())
+        except ValueError:
+            quantita = 0
+        quantita = max(0, quantita)
+        sessione = self._factory()
+        try:
+            pezzo = consultazione.pezzo_per_combinazione(sessione, codice, colore, lunghezza)
+        finally:
+            sessione.close()
+        flusso = f'<div style="font-size:{M.FONT_FLUSSO}px;font-weight:700">'
+        riga_id = f"{codice} · {colore} · {self._numero_it(lunghezza)} mm"
+        if pezzo is not None:
+            self.anteprima.setText(
+                f"Giacenza di <b>{riga_id}</b>"
+                f"{flusso}{self._numero_it(pezzo.quantita)} → "
+                f"{self._numero_it(pezzo.quantita + quantita)} pezzi</div>"
+            )
+        else:
+            self.anteprima.setText(
+                f"<b>{riga_id}</b> — combinazione nuova"
+                f"{flusso}0 → {self._numero_it(quantita)} pezzi</div>"
+            )
+
+    @staticmethod
+    def _numero_it(n: int) -> str:
+        s = f"{n:,}".replace(",", ".")
+        return s
+
+    # ------------------------------------------------------------------ salvataggio
     def salva_carico(self) -> None:
         if not self._campi_compilati():
-            QMessageBox.warning(self, "Carico", "Compila codice, colore e lunghezza.")
+            self.messaggio.mostra("Compila codice, colore e lunghezza.")
             return
         try:
             quantita = int(self.quantita.text() or 0)
             lunghezza = int(self.lunghezza.text() or 0)
         except ValueError:
-            QMessageBox.warning(self, "Carico", "Lunghezza o quantità non valide.")
+            self.messaggio.mostra("Lunghezza o quantità non valide.")
             return
         if quantita <= 0 or lunghezza <= 0:
-            QMessageBox.warning(self, "Carico", "Lunghezza e quantità devono essere maggiori di zero.")
+            self.messaggio.mostra("Lunghezza e quantità devono essere maggiori di zero.")
             return
 
         ubicazione = self.ubicazione.currentText().strip()
@@ -298,6 +320,12 @@ class SchedaCarico(QWidget):
             mostra_errore(self, "Carico", errore, "Il carico")
             return
 
+        self._azzera_form()
+        self._popola_ubicazioni()
+        self._mostra_movimenti()
+        self.cambiato.emit()
+
+    def _azzera_form(self) -> None:
         self.barcode.clear()
         self.codice.clear()
         self.colore.clear()
@@ -306,6 +334,5 @@ class SchedaCarico(QWidget):
         self.ubicazione.setCurrentIndex(-1)
         self.ubicazione.setEditText("")
         self.causale.clear()
-        self._popola_ubicazioni()
-        self._mostra_movimenti()
-        self.cambiato.emit()
+        self.messaggio.mostra("")
+        self._aggiorna_anteprima()

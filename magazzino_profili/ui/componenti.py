@@ -482,6 +482,7 @@ class ListaMovimenti(QWidget):
         lab_t.setObjectName("MovTitolo")
         lab_s = QLabel(sottotitolo, riga)
         lab_s.setObjectName("MovSotto")
+        lab_s.setTextFormat(Qt.TextFormat.PlainText)  # la causale va mostrata come testo
         colonna.addWidget(lab_t)
         colonna.addWidget(lab_s)
         h.addLayout(colonna, 1)
@@ -505,7 +506,8 @@ class ListaMovimenti(QWidget):
         destra.addWidget(lab_o)
         h.addLayout(destra)
 
-        self._testi.append(f"{etichetta} {segno} {m.quantita} — {titolo}")
+        causale = m.causale or ""
+        self._testi.append(f"{etichetta} {segno} {m.quantita} — {titolo}" + (f" · {causale}" if causale else ""))
         return riga
 
 

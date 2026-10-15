@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 import sys
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, SignalInstance
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -335,15 +335,21 @@ class FinestraPrincipale(QWidget):
             self.scheda_inventario = None
 
         def _collega_cambiato(scheda) -> None:
+            # ``messaggio`` è un segnale solo dove esiste come SignalInstance
+            # (nelle nuove schede è un widget MessaggioErrore, non un segnale).
+            def _segnale_messaggio() -> bool:
+                attr = getattr(scheda, "messaggio", None)
+                return isinstance(attr, SignalInstance)
+
             if not hasattr(scheda, "cambiato") or scheda is self.scheda_avvisi:
-                if hasattr(scheda, "messaggio"):
+                if _segnale_messaggio():
                     scheda.messaggio.connect(self.mostra_toast)
                 return
             if self.scheda_inventario is not None:
                 scheda.cambiato.connect(self.scheda_inventario.aggiorna)
             if self.scheda_avvisi is not None:
                 scheda.cambiato.connect(self.scheda_avvisi.aggiorna)
-            if hasattr(scheda, "messaggio"):
+            if _segnale_messaggio():
                 scheda.messaggio.connect(self.mostra_toast)
 
         if "Carico" in consentite:
