@@ -46,7 +46,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..services import consultazione
-from . import tema
+from . import animazioni, tema
 from .tema import M, colore_di_codice, rem, tema_attivo
 from .icone import ic_px, icona_svg, pixmap_icona
 from .componenti import (
@@ -110,7 +110,9 @@ class DelegatoProfilo(QStyledItemDelegate):
             painter.fillRect(option.rect, QColor(t.accento_vel))
             painter.fillRect(option.rect.x(), option.rect.y(), 3, option.rect.height(), QColor(t.accento))
 
-        riga = option.rect
+        riga = option.rect.adjusted(M.TD_PH, 0, -M.TD_PH // 2, 0)  # stesso padding delle altre colonne
+        painter.setPen(QColor(t.bordo))
+        painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())  # linea di riga come QSS ::item
         fm = painter.fontMetrics()
         if descrizione:
             y = riga.y() + max(0, (riga.height() - fm.height() * 2) // 2)
@@ -118,16 +120,17 @@ class DelegatoProfilo(QStyledItemDelegate):
             f.setBold(True)
             painter.setFont(f)
             painter.setPen(QColor(t.testo))
-            painter.drawText(riga.x() + 1, y, riga.width() - 2, fm.height(),
+            painter.drawText(riga.x(), y, riga.width(), fm.height(),
                              int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-                             codice)
+                             fm.elidedText(codice, Qt.TextElideMode.ElideRight, riga.width()))
             painter.setPen(QColor(t.testo_dim))
             f.setBold(False)
             f.setPixelSize(M.FONT_SMALL)
             painter.setFont(f)
-            painter.drawText(riga.x() + 1, y + fm.height() + 1, riga.width() - 2, fm.height(),
+            fm2 = painter.fontMetrics()
+            painter.drawText(riga.x(), y + fm.height() + 1, riga.width(), fm.height(),
                              int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
-                             descrizione)
+                             fm2.elidedText(descrizione, Qt.TextElideMode.ElideRight, riga.width()))
         else:
             painter.setPen(QColor(t.testo))
             f = painter.font()
@@ -149,16 +152,18 @@ class DelegatoColore(QStyledItemDelegate):
         hx = colore_di_codice(codice) if codice else t.testo_dim
         if option.state & QStyle.StateFlag.State_Selected:
             painter.fillRect(option.rect, QColor(t.accento_vel))
+        painter.setPen(QColor(t.bordo))
+        painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
         d = int(M.PILL_PUNTO) + ic_px(1)
-        cx = option.rect.x() + 2
+        cx = option.rect.x() + M.TD_PH
         cy = option.rect.y() + option.rect.height() // 2 - d // 2
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)  # noqa
-        painter.setPen(QPen(QColor(t.bordo_forte), 1))
+        painter.setPen(QPen(QColor(t.bordo_campo), 1))
         painter.setBrush(QColor(hx))
         painter.drawEllipse(cx, cy, d, d)
         painter.setPen(QColor(t.testo))
         painter.drawText(
-            option.rect.adjusted(int(d + rem(0.5)), 0, -2, 0),
+            option.rect.adjusted(int(M.TD_PH + d + rem(0.5)), 0, -2, 0),
             int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter),
             nome,
         )
@@ -234,11 +239,12 @@ class TabellaPezzi(QWidget):
             self.combo_stato.setCurrentIndex(i)
 
     def _aggiorna_kpi(self, r: dict) -> None:
-        self.kpi_pezzi.set_valore(f"{int(r['pezzi_totali']):,}")
-        self.kpi_profili.set_valore(f"{int(r['referenze']):,}")
-        self.kpi_peso.set_valore(_testo_peso(r["peso_kg"] or 0))
+        # i numeri "salgono" dal valore precedente (a fine corsa il testo è esattamente quello di prima)
+        animazioni.conta_su(self.kpi_pezzi, int(r["pezzi_totali"]), lambda v: f"{int(v):,}")
+        animazioni.conta_su(self.kpi_profili, int(r["referenze"]), lambda v: f"{int(v):,}")
+        animazioni.conta_su(self.kpi_peso, float(r["peso_kg"] or 0), _testo_peso)
         n_riordino = int(r["da_riordinare"])
-        self.kpi_riordino.set_valore(f"{n_riordino:,}")
+        animazioni.conta_su(self.kpi_riordino, n_riordino, lambda v: f"{int(v):,}")
         if n_riordino > 0:
             self.kpi_riordino.set_tono("bad", "alert")
             self.kpi_riordino.set_etichetta("Da riordinare")
@@ -325,6 +331,12 @@ class TabellaPezzi(QWidget):
         self.azzera = bottone("Azzera", icona="refresh", parent=barra)
         self.azzera.clicked.connect(self._azzera_filtri)
         h.addWidget(self.azzera)
+        # i filtri si accorciano invece di sovrapporsi alla ricerca quando la card è stretta
+        for combo in (self.combo_profilo, self.combo_ubicazione, self.combo_stato):
+            combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+            combo.setMinimumContentsLength(11)
+            combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.cerca.setMinimumWidth(rem(10))
 
         v.addWidget(barra)
         v.addWidget(self._costruisci_tabella(), 1)
@@ -368,7 +380,13 @@ class TabellaPezzi(QWidget):
         header = tab.horizontalHeader()
         header.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setStretchLastSection(True)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Profilo assorbe lo spazio
+        header.setMinimumSectionSize(rem(3))
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
+        # larghezza = pillola più lunga ("Sotto scorta") + margini della cella, qualunque sia il font
+        tab.setColumnWidth(7, Pillola("Sotto scorta", "pericolo").sizeHint().width() + 2 * rem(0.375) + M.TD_PH)
+        tab.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         tab.setItemDelegateForColumn(1, DelegatoProfilo(tab))
         tab.setItemDelegateForColumn(_COLORE, DelegatoColore(tab))
         tab.itemSelectionChanged.connect(self._su_selezione)
@@ -552,7 +570,8 @@ class TabellaPezzi(QWidget):
         sotto = QLabel("Scegli una riga per vedere barcode, peso e movimenti.", s)
         sotto.setObjectName("Dim")
         sotto.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        v.addWidget(sotto, 0, Qt.AlignmentFlag.AlignHCenter)
+        sotto.setWordWrap(True)
+        v.addWidget(sotto)
         self._pannello_l.addWidget(s)
 
     def _sezione_movimenti(self, titolo: str, pezzo_id: int | None, limite: int) -> None:
@@ -784,6 +803,7 @@ class TabellaPezzi(QWidget):
         else:
             self._barcode_selezionato = None
         self._sezioni_laterali()
+        animazioni.dissolvenza(self._pannello, animazioni.DURATA_BREVE)
 
     def _azzera_filtri(self) -> None:
         self.cerca.clear()

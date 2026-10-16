@@ -21,6 +21,7 @@ import sys
 from PySide6.QtCore import Qt, SignalInstance
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QFrame,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -34,7 +35,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..sicurezza import Ruolo, autentica, schede_consenti as _schede_ruolo
-from . import tema
+from . import animazioni, tema
 from .tema import M, tema_attivo
 from .icone import ic_px, icona_svg, pixmap_icona
 from .avvisi import SchedaAvvisi
@@ -210,6 +211,9 @@ class FinestraPrincipale(QWidget):
         self._tab.tabBar().setDrawBase(False)
         self._tab.setIconSize(_icona_schede())
         self._tab.currentChanged.connect(self._aggiorna_icone_schede)
+        self._tab.currentChanged.connect(
+            lambda i: animazioni.dissolvenza(self._tab.widget(i), animazioni.DURATA_BREVE)
+        )
         self._radice.addWidget(self._tab, 1)
 
         self._costruisci_barra_stato()
@@ -268,6 +272,12 @@ class FinestraPrincipale(QWidget):
         self._azione_pdf.triggered.connect(self._esporta_pdf)
         menu.addAction(self._azione_excel)
         menu.addAction(self._azione_pdf)
+        menu.addSeparator()
+        self._azione_animazioni = QAction("Animazioni di transizione", menu)
+        self._azione_animazioni.setCheckable(True)
+        self._azione_animazioni.setChecked(animazioni.attive())
+        self._azione_animazioni.toggled.connect(lambda v: animazioni.imposta_attive(v))
+        menu.addAction(self._azione_animazioni)
         self.puls_report.setMenu(menu)
         h.addWidget(self.puls_report)
 
@@ -286,7 +296,7 @@ class FinestraPrincipale(QWidget):
     # ------------------------------------------------------------------
     def _costruisci_barra_stato(self) -> None:
         t = tema_attivo()
-        barra = QWidget(self)
+        barra = QFrame(self)
         barra.setObjectName("Statusbar")
         h = QHBoxLayout(barra)
         h.setContentsMargins(M.STATO_PH, M.STATO_PV, M.STATO_PH, M.STATO_PV)
@@ -426,9 +436,13 @@ class FinestraPrincipale(QWidget):
 
         app = QApplication.instance()
         if app is not None:
+            app.setPalette(tema.palette_tema(tema_attivo()))
             app.setStyleSheet(tema.qss_globale(tema_attivo()))
 
     def _cambia_tema(self) -> None:
+        animazioni.transizione_tema(self, self._esegui_cambio_tema)
+
+    def _esegui_cambio_tema(self) -> None:
         tema.alterna_tema()
         self._applica_tema()
         # ricostruisce barra del titolo, schede e barra di stato (i colori
@@ -506,6 +520,7 @@ class FinestraPrincipale(QWidget):
         self._toast.append(toast)
         toast.destroyed.connect(lambda _o, t=toast: self._toast.remove(t) if t in self._toast else None)
         toast.mostra(self)
+        toast.entra()
 
     def resizeEvent(self, evento) -> None:  # noqa: N802
         super().resizeEvent(evento)

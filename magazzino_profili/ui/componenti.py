@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from . import animazioni
 from .icone import ic_px, icona_svg, pixmap_icona
 from .tema import M, alfa, colore_da_css, colore_di_codice, colore_sbiadito, px, rem, tema_attivo
 
@@ -54,7 +55,7 @@ def _disegna_pallino(hx: str, d: int) -> QPixmap:
     grad.setColorAt(0.0, corpo.lighter(125))
     grad.setColorAt(1.0, corpo.darker(120))
     p.setBrush(grad)
-    p.setPen(QPen(QColor(t.bordo_forte), float(max(1, d // 16))))
+    p.setPen(QPen(QColor(t.bordo_campo), float(max(1, d // 16))))
     margine = max(1, d // 16)
     p.drawEllipse(margine, margine, d - 2 * margine, d - 2 * margine)
     # riflesso
@@ -158,11 +159,15 @@ class Pillola(QLabel):
         self.setObjectName("Pillola")
         self._variante = variante
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+
+    def _font(self) -> QFont:
+        """Font proprio della pillola. NON usare self.font(): il QSS globale `QWidget{font-size}` lo
+        sovrascrive DOPO sizeHint() e il testo risulterebbe più largo della pillola (tagliato)."""
         f = QFont(self.font())
         f.setPixelSize(M.FONT_XS)
         f.setWeight(QFont.Weight.DemiBold)
-        self.setFont(f)
-        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        return f
 
     def _colori(self) -> tuple[QColor, QColor]:
         t = tema_attivo()
@@ -174,7 +179,7 @@ class Pillola(QLabel):
         return QColor(primo), colore_da_css(velo)
 
     def sizeHint(self) -> QSize:
-        fm = QFontMetrics(self.font())
+        fm = QFontMetrics(self._font())
         larghezza = M.PILL_PH + M.PILL_PUNTO + rem(0.375) + fm.horizontalAdvance(self.text()) + M.PILL_PH
         return QSize(larghezza, fm.height() + 2 * M.PILL_PV)
 
@@ -193,7 +198,7 @@ class Pillola(QLabel):
         p.setBrush(primo)
         p.drawEllipse(QPointF(M.PILL_PH + d / 2, r.height() / 2), d / 2, d / 2)
         p.setPen(primo)
-        p.setFont(self.font())
+        p.setFont(self._font())
         testo = QRectF(M.PILL_PH + d + rem(0.375), 0, r.width(), r.height())
         p.drawText(testo, int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft), self.text())
         p.end()
@@ -333,8 +338,14 @@ class MessaggioErrore(QFrame):
         self.hide()
 
     def mostra(self, testo: str) -> None:
+        era_visibile = self.isVisible()
         self._testo.setText(testo)
         self.setVisible(bool(testo))
+        if testo:
+            if not era_visibile:
+                animazioni.dissolvenza(self, animazioni.DURATA_BREVE)
+            # dopo che il layout si è assestato, altrimenti la posizione di partenza è sbagliata
+            QTimer.singleShot(0, lambda: animazioni.scuoti(self) if self.isVisible() else None)
 
     def text(self) -> str:
         return self._testo.text()
@@ -543,7 +554,7 @@ class Toast(QFrame):
         chiudi.setIcon(icona_svg("x", t.testo_dim, ic_px(12)))
         chiudi.setIconSize(QSize(ic_px(12), ic_px(12)))
         chiudi.setFixedSize(M.STEP_BTN, M.STEP_BTN)
-        chiudi.clicked.connect(self.close)
+        chiudi.clicked.connect(self.chiudi)
         riga.addWidget(chiudi, 0, Qt.AlignmentFlag.AlignVCenter)
         self.setMaximumWidth(M.TOAST_MAXW)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -558,4 +569,14 @@ class Toast(QFrame):
         y = finestra.height() - M.TOAST_BASSO - self.height()
         self.move(max(0, x), max(0, y))
         self.show()
-        QTimer.singleShot(self.DURATA_MS, self.close)
+        QTimer.singleShot(self.DURATA_MS, self.chiudi)
+
+    def entra(self) -> None:
+        """Ingresso animato (solo alla prima comparsa: ``mostra`` viene richiamato anche al resize)."""
+        animazioni.entra_da_destra(self)
+
+    def chiudi(self) -> None:
+        try:
+            animazioni.esci_e_chiudi(self)
+        except RuntimeError:  # widget già distrutto (timer scaduto dopo una chiusura manuale)
+            pass

@@ -130,6 +130,7 @@ class Tema:
     carta2: str
     bordo: str
     bordo_forte: str
+    bordo_campo: str  # bordo di campi/pulsanti: contrasto >= 3:1 (WCAG 1.4.11)
     testo: str
     testo_dim: str
     testo_debole: str
@@ -155,21 +156,22 @@ SCURO = Tema(
     carta2="#252a35",
     bordo="#2c323e",
     bordo_forte="#3b4354",
+    bordo_campo="#6a748a",
     testo="#eceef2",
     testo_dim="#9ba3b1",
-    testo_debole="#6f7787",
+    testo_debole="#8d97ab",
     accento="#5b8dff",
     accento_sfondo="#243350",
     ok="#3ccb82",
     avviso="#f0b04a",
-    pericolo="#f0605a",
+    pericolo="#f47a74",
     accento_inchiostro="#0b1633",
     ok_inchiostro="#06261a",
     pericolo_inchiostro="#2c0a08",
     accento_vel="rgba(91, 141, 255, 36)",
     ok_vel="rgba(60, 203, 130, 36)",
     avviso_vel="rgba(240, 176, 74, 38)",
-    pericolo_vel="rgba(240, 96, 90, 36)",
+    pericolo_vel="rgba(244, 122, 116, 36)",
 )
 
 CHIARO = Tema(
@@ -179,19 +181,20 @@ CHIARO = Tema(
     carta2="#f1f3f8",
     bordo="#dde1ea",
     bordo_forte="#c6ccda",
+    bordo_campo="#7d889d",
     testo="#161a22",
     testo_dim="#556073",
-    testo_debole="#7b8698",
+    testo_debole="#5d6a7d",
     accento="#2b62e0",
     accento_sfondo="#e3ebfc",
-    ok="#168a53",
-    avviso="#9c6200",
+    ok="#117a48",
+    avviso="#8f5900",
     pericolo="#c43832",
     accento_inchiostro="#ffffff",
     ok_inchiostro="#ffffff",
     pericolo_inchiostro="#ffffff",
     accento_vel="rgba(43, 98, 224, 26)",
-    ok_vel="rgba(22, 138, 83, 28)",
+    ok_vel="rgba(17, 122, 72, 28)",
     avviso_vel="rgba(201, 125, 0, 36)",
     pericolo_vel="rgba(196, 56, 50, 26)",
 )
@@ -276,6 +279,24 @@ def schiarisci(hx: str, percento: int = 108) -> str:
     return QColor(hx).lighter(percento).name()
 
 
+def palette_tema(t: Tema):
+    """QPalette coerente col tema: i widget senza regola QSS (viewport di QScrollArea, finestre di
+    sistema, dialoghi nativi) non devono ricadere sui grigi chiari di default."""
+    from PySide6.QtGui import QPalette
+
+    p = QPalette()
+    R = QPalette.ColorRole
+    for ruolo, colore in (
+        (R.Window, t.sfondo), (R.WindowText, t.testo), (R.Base, t.superficie),
+        (R.AlternateBase, t.carta2), (R.Text, t.testo), (R.Button, t.carta2),
+        (R.ButtonText, t.testo), (R.ToolTipBase, t.carta2), (R.ToolTipText, t.testo),
+        (R.Highlight, t.accento), (R.HighlightedText, t.accento_inchiostro),
+        (R.PlaceholderText, t.testo_dim), (R.Link, t.accento),
+    ):
+        p.setColor(ruolo, colore_da_css(colore))
+    return p
+
+
 def qss_globale(t: Tema) -> str:
     """Foglio di stile globale. Le misure vengono SOLO da ``M`` (mockup, rem x 24)."""
     from .icone import percorso_icona_png
@@ -313,14 +334,14 @@ QTabBar#TabPrincipali::tab {{
 QTabBar#TabPrincipali::tab:selected {{ background: {t.superficie}; color: {t.testo}; border-color: {t.bordo}; }}
 QTabBar#TabPrincipali::tab:hover:!selected {{ color: {t.testo}; }}
 QLabel#Conta {{
-    background: {t.pericolo}; color: #ffffff; font-size: {M.FONT_CONTA}px; font-weight: 700;
+    background: {t.pericolo}; color: {t.pericolo_inchiostro}; font-size: {M.FONT_CONTA}px; font-weight: 700;
     border-radius: {M.CONTA // 2}px; min-width: {M.CONTA}px; max-height: {M.CONTA}px; min-height: {M.CONTA}px;
     padding: 0 {rem(0.375)}px;
 }}
 
 /* ---------- schede colore (chip) dell'Inventario ---------- */
 QTabBar#TabColori::tab {{
-    background: {t.carta2}; color: {t.testo_dim}; border: 1px solid {t.bordo};
+    background: {t.carta2}; color: {t.testo_dim}; border: 1px solid {t.bordo_campo};
     border-radius: {M.CHIP_R}px;
     padding: {M.CHIP_PV}px {M.CHIP_PH}px; margin: 0 {rem(0.375)}px 0 0;
     font-size: {M.FONT_SMALL}px; font-weight: 400;
@@ -394,7 +415,7 @@ QFrame#Toast QLabel {{ font-weight: 600; }}
 
 /* ---------- campi ---------- */
 QLineEdit, QComboBox, QSpinBox {{
-    background: {t.superficie}; border: 1px solid {t.bordo}; border-radius: {M.R_SM}px;
+    background: {t.superficie}; border: 1px solid {t.bordo_campo}; border-radius: {M.R_SM}px;
     padding: {M.CAMPO_PV}px {M.CAMPO_PH}px; selection-background-color: {t.accento_vel}; selection-color: {t.testo};
 }}
 QLineEdit:focus, QComboBox:focus {{ border-color: {t.accento}; }}
@@ -416,7 +437,7 @@ QComboBox QAbstractItemView {{
 
 /* ---------- pulsanti ---------- */
 QPushButton {{
-    background: {t.carta2}; border: 1px solid {t.bordo}; color: {t.testo}; border-radius: {M.R_SM}px;
+    background: {t.carta2}; border: 1px solid {t.bordo_campo}; color: {t.testo}; border-radius: {M.R_SM}px;
     padding: {M.BTN_PV}px {M.BTN_PH}px; font-weight: 600; font-size: {M.FONT_BTN}px;
 }}
 QPushButton:hover {{ border-color: {t.accento}; }}
@@ -434,11 +455,11 @@ QPushButton[classe="primario"]:disabled, QPushButton[classe="ok"]:disabled, QPus
     background: {t.carta2}; color: {t.testo_debole}; border-color: {t.bordo};
 }}
 QPushButton[classe="chip"] {{
-    background: {t.carta2}; border: 1px solid {t.bordo}; color: {t.testo_dim}; font-size: {M.FONT_SMALL}px; font-weight: 400;
+    background: {t.carta2}; border: 1px solid {t.bordo_campo}; color: {t.testo_dim}; font-size: {M.FONT_SMALL}px; font-weight: 400;
     border-radius: {M.CHIP_R}px; padding: {M.CHIP_PV}px {M.CHIP_PH}px;
 }}
 QPushButton[classe="chip"]:hover {{ border-color: {t.accento}; color: {t.testo}; }}
-QPushButton[classe="stepper"] {{ background: {t.carta2}; border: 1px solid {t.bordo}; border-radius: 0; padding: 0; }}
+QPushButton[classe="stepper"] {{ background: {t.carta2}; border: 1px solid {t.bordo_campo}; border-radius: 0; padding: 0; }}
 QPushButton[classe="stepper"][lato="sx"] {{ border-top-left-radius: {M.R_SM}px; border-bottom-left-radius: {M.R_SM}px; }}
 QPushButton[classe="stepper"][lato="dx"] {{ border-top-right-radius: {M.R_SM}px; border-bottom-right-radius: {M.R_SM}px; }}
 QPushButton::menu-indicator {{
@@ -465,7 +486,7 @@ QHeaderView::section {{
 }}
 QTableCornerButton::section {{ background: {t.carta}; border: none; }}
 
-QScrollArea {{ background: transparent; border: none; }}
+QScrollArea, QScrollArea > QWidget, QScrollArea > QWidget > QWidget {{ background: transparent; border: none; }}
 QScrollBar:vertical {{ background: transparent; width: {rem(0.5)}px; margin: 0; }}
 QScrollBar::handle:vertical {{ background: {t.bordo_forte}; border-radius: {rem(0.25)}px; min-height: {rem(1.25)}px; }}
 QScrollBar::handle:vertical:hover {{ background: {t.testo_debole}; }}

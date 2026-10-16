@@ -9,6 +9,12 @@ import sys
 from decimal import Decimal
 from pathlib import Path
 
+# Gli screenshot non devono dipendere dallo stato delle animazioni:
+# la dissolvenza delle schede (Fase 6) parte con opacità 0 e un grab()
+# immediato produrrebbe schede vuote. MAGAZZINO_NO_ANIM=1 rende tutte le
+# transizioni di animazioni.py NO-OP (stato finale identico, senza timer).
+os.environ["MAGAZZINO_NO_ANIM"] = "1"
+
 # Default: piattaforma reale (windows), perché la piattaforma "offscreen"
 # di PySide6 su questa macchina non carica NESSUNA famiglia di font (testi
 # a quadretto). "offscreen" resta disponibile forzando QT_QPA_PLATFORM.
@@ -80,7 +86,11 @@ def main(prefisso: str) -> None:
     for tema_nome in ("scuro", "chiaro"):
         scuro_ora = tema.tema_attivo().sfondo in ("#12141a", "#16181d")
         if (tema_nome == "scuro") != scuro_ora:
-            tema.alterna_tema()
+            # DEVE essere _cambia_tema(): tema.alterna_tema() solo cambia i token
+            # senza riapplicare QSS/palette, e produce screenshot "chiaro" sbagliati.
+            # Finestra non mostrata => transizione_tema() esegue _esegui_cambio_tema() subito.
+            finestra._cambia_tema()
+            app.processEvents()
         for idx in range(min(5, finestra._tab.count())):
             finestra._tab.setCurrentIndex(idx)
             finestra.resize(1700, 1000)

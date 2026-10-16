@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from ..services import consultazione
 from .componenti import bottone
+from . import animazioni
 from .icone import ic_px, pixmap_icona
 from .tema import M, rem, tema_attivo
 
@@ -33,6 +34,8 @@ class _MeterBarra(QFrame):
         self.setObjectName("MeterBarra")
         self.setProperty("gravita", gravita)
         self._frazione = max(0.0, min(1.0, frazione))
+        self._frazione_finale = self._frazione
+        self._animata = False
         self.setFixedHeight(M.METER_H)
         self.setMaximumWidth(M.METER_MAXW)
         self.style().unpolish(self)
@@ -41,6 +44,16 @@ class _MeterBarra(QFrame):
     def _aggiorna(self) -> None:
         sfondo_larghezza = self.parent().width() if self.parent() else self.width()
         self.setFixedWidth(int(round(sfondo_larghezza * self._frazione)))
+
+    def _imposta(self, v: float) -> None:
+        self._frazione = v
+        self._aggiorna()
+
+    def showEvent(self, evento) -> None:  # noqa: N802
+        super().showEvent(evento)
+        if not self._animata:  # la barra "cresce" solo alla prima comparsa
+            self._animata = True
+            animazioni.anima_valore(0.0, self._frazione_finale, self._imposta, animazioni.DURATA_LUNGA, ritardo=120)
 
     def resizeEvent(self, _evento) -> None:  # noqa: N802
         self._aggiorna()
@@ -166,6 +179,7 @@ class SchedaAvvisi(QWidget):
         self._v_corpo.setSpacing(M.GAP_SM)
         area = QScrollArea(self)
         area.setWidgetResizable(True)
+        area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         area.setContentsMargins(0, 0, 0, 0)
         area.setWidget(self._corpo)
         root.addWidget(area, 1)
@@ -191,6 +205,7 @@ class SchedaAvvisi(QWidget):
         vv.addWidget(lab_s)
         vv.addStretch(1)
         self._v_corpo.addWidget(self._vuoto)
+        self._v_corpo.addStretch(1)  # le righe NON devono allungarsi a tutta l'altezza
 
         self.aggiorna()
 
@@ -217,7 +232,7 @@ class SchedaAvvisi(QWidget):
 
         for z in lista:
             riga = _riga_avviso(z, self, self._corpo)
-            self._v_corpo.addWidget(riga)
+            self._v_corpo.insertWidget(self._v_corpo.count() - 1, riga)  # prima dello stretch
 
         n = len(lista)
         self._vuoto.setVisible(n == 0)
