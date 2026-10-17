@@ -20,8 +20,10 @@ from magazzino_profili.services.consultazione import (
     lista_pezzi,
     lista_profili_con_giacenza,
     lista_ubicazioni,
+    livello_scorta,
     pezzo_per_barcode,
     pezzo_per_combinazione,
+    pezzi_avvisi,
     pezzi_da_riordinare,
     pezzi_sotto_scora,
     peso_totale_kg,
@@ -390,6 +392,107 @@ def test_pezzi_da_riordinare_ordine(factory, con_dati):
     lista = pezzi_da_riordinare(sessione)
     assert [z.barcode for z in lista] == ["AB12-ROSSO-4000", "AB12-ROSSO-5000"]  # giacenza crescente
     assert all(z.id != ok.id for z in lista)
+    sessione.close()
+
+
+# ----------------------------------------------------------------------
+# Fase 7A: soglia globale, livello "esaurimento" e pezzi_avvisi
+# ----------------------------------------------------------------------
+def _pezzo(factory, barcode, quantita, scorta_minima=None) -> Pezzo:
+    """Crea un pezzo (profilo + colore + giacenza) e restituisce l'istanza."""
+    sessione = factory()
+    from sqlalchemy import select
+    profilo = sessione.scalars(select(Profilo).limit(1)).first()
+    colore = sessione.scalars(select(Colore).limit(1)).first()
+    if profilo is None:
+        profilo = Profilo(
+            codice="AB12", descrizione="Profilo di prova",
+            peso_kg_per_metro=Decimal("1.0"), lunghezza_standard_mm=6000,
+        )
+        sessione.add(profilo)
+    if colore is None:
+        colore = Colore(codice_normalizzato="ROSSO", nome_visualizzato="Rosso")
+        sessione.add(colore)
+    sessione.flush()
+    lunghezza = int(barcode.rsplit('-', 1)[1])  # il barcode termina con la lunghezza
+    z = Pezzo(
+        profilo=profilo, colore=colore, lunghezza_mm=lunghezza,
+        quantita=quantita, scorta_minima=scorta_minima, barcode=barcode,
+    )
+    sessione.add(z)
+    sessione.commit()
+    sessione.close()
+    return z
+
+
+def test_stato_scorta_soglia_globale_pezzo_senza_scora(factory):
+    """Pezzo senza scorta_minima: 'fino a N pezzi' con la soglia globale."""
+    z = _pezzo(factory, "AB12-ROSSO-6000", 5)
+    assert stato_scorta(z, 5) == "sotto"  # 5 <= 5
+    assert stato_scorta(z, 4) == "ok"  # 5 > 4
+    assert stato_scorta(z, 6) == "sotto"  # 5 <= 6
+    z6 = _pezzo(factory, "AB12-ROSSO-6006", 6)
+    assert stato_scorta(z6, 5) == "ok"  # 6 > 5
+
+
+def test_stato_scorta_senza_soglia_comportamento_storico(factory):
+    """Senza soglia globale il pezzo senza scorta_minima resta 'ok' (come prima)."""
+    z = _pezzo(factory, "AB12-ROSSO-5000", 3)
+    assert stato_scorta(z) == "ok"
+
+
+def test_stato_scorta_scora_minima_ha_priorita(factory):
+    """scorta_minima presente: '<' resta stretto, la soglia globale non conta."""
+    z = _pezzo(factory, "AB12-ROSSO-4000", 10, scorta_minima=10)
+    assert stato_scorta(z, 5) == "ok"  # 10 < 10 falso, la soglia 5 non vale
+    z2 = _pezzo(factory, "AB12-ROSSO-3000", 9, scorta_minima=10)
+    assert stato_scorta(z2, 5) == "sotto"  # 9 < 10
+
+
+def test_livello_scorta_esaurimento(factory):
+    """Soglia 5: giacenza 6..15 = 'esaurimento', da 16 = 'ok'."""
+    z = _pezzo(factory, "AB12-ROSSO-6001", 15)
+    assert livello_scorta(z, 5) == "esaurimento"  # 15 <= 15
+    z2 = _pezzo(factory, "AB12-ROSSO-6002", 16)
+    assert livello_scorta(z2, 5) == "ok"  # 16 > 15
+    z3 = _pezzo(factory, "AB12-ROSSO-6003", 6)
+    assert livello_scorta(z3, 5) == "esaurimento"  # 6 <= 15
+    # senza soglia globale: niente livello esaurimento
+    assert livello_scorta(z2) == "ok"
+    # 'sotto' e 'esaurito' non vengono mai riscritti in 'esaurimento'
+    z4 = _pezzo(factory, "AB12-ROSSO-6004", 3)
+    assert livello_scorta(z4, 5) == "sotto"
+    z5 = _pezzo(factory, "AB12-ROSSO-6005", 0)
+    assert livello_scorta(z5, 5) == "esaurito"
+
+
+def test_pezzi_da_riordinare_esclude_esaurimento(factory):
+    """Con soglia 5: da_riordinare = esauriti + sotto (non 'in esaurimento')."""
+    sotto = _pezzo(factory, "AB12-ROSSO-7001", 3)  # sotto (3 <= 5)
+    esaurito = _pezzo(factory, "AB12-ROSSO-7002", 0)  # esaurito
+    esaurimento = _pezzo(factory, "AB12-ROSSO-7003", 12)  # solo 'in esaurimento'
+    ok = _pezzo(factory, "AB12-ROSSO-7004", 40)
+    sessione = factory()
+    riordino = pezzi_da_riordinare(sessione, 5)
+    assert {z.id for z in riordino} == {sotto.id, esaurito.id}
+    avvisi = pezzi_avvisi(sessione, 5)
+    assert {z.id for z in avvisi} == {sotto.id, esaurito.id, esaurimento.id}
+    assert all(z.id != ok.id for z in avvisi)
+    sessione.close()
+
+
+def test_cerca_pezzi_sotto_ok_complementari_con_soglia(factory):
+    """Con soglia 5, sotto/ok sono complementari sui pezzi con quantita > 0."""
+    _pezzo(factory, "AB12-ROSSO-8001", 3)   # sotto
+    _pezzo(factory, "AB12-ROSSO-8002", 12)  # in esaurimento -> ok per l'inventario
+    _pezzo(factory, "AB12-ROSSO-8003", 40)  # ok
+    sessione = factory()
+    sotto = {z.id for z in cerca_pezzi(sessione, stato="sotto", soglia_globale=5)}
+    ok = {z.id for z in cerca_pezzi(sessione, stato="ok", soglia_globale=5)}
+    vivi = {z.id for z in cerca_pezzi(sessione, soglia_globale=5) if z.quantita and z.quantita > 0}
+    assert sotto | ok == vivi
+    assert sotto & ok == set()
+    assert len(sotto) == 1
     sessione.close()
 
 

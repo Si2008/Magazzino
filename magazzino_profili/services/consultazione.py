@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session, selectinload
 from ..domain import Colore, Movimento, Pezzo, Profilo
 from ..db.normalizzazione import normalizza_codice, normalizza_colore
 
+from .impostazioni import MOLTIPLICATORE_ESAURIMENTO
+
 
 def _opzioni_pezzo():
     """Carica subito profilo e colore: la UI usa i relaz. a sessione chiusa."""
@@ -18,6 +20,19 @@ def _opzioni_pezzo():
         selectinload(Pezzo.profilo),
         selectinload(Pezzo.colore),
     )
+
+
+def _limite_sotto_scorta(soglia_globale: int | None):
+    """Espressione SQL: quantità massima (inclusa) considerata "sotto scorta".
+
+    - pezzo con scorta_minima: ``scorta_minima - 1`` (significato storico: quantita < scorta_minima);
+    - pezzo senza scorta_minima: ``soglia_globale`` ("fino a N pezzi");
+    - ``soglia_globale=None``: comportamento storico, i pezzi senza scorta_minima danno NULL
+      (nessun avviso), quindi ``quantita <= NULL`` non seleziona nulla.
+    """
+    if soglia_globale is None:
+        return Pezzo.scorta_minima - 1
+    return func.coalesce(Pezzo.scorta_minima - 1, soglia_globale)
 
 
 def lista_pezzi(session: Session) -> list[Pezzo]:
@@ -39,15 +54,18 @@ def lista_profilo(session: Session) -> list[Profilo]:
     return list(session.scalars(select(Profilo).order_by(Profilo.codice)))
 
 
-def pezzi_sotto_scora(session: Session) -> list[Pezzo]:
-    """Pezzi con scorta minima definita e giacenza al di sotto di essa."""
+def pezzi_sotto_scora(session: Session, soglia_globale: int | None = None) -> list[Pezzo]:
+    """Pezzi con scorta minima definita e giacenza al di sotto di essa.
+
+    Con ``soglia_globale`` i pezzi senza scorta_minima entrano in avviso
+    fino a (inclusi) ``soglia_globale`` pezzi.
+    """
     return list(
         session.scalars(
             select(Pezzo)
             .options(*_opzioni_pezzo())
             .where(
-                Pezzo.scorta_minima.is_not(None),
-                Pezzo.quantita < Pezzo.scorta_minima,
+                Pezzo.quantita <= _limite_sotto_scorta(soglia_globale),
             )
         )
     )
@@ -66,6 +84,7 @@ def cerca_pezzi(
     stato: str | None = None,
     profilo_id: int | None = None,
     ubicazione: str | None = None,
+    soglia_globale: int | None = None,
 ) -> list[Pezzo]:
     """Cerca pezzi per testo libero, colori, profilo, ubicazione e stato scorta.
 
@@ -110,17 +129,12 @@ def cerca_pezzi(
         )
 
     if stato == "sotto":
-        condizioni.append(
-            and_(
-                Pezzo.scorta_minima.is_not(None),
-                Pezzo.quantita < Pezzo.scorta_minima,
-            )
-        )
+        condizioni.append(Pezzo.quantita <= _limite_sotto_scorta(soglia_globale))
     elif stato == "ok":
         condizioni.append(
             or_(
-                Pezzo.scorta_minima.is_(None),
-                Pezzo.quantita >= Pezzo.scorta_minima,
+                _limite_sotto_scorta(soglia_globale).is_(None),
+                Pezzo.quantita > _limite_sotto_scorta(soglia_globale),
             )
         )
     elif stato == "esaurito":
@@ -129,10 +143,7 @@ def cerca_pezzi(
         condizioni.append(
             or_(
                 Pezzo.quantita <= 0,
-                and_(
-                    Pezzo.scorta_minima.is_not(None),
-                    Pezzo.quantita < Pezzo.scorta_minima,
-                ),
+                Pezzo.quantita <= _limite_sotto_scorta(soglia_globale),
             )
         )
 
@@ -146,14 +157,17 @@ def cerca_pezzi(
     )
 
 
-def stato_scorta(pezzo: Pezzo) -> str:
+def stato_scorta(pezzo: Pezzo, soglia_globale: int | None = None) -> str:
     """Stato scorta di un pezzo: ``"ok"``, ``"sotto"`` o ``"esaurito"``.
 
+    ``soglia_globale`` vale solo per i pezzi senza ``scorta_minima`` ("fino a N pezzi").
     Funzione pura: non tocca la sessione.
     """
     if pezzo.quantita is None or pezzo.quantita <= 0:
         return "esaurito"
-    if pezzo.scorta_minima is not None and pezzo.quantita < pezzo.scorta_minima:
+    if pezzo.scorta_minima is not None:
+        return "sotto" if pezzo.quantita < pezzo.scorta_minima else "ok"
+    if soglia_globale is not None and pezzo.quantita <= soglia_globale:
         return "sotto"
     return "ok"
 
@@ -190,7 +204,7 @@ def peso_totale_kg(pezzo: Pezzo) -> float:
     return peso_unitario_kg(pezzo) * quantita
 
 
-def riepilogo_inventario(session: Session) -> dict:
+def riepilogo_inventario(session: Session, soglia_globale: int | None = None) -> dict:
     """Contatori dell'inventario in un unico dict (card KPI globali).
 
     Chiavi richieste dalle card KPI: ``pezzi_totali`` (somma delle
@@ -216,7 +230,7 @@ def riepilogo_inventario(session: Session) -> dict:
         "pezzi": pezzi_totali,  # alias mantenuto per retrocompatibilità
         "referenze": int(riga[0] or 0),
         "peso_kg": sum(peso_totale_kg(p) for p in lista_pezzi(session)),
-        "da_riordinare": len(pezzi_da_riordinare(session)),
+        "da_riordinare": len(pezzi_da_riordinare(session, soglia_globale)),
         "profili": int(riga[2] or 0),
         "colori": int(riga[3] or 0),
         "barcodes_unici": int(riga[4] or 0),
@@ -361,7 +375,7 @@ def lista_colori_con_conteggio(session: Session) -> list[tuple[Colore, int, int]
     return [(colore, int(referenze or 0), int(pezzi or 0)) for colore, referenze, pezzi in righe]
 
 
-def pezzi_da_riordinare(session: Session) -> list[Pezzo]:
+def pezzi_da_riordinare(session: Session, soglia_globale: int | None = None) -> list[Pezzo]:
     """Pezzi esauriti o sotto la scorta minima, per giacenza crescente."""
     return list(
         session.scalars(
@@ -370,10 +384,40 @@ def pezzi_da_riordinare(session: Session) -> list[Pezzo]:
             .where(
                 or_(
                     Pezzo.quantita <= 0,
-                    and_(
-                        Pezzo.scorta_minima.is_not(None),
-                        Pezzo.quantita < Pezzo.scorta_minima,
-                    ),
+                    Pezzo.quantita <= _limite_sotto_scorta(soglia_globale),
+                )
+            )
+            .order_by(Pezzo.quantita.asc(), Pezzo.barcode)
+        )
+    )
+
+
+def livello_scorta(pezzo: Pezzo, soglia_globale: int | None = None) -> str:
+    """Come :func:`stato_scorta` ma con il quarto livello ``"esaurimento"``.
+
+    ``"esaurimento"``: pezzo non sotto scorta ma con giacenza entro 3 volte il riferimento
+    (``scorta_minima`` se presente, altrimenti la soglia globale).
+    """
+    base = stato_scorta(pezzo, soglia_globale)
+    if base != "ok":
+        return base
+    riferimento = pezzo.scorta_minima if pezzo.scorta_minima is not None else soglia_globale
+    if riferimento is not None and pezzo.quantita <= riferimento * MOLTIPLICATORE_ESAURIMENTO:
+        return "esaurimento"
+    return "ok"
+
+
+def pezzi_avvisi(session: Session, soglia_globale: int | None = None) -> list[Pezzo]:
+    """Pezzi per la scheda Avvisi: esauriti, sotto scorta e in esaurimento, per giacenza crescente."""
+    riferimento = func.coalesce(Pezzo.scorta_minima, soglia_globale) if soglia_globale is not None else Pezzo.scorta_minima
+    return list(
+        session.scalars(
+            select(Pezzo)
+            .options(*_opzioni_pezzo())
+            .where(
+                or_(
+                    Pezzo.quantita <= 0,
+                    Pezzo.quantita <= riferimento * MOLTIPLICATORE_ESAURIMENTO,
                 )
             )
             .order_by(Pezzo.quantita.asc(), Pezzo.barcode)
