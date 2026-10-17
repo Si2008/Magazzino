@@ -9,7 +9,9 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+import os
+
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -19,8 +21,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..services import consultazione
-from .componenti import bottone
+from ..services import consultazione, impostazioni
+from .componenti import Stepper, bottone
 from . import animazioni
 from .icone import ic_px, pixmap_icona
 from .tema import M, rem, tema_attivo
@@ -67,8 +69,9 @@ def _riga_avviso(
 ) -> QFrame:
     """Una riga ``QFrame#RigaAvviso`` per un pezzo da riordinare."""
     t = tema_attivo()
-    stato = consultazione.stato_scorta(z)
-    etichetta = "Esaurito" if stato == "esaurito" else "Sotto scorta"
+    livello = consultazione.livello_scorta(z, scheda._soglia)
+    gravita = "avviso" if livello == "esaurimento" else "pericolo"
+    etichetta = {"esaurito": "Esaurito", "sotto": "Sotto scorta", "esaurimento": "In esaurimento"}[livello]
     colore = z.colore.nome_visualizzato or z.colore.codice_normalizzato
     lunghezza = f"{z.lunghezza_mm:,}".replace(",", ".") if z.lunghezza_mm else "—"
     titolo = f"{z.profilo.codice} · {colore} · {lunghezza} mm — {etichetta}"
@@ -83,7 +86,7 @@ def _riga_avviso(
 
     riga = QFrame(parent)
     riga.setObjectName("RigaAvviso")
-    riga.setProperty("gravita", "pericolo")  # nel mockup anche "Sotto scorta" è rosso
+    riga.setProperty("gravita", gravita)  # "avviso" = giallo (in esaurimento)
 
     h = QHBoxLayout(riga)
     h.setContentsMargins(M.AVV_PH, M.AVV_PV, M.AVV_PH, M.AVV_PV)
@@ -93,7 +96,8 @@ def _riga_avviso(
     ico.setObjectName("AvvIco")
     ico.setFixedSize(M.AVV_ICO, M.AVV_ICO)
     ico.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    ico.setPixmap(pixmap_icona("alert", t.pericolo, ic_px(26)))
+    ico.setProperty("gravita", gravita)
+    ico.setPixmap(pixmap_icona("alert", t.avviso if gravita == "avviso" else t.pericolo, ic_px(26)))
     h.addWidget(ico, 0, Qt.AlignmentFlag.AlignVCenter)
 
     colonna = QVBoxLayout()
@@ -107,13 +111,13 @@ def _riga_avviso(
     colonna.addWidget(lab_t)
     colonna.addWidget(lab_s)
 
-    scorta = z.scorta_minima
-    frazione = (z.quantita / scorta) if (scorta and scorta > 0 and z.quantita) else 0.0
+    riferimento = z.scorta_minima if z.scorta_minima else scheda._soglia
+    frazione = min(1.0, z.quantita / (riferimento * 3)) if (riferimento and z.quantita and z.quantita > 0) else 0.0
     sfondo = QFrame(riga)
     sfondo.setObjectName("MeterSfondo")
     sfondo.setFixedHeight(M.METER_H)
     sfondo.setMaximumWidth(M.METER_MAXW)
-    barra = _MeterBarra(frazione, "pericolo", sfondo)
+    barra = _MeterBarra(frazione, gravita, sfondo)
     sfondo_lay = QHBoxLayout(sfondo)
     sfondo_lay.setContentsMargins(0, 0, 0, 0)
     sfondo_lay.addWidget(barra)
@@ -139,10 +143,26 @@ class SchedaAvvisi(QWidget):
     vai_a_colore = Signal(int)
     #: emesso da "Carica" di una riga: nome scheda e barcode
     vai_a_scheda = Signal(str, str)
+    #: emesso con il nuovo valore quando cambia la soglia globale
+    soglia_cambiata = Signal(int)
 
     def __init__(self, factory, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._factory = factory
+
+        # Soglia globale di sotto scorta: letta una volta all'avvio; ogni
+        # modifica dello stepper viene salvata in debounce (350 ms; 0 con
+        # MAGAZZINO_NO_ANIM=1) e aggiorna DB, contatore e righe.
+        self._soglia = impostazioni.SOGLIA_DEFAULT
+        sessione = factory()
+        try:
+            self._soglia = impostazioni.leggi_soglia(sessione)
+        finally:
+            sessione.close()
+        self._timer_soglia = QTimer(self)
+        self._timer_soglia.setSingleShot(True)
+        self._timer_soglia.setInterval(0 if os.environ.get("MAGAZZINO_NO_ANIM") else 350)
+        self._timer_soglia.timeout.connect(self._salva_soglia)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(M.PAG_H, M.PAG_T, M.PAG_H, M.PAG_B)
@@ -166,6 +186,21 @@ class SchedaAvvisi(QWidget):
         colonna.addWidget(titolo)
         colonna.addWidget(self.contatore)
         h.addLayout(colonna, 1)
+        self.lbl_soglia = QLabel("Soglia sotto scorta", intest)
+        self.lbl_soglia.setObjectName("Dim")
+        self.stepper_soglia = Stepper(
+            valore=self._soglia,
+            minimo=impostazioni.SOGLIA_MIN,
+            massimo=impostazioni.SOGLIA_MAX,
+            parent=intest,
+        )
+        self.stepper_soglia.setFixedWidth(rem(9.5))  # ~230 px: − [campo] +
+        self.stepper_soglia.campo.textChanged.connect(lambda _t: self._timer_soglia.start())
+        self.lbl_unita = QLabel("pezzi", intest)
+        self.lbl_unita.setObjectName("Dim")
+        h.addWidget(self.lbl_soglia)
+        h.addWidget(self.stepper_soglia)
+        h.addWidget(self.lbl_unita)
         self.aggiorna_btn = bottone("Aggiorna", icona="refresh", parent=intest)
         self.aggiorna_btn.clicked.connect(self.aggiorna)
         h.addWidget(self.aggiorna_btn)
@@ -214,7 +249,7 @@ class SchedaAvvisi(QWidget):
         """Crea/rigenera le righe (chiamato da ``aggiorna``)."""
         sessione = self._factory()
         try:
-            lista = consultazione.pezzi_da_riordinare(sessione)
+            lista = consultazione.pezzi_avvisi(sessione, self._soglia)
         finally:
             sessione.close()
 
@@ -236,12 +271,31 @@ class SchedaAvvisi(QWidget):
 
         n = len(lista)
         self._vuoto.setVisible(n == 0)
-        if n == 0:
-            self.contatore.setText("Nessun avviso: tutte le giacenze sono sopra la scorta minima.")
-        else:
-            self.contatore.setText(
-                f"{n} {'pezzo' if n == 1 else 'pezzi'} da riordinare (esauriti o sotto scorta)."
-            )
+        # Sottotitolo: spiega la soglia globale corrente.
+        self.contatore.setText(
+            f"Sotto scorta: fino a {self._soglia} pezzi · In esaurimento: "
+            f"fino a {impostazioni.soglia_esaurimento(self._soglia)} pezzi"
+        )
+
+    def _salva_soglia(self) -> None:
+        """Salva la soglia dallo stepper (debounce) ed emette ``soglia_cambiata``."""
+        testo = self.stepper_soglia.campo.text()
+        try:
+            valore = int(testo) if testo.strip() else self._soglia
+        except ValueError:
+            return
+        sessione = self._factory()
+        try:
+            salvato = impostazioni.imposta_soglia(sessione, valore)
+        finally:
+            sessione.close()
+        if salvato != self._soglia:
+            self._soglia = salvato
+            self.soglia_cambiata.emit(salvato)
+            self.aggiorna()
+        # Allinea lo stepper al valore effettivamente salvato (fuori range).
+        if testo.isdigit() and int(testo) != salvato:
+            self.stepper_soglia.campo.setText(str(salvato))
 
     def aggiorna(self) -> None:
         self._vuole_mostrare()

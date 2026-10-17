@@ -395,8 +395,10 @@ QLabel#MovQta[tono="avviso"] {{ color: {t.avviso}; }}
 /* righe di avviso */
 QFrame#RigaAvviso {{ background: {t.carta}; border: 1px solid {t.bordo}; border-radius: {M.R_MENU}px; }}
 QFrame#RigaAvviso[gravita="pericolo"] {{ background: {t.pericolo_vel}; border-color: {t.pericolo}; }}
+QFrame#RigaAvviso[gravita="avviso"] {{ background: {t.avviso_vel}; border-color: {t.avviso}; }}
 QLabel#AvvIco {{ border-radius: {M.KPI_ICO_R}px; background: {t.avviso_vel}; }}
 QLabel#AvvIco[gravita="pericolo"] {{ background: {t.pericolo_vel}; }}
+QLabel#AvvIco[gravita="avviso"] {{ background: {t.avviso_vel}; }}
 QLabel#AvvTitolo {{ font-weight: 700; }}
 QLabel#AvvSotto {{ color: {t.testo_dim}; font-size: {M.FONT_HINT}px; }}
 QFrame#MeterSfondo {{ background: {t.bordo}; border: none; border-radius: {M.METER_H // 2}px; }}
