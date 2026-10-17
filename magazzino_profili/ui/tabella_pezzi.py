@@ -45,7 +45,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..services import consultazione
+from ..services import consultazione, impostazioni
 from . import animazioni, tema
 from .tema import M, colore_di_codice, rem, tema_attivo
 from .icone import ic_px, icona_svg, pixmap_icona
@@ -188,6 +188,8 @@ class TabellaPezzi(QWidget):
     def __init__(self, factory, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._factory = factory
+        # Soglia globale di sotto scorta (rilessa in ``aggiorna``).
+        self._soglia = impostazioni.SOGLIA_DEFAULT
         self._colore_selezionato: int | None = None  # None = "Tutti"
         self._id_tab: list[int | None] = []
         self._barcode_selezionato: str | None = None
@@ -471,7 +473,7 @@ class TabellaPezzi(QWidget):
         colonna.addWidget(codice)
         colonna.addWidget(descrizione)
         riga.addLayout(colonna, 1)
-        stato = consultazione.stato_scorta(pezzo)
+        stato = consultazione.stato_scorta(pezzo, self._soglia)
         testo_stato, variante = _STATO_INFO.get(stato, ("OK", "ok"))
         riga.addWidget(Pillola(testo_stato, variante), 0, Qt.AlignmentFlag.AlignTop)
         v1.addLayout(riga)
@@ -625,7 +627,8 @@ class TabellaPezzi(QWidget):
         """Rilegge tutto dal database: KPI, chip colore, filtri, tabella."""
         sessione = self._factory()
         try:
-            riepilogo = consultazione.riepilogo_inventario(sessione)
+            self._soglia = impostazioni.leggi_soglia(sessione)
+            riepilogo = consultazione.riepilogo_inventario(sessione, self._soglia)
             colori = consultazione.lista_colori_con_conteggio(sessione)
             profili = [(p.id, p.codice, p.descrizione) for p in consultazione.lista_profilo(sessione)]
             ubicazioni = list(consultazione.lista_ubicazioni(sessione))
@@ -701,6 +704,7 @@ class TabellaPezzi(QWidget):
                 stato=stato,
                 profilo_id=self.combo_profilo.currentData(),
                 ubicazione=ubicazione,
+                soglia_globale=self._soglia,
             )
         finally:
             sessione.close()
@@ -737,7 +741,7 @@ class TabellaPezzi(QWidget):
 
             peso_tot = consultazione.peso_totale_kg(z)
             tab.setItem(riga, 3, _item(self._numero_it(z.lunghezza_mm) + " mm" if z.lunghezza_mm else "—", Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter))
-            stato_riga = consultazione.stato_scorta(z)
+            stato_riga = consultazione.stato_scorta(z, self._soglia)
             pz_item = _item(f"{z.quantita:,}".replace(",", "X").replace(".", ",").replace("X", ".") if z.quantita is not None else "—", Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             if stato_riga in ("sotto", "esaurito"):
                 pz_item.setForeground(QColor(t.pericolo))

@@ -384,6 +384,8 @@ class FinestraPrincipale(QWidget):
                 self.scheda_avvisi.vai_a_colore.connect(self._vai_a_colore_davvisi)
                 # Avvisi -> "Carica": passa al Carico con il barcode compilato
                 self.scheda_avvisi.vai_a_scheda.connect(self._vai_a_scheda)
+                # Soglia sotto scorta cambiata: aggiorna badge, KPI e Inventario
+                self.scheda_avvisi.soglia_cambiata.connect(self._su_soglia_cambiata)
 
         # Inventario -> Carico/Scarico: "Carica"/"Scarica" compilano il barcode
         if self.scheda_inventario is not None:
@@ -417,6 +419,13 @@ class FinestraPrincipale(QWidget):
         self._tab.setCurrentWidget(self.scheda_inventario)
         self.scheda_inventario.vai_a_colore(colore_id)
         self._messaggio(f"Inventario: scheda colore selezionata da Avvisi (colore {colore_id})")
+
+    def _su_soglia_cambiata(self, _valore: int) -> None:
+        """La soglia globale è cambiata in Avvisi: rinfresca badge e KPI/Inventario."""
+        self._aggiorna_badge_avvisi()
+        self._aggiorna_stato_riepilogo()
+        if self.scheda_inventario is not None:
+            self.scheda_inventario.aggiorna()
 
     def _muovi_tab_colori(self, delta: int) -> None:
         if self.scheda_inventario is None:
@@ -466,14 +475,15 @@ class FinestraPrincipale(QWidget):
         self._barra_stato.setText(testo)
 
     def _aggiorna_stato_riepilogo(self) -> None:
-        from ..services import consultazione
+        from ..services import consultazione, impostazioni
 
         t = tema_attivo()
         r = None
         try:
             sessione = self._factory()
             try:
-                r = consultazione.riepilogo_inventario(sessione)
+                soglia = impostazioni.leggi_soglia(sessione)
+                r = consultazione.riepilogo_inventario(sessione, soglia)
             finally:
                 sessione.close()
             ok = True
@@ -485,12 +495,13 @@ class FinestraPrincipale(QWidget):
             self._conta_riepilogo.setText(f"{r['referenze']} referenze · {r['pezzi_totali']} pezzi")
 
     def _aggiorna_badge_avvisi(self) -> None:
-        from ..services import consultazione
+        from ..services import consultazione, impostazioni
 
         try:
             sessione = self._factory()
             try:
-                n = len(consultazione.pezzi_da_riordinare(sessione))
+                soglia = impostazioni.leggi_soglia(sessione)
+                n = len(consultazione.pezzi_da_riordinare(sessione, soglia))
             finally:
                 sessione.close()
         except Exception:
