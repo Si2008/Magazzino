@@ -355,7 +355,7 @@ class FinestraPrincipale(QWidget):
                 if _segnale_messaggio():
                     scheda.messaggio.connect(self.mostra_toast)
                 return
-            if self.scheda_inventario is not None:
+            if self.scheda_inventario is not None and scheda is not self.scheda_inventario:
                 scheda.cambiato.connect(self.scheda_inventario.aggiorna)
             if self.scheda_avvisi is not None:
                 scheda.cambiato.connect(self.scheda_avvisi.aggiorna)
