@@ -39,3 +39,6 @@ chiave_privata = "C:/percorso/a/chiave_privata.key"
 durata_token_secondi = 3600
 # Segrete lunga e casuale (almeno 32 caratteri) usata per firmare i token.
 segrete_token = "SEGRETE_LUNGA_E_CASUALE_MINIMO_32_CARATTERI"
+# Indirizzo HTTPS con cui il telefono raggiunge il server web (quello che hai esposto con
+# port forwarding, VPN o tunnel). Serve al pulsante "Collega telefono" per mostrare il QR.
+url_pubblico = "https://magazzino.esempio.it:8443/"
