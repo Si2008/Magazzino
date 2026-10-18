@@ -80,7 +80,7 @@ def registra_movimento(
       sessione: è il chiamante a decidere se annullare la
       transazione (``session.rollback()``) o continuare.
     """
-    if not isinstance(quantita, int) or quantita <= 0:
+    if not isinstance(quantita, int) or isinstance(quantita, bool) or quantita <= 0:
         raise ValueError("La quantità del movimento deve essere un intero positivo")
 
     if tipo is TipoMovimento.CARICO:
