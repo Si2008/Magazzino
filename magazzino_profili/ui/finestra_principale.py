@@ -15,8 +15,11 @@ riattivarlo.
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
+
+from sqlalchemy.exc import SQLAlchemyError
 
 from PySide6.QtCore import Qt, QTimer, SignalInstance
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
@@ -66,6 +69,9 @@ def schede_consenti(ruolo: Ruolo | str) -> tuple[str, ...]:
         return tuple(s.capitalize() for s in _schede_ruolo(ruolo))
     except ValueError:
         return ()
+
+
+logger = logging.getLogger(__name__)
 
 
 class DialogoAccesso(QWidget):
@@ -542,7 +548,8 @@ class FinestraPrincipale(QWidget):
             finally:
                 sessione.close()
             ok = True
-        except Exception:
+        except SQLAlchemyError:
+            logger.exception("Aggiornamento stato database non riuscito")
             ok = False
         self._stato_db.setText("PostgreSQL" if ok else "Database non raggiungibile")
         self._pallino_db.setPixmap(_pallino(t.ok if ok else t.pericolo, M.PILL_PUNTO))
@@ -559,7 +566,8 @@ class FinestraPrincipale(QWidget):
                 n = len(consultazione.pezzi_da_riordinare(sessione, soglia))
             finally:
                 sessione.close()
-        except Exception:
+        except SQLAlchemyError:
+            logger.exception("Aggiornamento badge avvisi non riuscito")
             n = 0
         for i in range(self._tab.count()):
             if self._tab.tabText(i) != "Avvisi":

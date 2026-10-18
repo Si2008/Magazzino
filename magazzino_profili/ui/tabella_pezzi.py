@@ -19,9 +19,12 @@ conservando la selezione corrente.
 
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 from decimal import Decimal
+
+from sqlalchemy.exc import SQLAlchemyError
 
 from PySide6.QtCore import QEvent, QRect, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
@@ -76,6 +79,9 @@ _STATO_INFO = {
     "sotto": ("Sotto scorta", "pericolo"),
     "esaurito": ("Esaurito", "pericolo"),
 }
+
+
+logger = logging.getLogger(__name__)
 
 
 def _testo_peso(peso: Decimal | float) -> str:
@@ -492,7 +498,11 @@ class TabellaPezzi(QWidget):
 
             bc_gen.genera_immagine_barcode(barcode, percorso)
             img.setPixmap(QPixmap(percorso))
+        # ``genera_immagine_barcode`` documenta ValueError; i guasti di
+        # Pillow/ImageWriter non sono esaustibili: si mantiene il catch largo
+        # e si registra il traceback (B-03).
         except Exception:
+            logger.exception("Generazione immagine barcode non riuscita")
             img.clear()
         lab_bc = QLabel(barcode or "", cb)
         lab_bc.setObjectName("Debole")
@@ -594,7 +604,8 @@ class TabellaPezzi(QWidget):
             finally:
                 sessione.close()
             lista.imposta(mov)
-        except Exception:
+        except SQLAlchemyError:
+            logger.exception("Caricamento ultimi movimenti non riuscito")
             lista.imposta([])
         v.addWidget(lista)
         self._pannello_l.addWidget(s)
