@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..services import consultazione, carica
+from .collega_telefono import crea_pulsante_telefono
 from .componenti import (
     Anteprima,
     ListaMovimenti,
@@ -44,6 +45,9 @@ class SchedaCarico(QWidget):
     """Form di carico pezzi da barcode."""
 
     cambiato = Signal()
+
+    #: l'utente ha premuto "Collega telefono"
+    telefono_richiesto = Signal()
 
     def __init__(
         self,
@@ -77,7 +81,13 @@ class SchedaCarico(QWidget):
 
         titolo = QLabel("Carico merce", card)
         titolo.setObjectName("TitoloCard")
-        v.addWidget(titolo)
+        testa = QHBoxLayout()
+        testa.setSpacing(M.GAP_SM)
+        testa.addWidget(titolo, 1)
+        self.btn_telefono = crea_pulsante_telefono(card)
+        self.btn_telefono.clicked.connect(self.telefono_richiesto)
+        testa.addWidget(self.btn_telefono, 0, Qt.AlignmentFlag.AlignVCenter)
+        v.addLayout(testa)
 
         suggerimento = QLabel(
             "Scansiona il barcode di un pezzo già presente: i dati si compilano da soli. "
@@ -205,6 +215,12 @@ class SchedaCarico(QWidget):
         """Lo scanner "digita" il barcode: compila i campi appena leggibile."""
         self._compila_dal_barcode(self.barcode.text())
         self._aggiorna_anteprima()
+
+    def ricevi_scansione(self, barcode: str) -> None:
+        """Barcode dal telefono: compila il campo (i dati del pezzo si compilano da soli)."""
+        self.barcode.setText(barcode.strip().upper())
+        self.barcode.textChanged.emit(self.barcode.text())  # stessa catena di una digitazione manuale
+        self.barcode.setFocus()
 
     def _su_invio(self) -> None:
         """Invio sul campo barcode: salva se i campi sono già compilati."""

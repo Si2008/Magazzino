@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..services import consultazione, scarica
+from .collega_telefono import crea_pulsante_telefono
 from .componenti import (
     Anteprima,
     ListaMovimenti,
@@ -31,6 +32,9 @@ class SchedaScarico(QWidget):
     """Form di scarico pezzi da barcode."""
 
     cambiato = Signal()
+
+    #: l'utente ha premuto "Collega telefono"
+    telefono_richiesto = Signal()
 
     def __init__(
         self,
@@ -64,7 +68,13 @@ class SchedaScarico(QWidget):
 
         titolo = QLabel("Scarico merce", card)
         titolo.setObjectName("TitoloCard")
-        v.addWidget(titolo)
+        testa = QHBoxLayout()
+        testa.setSpacing(M.GAP_SM)
+        testa.addWidget(titolo, 1)
+        self.btn_telefono = crea_pulsante_telefono(card)
+        self.btn_telefono.clicked.connect(self.telefono_richiesto)
+        testa.addWidget(self.btn_telefono, 0, Qt.AlignmentFlag.AlignVCenter)
+        v.addLayout(testa)
 
         suggerimento = QLabel(
             "Scansiona il barcode (il lettore invia Invio in automatico) oppure digitalo.",
@@ -200,6 +210,12 @@ class SchedaScarico(QWidget):
         return f"{n:,}".replace(",", ".")
 
     # ------------------------------------------------------------------ salvataggio
+    def ricevi_scansione(self, barcode: str) -> None:
+        """Barcode dal telefono: compila il campo e salva come farebbe un lettore con Invio."""
+        self.barcode.setText(barcode.strip().upper())
+        self.barcode.textChanged.emit(self.barcode.text())  # stessa catena di una digitazione manuale
+        self._su_invio()
+
     def _su_invio(self) -> None:
         if not self.causale.text().strip():
             self.messaggio.mostra("La causale è obbligatoria.")
