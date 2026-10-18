@@ -464,6 +464,7 @@ QPushButton[classe="chip"]:hover {{ border-color: {t.accento}; color: {t.testo};
 QPushButton[classe="stepper"] {{ background: {t.carta2}; border: 1px solid {t.bordo_campo}; border-radius: 0; padding: 0; }}
 QPushButton[classe="stepper"][lato="sx"] {{ border-top-left-radius: {M.R_SM}px; border-bottom-left-radius: {M.R_SM}px; }}
 QPushButton[classe="stepper"][lato="dx"] {{ border-top-right-radius: {M.R_SM}px; border-bottom-right-radius: {M.R_SM}px; }}
+QPushButton[telefono="on"] {{ color: {t.ok}; border: 1px solid {t.ok}; background: {t.ok_vel}; }}
 QPushButton::menu-indicator {{
     image: url("{chev_t}"); width: {rem(0.875)}px; height: {rem(0.875)}px;
     subcontrol-origin: padding; subcontrol-position: right center; right: {M.BTN_PH}px;
