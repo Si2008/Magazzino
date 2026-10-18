@@ -4,6 +4,8 @@ Il database di test è SQLite in memoria condiviso (StaticPool) con
 l'app; i dati sono un profilo, un colore e un pezzo con giacenza 5.
 """
 
+import pytest
+
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
@@ -257,3 +259,19 @@ def test_ping_segna_il_telefono_collegato() -> None:
     assert client.post("/api/telefono/ping", headers=_intestazioni(token)).status_code == 200
     with factory() as session:
         assert telefono.telefono_collegato(session) is True
+
+
+@pytest.mark.parametrize("quantita", [True, 1.0, "3", 0, -1])
+@pytest.mark.parametrize("percorso", ["/api/carico", "/api/scarico"])
+def test_quantita_non_intera_positiva_rifiutata_dal_telefono(percorso, quantita) -> None:
+    client, factory = _app_con_dati()
+    token = _token(client)
+    risposta = client.post(
+        percorso, json={"barcode": BARCODE, "quantita": quantita},
+        headers=_intestazioni(token),
+    )
+    assert risposta.status_code == 422
+    assert _conteggio(factory, Movimento) == 0
+    with factory() as session:
+        pezzo = session.scalar(select(Pezzo).where(Pezzo.barcode == BARCODE))
+        assert pezzo.quantita == GIACENZA_INIZIALE

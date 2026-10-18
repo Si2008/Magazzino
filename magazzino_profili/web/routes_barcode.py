@@ -27,7 +27,7 @@ Codici di errore restituiti:
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictInt
 
 from sqlalchemy import select
 
@@ -57,7 +57,7 @@ class RichiestaMovimento(BaseModel):
     """Dati di una richiesta di carico o scarico da telefono."""
 
     barcode: str = Field(min_length=1, max_length=255, description="Barcode del pezzo")
-    quantita: int = Field(gt=0, description="Quantità, numero intero positivo")
+    quantita: StrictInt = Field(gt=0, description="Quantità, numero intero positivo")
     causale: str | None = Field(
         default=None,
         max_length=512,
