@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 import sys
 
-from PySide6.QtCore import Qt, SignalInstance
+from PySide6.QtCore import Qt, QTimer, SignalInstance
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
@@ -38,7 +38,9 @@ from ..sicurezza import Ruolo, autentica, schede_consenti as _schede_ruolo
 from . import animazioni, tema
 from .tema import M, tema_attivo
 from .icone import ic_px, icona_svg, pixmap_icona
+from ..services import telefono as servizio_telefono
 from .avvisi import SchedaAvvisi
+from .collega_telefono import ControlloTelefono, DialogoTelefono, aggiorna_pulsante_telefono
 from .componenti import Toast, bottone
 from .scheda_carico import SchedaCarico
 from .scheda_profilo import SchedaProfilo
@@ -184,6 +186,14 @@ class FinestraPrincipale(QWidget):
         self._toast: list[Toast] = []
         self._badge_avvisi: QLabel | None = None
         self._icone_nomi: list[str] = []
+
+        self._scansione_in_corso = False
+        self._scansioni_in_coda: list[str] = []
+        self._controllo_telefono = ControlloTelefono(self._factory, self)
+        self._controllo_telefono.scansione.connect(self._su_scansione_telefono)
+        self._controllo_telefono.stato_cambiato.connect(lambda _c: self._aggiorna_pulsanti_telefono())
+        self._controllo_telefono.attivo_cambiato.connect(lambda _a: self._aggiorna_pulsanti_telefono())
+        self._controllo_telefono.errore.connect(lambda m: self.mostra_toast(m, "danger"))
 
         self.setObjectName("Finestra")
         self.setWindowTitle("Magazzino Profili")
@@ -364,9 +374,11 @@ class FinestraPrincipale(QWidget):
 
         if "Carico" in consentite:
             self.scheda_carico = SchedaCarico(self._factory, self._nome_utente)
+            self.scheda_carico.telefono_richiesto.connect(self._apri_dialogo_telefono)
             nomi.append((self.scheda_carico, "Carico"))
         if "Scarico" in consentite:
             self.scheda_scarico = SchedaScarico(self._factory, self._nome_utente)
+            self.scheda_scarico.telefono_richiesto.connect(self._apri_dialogo_telefono)
             nomi.append((self.scheda_scarico, "Scarico"))
         if "Profili" in consentite:
             self.scheda_profilo = SchedaProfilo(self._factory)
@@ -393,6 +405,49 @@ class FinestraPrincipale(QWidget):
 
         self._aggiorna_icone_schede()
         self._aggiorna_badge_avvisi()
+        self._aggiorna_pulsanti_telefono()  # le schede vengono ricreate al cambio tema: riprendere lo stato
+
+    # ------------------------------------------------------------------
+    # telefono come lettore barcode
+    # ------------------------------------------------------------------
+    def _aggiorna_pulsanti_telefono(self) -> None:
+        for nome in ("scheda_carico", "scheda_scarico"):
+            scheda = getattr(self, nome, None)
+            if scheda is not None:
+                aggiorna_pulsante_telefono(scheda.btn_telefono, self._controllo_telefono.collegato)
+
+    def _apri_dialogo_telefono(self) -> None:
+        url = servizio_telefono.leggi_url_pubblico()
+        if url and not self._controllo_telefono.attivo:
+            self._controllo_telefono.avvia()  # l'ascolto parte solo se c'è un indirizzo da dare al telefono
+        dialogo = DialogoTelefono(self._controllo_telefono, url, self)
+        dialogo.exec()
+        dialogo.deleteLater()
+
+    def _su_scansione_telefono(self, barcode: str) -> None:
+        """Consegna il barcode alla scheda attiva (Scarico o Carico). Una alla volta."""
+        if self._scansione_in_corso:  # un dialogo di conferma è aperto: la scansione aspetta il suo turno
+            self._scansioni_in_coda.append(barcode)
+            return
+        self._scansione_in_corso = True
+        try:
+            corrente = self._tab.currentWidget()
+            if corrente is not None and corrente is getattr(self, "scheda_scarico", None):
+                self.scheda_scarico.ricevi_scansione(barcode)
+            elif corrente is not None and corrente is getattr(self, "scheda_carico", None):
+                self.scheda_carico.ricevi_scansione(barcode)
+            else:
+                self.mostra_toast("Apri Carico o Scarico per usare il telefono come lettore", "info")
+        finally:
+            self._scansione_in_corso = False
+        if self._scansioni_in_coda:
+            prossimo = self._scansioni_in_coda.pop(0)
+            QTimer.singleShot(0, lambda: self._su_scansione_telefono(prossimo))
+
+    def closeEvent(self, evento) -> None:  # noqa: N802
+        """Chiudendo l'app: ferma l'ascolto delle scansioni dal telefono."""
+        self._controllo_telefono.ferma()
+        super().closeEvent(evento)
 
     def _aggiorna_icone_schede(self) -> None:
         """Scheda attiva con icona in ``t.accento``, le altre in ``t.testo_dim``."""
