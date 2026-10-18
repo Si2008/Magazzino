@@ -4,6 +4,12 @@ Il modulo web NON riduplica la logica di magazzino: richiama i servizi
 già esistenti (``services.carico.carica`` e ``services.scarico.scarica``),
 che gestiscono transazione, regola anti-sottozero e traccia contabile.
 
+La modalità "Lettore" del telefono usa due endpoint aggiuntivi che NON
+modificano il magazzino: ``POST /api/scansione`` accoda il barcode per il
+programma desktop (``services.telefono.registra_scansione``) e
+``POST /api/telefono/ping`` segna la presenza del telefono
+(``services.telefono.registra_ping``).
+
 Regola aggiuntiva specifica dell'uso remoto (vincolo di progetto):
 il **carico via barcode non crea mai pezzi nuovi**. Se il barcode non
 corrisponde a nessun pezzo esistente, la risposta è 404: la creazione
@@ -30,6 +36,7 @@ from ..domain.pezzo import QuantitaInsufficienteError
 from ..services.carico import carica
 from ..services.eccezioni import PezzoNonTrovatoError, ProfiloNonTrovatoError
 from ..services.scarico import scarica
+from ..services import telefono as servizio_telefono
 from .auth import (
     UtenteAutenticato,
     crea_dipendenza_utente,
@@ -56,6 +63,12 @@ class RichiestaMovimento(BaseModel):
         max_length=512,
         description="Causale (facoltativa) per la traccia contabile",
     )
+
+
+class RichiestaScansione(BaseModel):
+    """Barcode letto dal telefono in modalità "Lettore" (non modifica il magazzino)."""
+
+    barcode: str = Field(min_length=1, max_length=255, description="Barcode letto")
 
 
 def _dettagli_pezzo(pezzo: Pezzo, esito: str) -> dict:
@@ -186,5 +199,27 @@ def crea_router(
             except QuantitaInsufficienteError as errore:
                 raise HTTPException(status_code=409, detail=str(errore)) from errore
             return _dettagli_pezzo(movimento.pezzo, "Scarico registrato.")
+
+    @router.post("/scansione")
+    def api_scansione(
+        payload: RichiestaScansione,
+        utente: UtenteAutenticato = Depends(utente_autenticato),
+    ) -> dict:
+        """Accoda un barcode per il programma desktop. Non tocca le giacenze."""
+        verifica_permesso(utente, "carico")
+        with session_factory() as session:
+            try:
+                servizio_telefono.registra_scansione(session, payload.barcode, utente.username)
+            except ValueError as errore:
+                raise HTTPException(status_code=422, detail=str(errore)) from errore
+        return {"dettaglio": "Scansione inviata al PC.", "barcode": payload.barcode.strip().upper()}
+
+    @router.post("/telefono/ping")
+    def api_ping(utente: UtenteAutenticato = Depends(utente_autenticato)) -> dict:
+        """Segnale di presenza del telefono (ogni 10 s dalla pagina di scansione)."""
+        verifica_permesso(utente, "carico")
+        with session_factory() as session:
+            servizio_telefono.registra_ping(session)
+        return {"dettaglio": "ok"}
 
     return router

@@ -91,6 +91,7 @@ def leggi_sezione_web(percorso: str | Path | None = None) -> dict[str, Any]:
                 sezione.get("durata_token_secondi", _DEFAULT_WEB["durata_token_secondi"])
             ),
             "segrete_token": sezione.get("segrete_token"),
+            "url_pubblico": sezione.get("url_pubblico"),  # informativa: QR "Collega telefono"
         }
     )
     return configurazione

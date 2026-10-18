@@ -28,6 +28,32 @@ const STATO = {
 
 const $ = (id) => document.getElementById(id);
 
+let timerPing = null;
+
+async function ping() {
+  try {
+    await chiedi("/api/telefono/ping", {});
+  } catch (errore) {
+    if (errore.codice === 401) {
+      esci();
+    }
+    // altri errori di rete: si riprova al prossimo giro
+  }
+}
+
+function avviaPing() {
+  fermaPing();
+  ping();
+  timerPing = setInterval(ping, 10000);
+}
+
+function fermaPing() {
+  if (timerPing) {
+    clearInterval(timerPing);
+    timerPing = null;
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* Chiamate all'API (JSON, token Bearer in memoria)                    */
 /* ------------------------------------------------------------------ */
@@ -77,6 +103,7 @@ async function accedi(evento) {
     $("ruolo-utente").textContent = STATO.ruolo;
     $("zona-login").hidden = true;
     $("zona-operazione").hidden = false;
+    avviaPing();
   } catch (errore) {
     esito.textContent = errore.message;
     esito.className = "esito errore";
@@ -84,6 +111,7 @@ async function accedi(evento) {
 }
 
 function esci() {
+  fermaPing(); fermiScanner(); STATO.modalita = null; STATO.in_corso = false;
   STATO.token = null;
   STATO.utente = null;
   STATO.ruolo = null;
@@ -159,6 +187,26 @@ async function inviaMovimento(barcode) {
     mostraMessaggio("Nessun barcode letto.", "errore");
     return;
   }
+
+  if (STATO.modalita === "lettore") {
+    mostraMessaggio("Invio al PC in corso…", "successo");
+    try {
+      const corpo = await chiedi("/api/scansione", { barcode: barcode });
+      mostraMessaggio("Inviato al PC: " + corpo.barcode, "successo");
+      // lettore continuo: dopo 1,2 s riparte la fotocamera
+      setTimeout(() => {
+        if (STATO.token && STATO.modalita === "lettore") avviaScansione("lettore");
+      }, 1200);
+    } catch (errore) {
+      if (errore.codice === 401) {
+        mostraMessaggio("Sessione scaduta: effettuare nuovamente il login.", "errore");
+        esci();
+        return;
+      }
+      mostraMessaggio(errore.message, "errore");
+    }
+    return;
+  }
   const quantita = parseInt($("campo-quantita").value, 10);
   if (!Number.isInteger(quantita) || quantita <= 0) {
     mostraMessaggio("Inserire una quantità intera e maggiore di zero.", "errore");
@@ -195,5 +243,6 @@ document.addEventListener("DOMContentLoaded", () => {
   $("form-login").addEventListener("submit", accedi);
   $("btn-carico").addEventListener("click", () => avviaScansione("carico"));
   $("btn-scarico").addEventListener("click", () => avviaScansione("scarico"));
+  $("btn-lettore").addEventListener("click", () => avviaScansione("lettore"));
   $("btn-esci").addEventListener("click", esci);
 });

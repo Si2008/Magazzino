@@ -31,6 +31,7 @@
     #btn-scarico { background: #b3261e; color: #fff; }
     #btn-accedi { background: #17497a; color: #fff; }
     #btn-esci { background: #6b7684; color: #fff; }
+    #btn-lettore { background: #17497a; color: #fff; }
     .esito { margin-top: 14px; padding: 12px; border-radius: 8px; background: #eef1f4; white-space: pre-line; min-height: 1.2em; }
     .esito.successo { background: #e3f3e8; }
     .esito.errore { background: #f9e4e2; }
@@ -72,6 +73,9 @@
         <button id="btn-carico" type="button">Carico</button>
         <button id="btn-scarico" type="button">Scarico</button>
       </div>
+
+      <button id="btn-lettore" type="button">Lettore (invia al PC)</button>
+      <p class="info">«Lettore» manda ogni barcode inquadrato al programma sul PC (scheda Carico o Scarico attiva), senza modificare la giacenza da qui.</p>
 
       <!-- Qui il lettore html5-qrcode inserisce il video della fotocamera -->
       <div id="lettore-barcode"></div>

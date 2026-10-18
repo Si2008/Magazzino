@@ -205,3 +205,55 @@ def test_utente_sola_lettura_riceve_403_sul_carico() -> None:
     )
     assert risposta.status_code == 403
     assert "autorizzato" in risposta.json()["detail"].lower()
+
+
+# ----------------------------------------------------------------------
+# Fase 7B: modalita "Lettore" - /api/scansione e /api/telefono/ping
+# ----------------------------------------------------------------------
+def test_scansione_con_token_operatore_accoda_e_non_tocca_la_giacenza() -> None:
+    from magazzino_profili.domain import Pezzo, ScansioneTelefono
+    from magazzino_profili.services import telefono
+
+    client, factory = _app_con_dati()
+    token = _token(client)
+    risposta = client.post(
+        "/api/scansione", json={"barcode": "ab12-an007-6000"}, headers=_intestazioni(token)
+    )
+    assert risposta.status_code == 200
+    corpo = risposta.json()
+    assert corpo["barcode"] == "AB12-AN007-6000"
+
+    with factory() as session:
+        righe = session.scalars(select(ScansioneTelefono)).all()
+        assert len(righe) == 1
+        assert righe[0].barcode == "AB12-AN007-6000"
+        assert righe[0].letta is False
+        assert session.get(Pezzo, 1).quantita == GIACENZA_INIZIALE  # giacenza invariata
+
+
+def test_scansione_sicurezza_401_403_422() -> None:
+    client, _ = _app_con_dati()
+    # Senza token: 401.
+    assert client.post("/api/scansione", json={"barcode": BARCODE}).status_code == 401
+    # SOLA_LETTURA: 403.
+    token = _token(client, utente="osservatore")
+    assert client.post(
+        "/api/scansione", json={"barcode": BARCODE}, headers=_intestazioni(token)
+    ).status_code == 403
+    # Barcode vuoto: 422 con messaggio in italiano.
+    token = _token(client)
+    risposta = client.post("/api/scansione", json={"barcode": ""}, headers=_intestazioni(token))
+    assert risposta.status_code == 422
+    assert "barcode" in risposta.json()["detail"].lower()
+
+
+def test_ping_segna_il_telefono_collegato() -> None:
+    from magazzino_profili.services import telefono
+
+    client, factory = _app_con_dati()
+    # Senza token: 401.
+    assert client.post("/api/telefono/ping").status_code == 401
+    token = _token(client)
+    assert client.post("/api/telefono/ping", headers=_intestazioni(token)).status_code == 200
+    with factory() as session:
+        assert telefono.telefono_collegato(session) is True
