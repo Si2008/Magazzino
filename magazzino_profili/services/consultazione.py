@@ -5,7 +5,7 @@ La UI non contiene logica di business: le query restano qui.
 
 import re
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import Float, and_, case, cast, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..domain import Colore, Movimento, Pezzo, Profilo
@@ -215,6 +215,17 @@ def riepilogo_inventario(session: Session, soglia_globale: int | None = None) ->
     Chiavi extra: ``pezzi`` (alias di ``pezzi_totali``), ``profili``,
     ``colori``, ``barcodes_unici``.
     """
+    da_riordinare = or_(
+        Pezzo.quantita <= 0,
+        and_(Pezzo.scorta_minima.is_not(None), Pezzo.quantita < Pezzo.scorta_minima),
+    )
+    peso = case(
+        (
+            and_(Pezzo.quantita > 0, Pezzo.lunghezza_mm > 0, Profilo.peso_kg_per_metro > 0),
+            cast(Profilo.peso_kg_per_metro, Float) * (Pezzo.lunghezza_mm / 1000.0) * Pezzo.quantita,
+        ),
+        else_=0.0,
+    )
     riga = session.execute(
         select(
             func.count(Pezzo.id),
@@ -222,18 +233,16 @@ def riepilogo_inventario(session: Session, soglia_globale: int | None = None) ->
             func.count(func.distinct(Pezzo.profilo_id)),
             func.count(func.distinct(Pezzo.colore_id)),
             func.count(func.distinct(Pezzo.barcode)),
-        )
+            func.coalesce(func.sum(peso), 0.0),
+            func.coalesce(func.sum(case((da_riordinare, 1), else_=0)), 0),
+        ).select_from(Pezzo).join(Profilo, Pezzo.profilo_id == Profilo.id)
     ).one()
     pezzi_totali = int(riga[1] or 0)
     return {
-        "pezzi_totali": pezzi_totali,
-        "pezzi": pezzi_totali,  # alias mantenuto per retrocompatibilità
-        "referenze": int(riga[0] or 0),
-        "peso_kg": sum(peso_totale_kg(p) for p in lista_pezzi(session)),
-        "da_riordinare": len(pezzi_da_riordinare(session, soglia_globale)),
-        "profili": int(riga[2] or 0),
-        "colori": int(riga[3] or 0),
-        "barcodes_unici": int(riga[4] or 0),
+        "pezzi_totali": pezzi_totali, "pezzi": pezzi_totali,
+        "referenze": int(riga[0] or 0), "peso_kg": float(riga[5] or 0.0),
+        "da_riordinare": int(riga[6] or 0), "profili": int(riga[2] or 0),
+        "colori": int(riga[3] or 0), "barcodes_unici": int(riga[4] or 0),
     }
 
 
