@@ -65,6 +65,9 @@ _COLONNE = ["Barcode", "Profilo", "Colore", "Lunghezza", "Pezzi", "Peso tot.", "
 _COLORE = 2  # indice colonna "Colore" (contratto test: item(0, 2))
 _BARCODE = 0
 _TUTTE_UBICAZIONI = "Tutte le ubicazioni"
+_FLAG_CELLA = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+_ALLINEA_SX = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+_ALLINEA_DX = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 _STATI_COMBO = [
     ("Stato: tutti", None),
@@ -723,52 +726,52 @@ class TabellaPezzi(QWidget):
         t = tema_attivo()
         tab = self._tabella
         tab.blockSignals(True)
-        tab.setRowCount(0)
 
-        def _item(testo: str, allineamento: int = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter) -> QTableWidgetItem:
+        def _item(testo: str, allineamento: int = _ALLINEA_SX) -> QTableWidgetItem:
             i = QTableWidgetItem(str(testo))
             i.setTextAlignment(allineamento)
-            i.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            i.setFlags(_FLAG_CELLA)
             return i
 
-        for z in pezzi:
-            riga = tab.rowCount()
-            tab.insertRow(riga)
+        tab.setUpdatesEnabled(False)
+        try:
+            tab.setRowCount(len(pezzi))
+            for riga, z in enumerate(pezzi):
+                bc = _item(z.barcode or "")
+                bc.setForeground(QColor(t.testo_dim))
+                tab.setItem(riga, _BARCODE, bc)
 
-            bc = _item(z.barcode or "")
-            bc.setForeground(QColor(t.testo_dim))
-            tab.setItem(riga, _BARCODE, bc)
+                codice = z.profilo.codice or ""
+                descrizione = z.profilo.descrizione or ""
+                prof_item = _item(codice + ((" — " + descrizione) if descrizione else ""))
+                prof_item.setData(Qt.ItemDataRole.UserRole + 1, descrizione)
+                tab.setItem(riga, 1, prof_item)
 
-            codice = z.profilo.codice or ""
-            descrizione = z.profilo.descrizione or ""
-            prof_item = _item(codice + ((" — " + descrizione) if descrizione else ""))
-            prof_item.setData(Qt.ItemDataRole.UserRole + 1, descrizione)
-            tab.setItem(riga, 1, prof_item)
+                colore_txt = z.colore.nome_visualizzato or z.colore.codice_normalizzato
+                col_item = _item(colore_txt)
+                col_item.setData(Qt.ItemDataRole.UserRole + 1, z.colore.codice_normalizzato)
+                tab.setItem(riga, _COLORE, col_item)
 
-            colore_txt = z.colore.nome_visualizzato or z.colore.codice_normalizzato
-            col_item = _item(colore_txt)
-            col_item.setData(Qt.ItemDataRole.UserRole + 1, z.colore.codice_normalizzato)
-            tab.setItem(riga, _COLORE, col_item)
+                peso_tot = consultazione.peso_totale_kg(z)
+                tab.setItem(riga, 3, _item(self._numero_it(z.lunghezza_mm) + " mm" if z.lunghezza_mm else "—", _ALLINEA_DX))
+                stato_riga = consultazione.stato_scorta(z, self._soglia)
+                pz_item = _item(f"{z.quantita:,}".replace(",", "X").replace(".", ",").replace("X", ".") if z.quantita is not None else "—", _ALLINEA_DX)
+                if stato_riga in ("sotto", "esaurito"):
+                    pz_item.setForeground(QColor(t.pericolo))
+                    f = pz_item.font()
+                    f.setBold(True)
+                    pz_item.setFont(f)
+                tab.setItem(riga, 4, pz_item)
+                tab.setItem(riga, 5, _item(_testo_peso(peso_tot), _ALLINEA_DX))
+                tab.setItem(riga, 6, _item(z.ubicazione or "—"))
 
-            peso_tot = consultazione.peso_totale_kg(z)
-            tab.setItem(riga, 3, _item(self._numero_it(z.lunghezza_mm) + " mm" if z.lunghezza_mm else "—", Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter))
-            stato_riga = consultazione.stato_scorta(z, self._soglia)
-            pz_item = _item(f"{z.quantita:,}".replace(",", "X").replace(".", ",").replace("X", ".") if z.quantita is not None else "—", Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            if stato_riga in ("sotto", "esaurito"):
-                pz_item.setForeground(QColor(t.pericolo))
-                f = pz_item.font()
-                f.setBold(True)
-                pz_item.setFont(f)
-            tab.setItem(riga, 4, pz_item)
-            tab.setItem(riga, 5, _item(_testo_peso(peso_tot), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter))
-            tab.setItem(riga, 6, _item(z.ubicazione or "—"))
-
-            testo_stato, chiave = _STATO_INFO.get(stato_riga, ("OK", "ok"))
-            stato_item = _item("")
-            stato_item.setData(Qt.ItemDataRole.UserRole, testo_stato)
-            tab.setItem(riga, 7, stato_item)
-            tab.setCellWidget(riga, 7, _cella_pillola(testo_stato, chiave))
-
+                testo_stato, chiave = _STATO_INFO.get(stato_riga, ("OK", "ok"))
+                stato_item = _item("")
+                stato_item.setData(Qt.ItemDataRole.UserRole, testo_stato)
+                tab.setItem(riga, 7, stato_item)
+                tab.setCellWidget(riga, 7, _cella_pillola(testo_stato, chiave))
+        finally:
+            tab.setUpdatesEnabled(True)
         tab.blockSignals(False)
 
         self._applica_colonna_colore()
