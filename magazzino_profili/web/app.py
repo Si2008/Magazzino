@@ -29,6 +29,7 @@ si limita a ascoltare su ``host:porta`` con TLS.
 
 from __future__ import annotations
 
+import logging
 import secrets
 import tomllib
 from pathlib import Path
@@ -39,9 +40,12 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.exc import SQLAlchemyError
 
 from ..db import crea_engine, crea_session_factory, leggi_config
 from .routes_barcode import crea_router
+
+logger = logging.getLogger(__name__)
 
 # Percorsi delle risorse web, relativi a questo pacchetto.
 _RADICE_PACCHETTO = Path(__file__).resolve().parent
@@ -160,6 +164,22 @@ def crea_app(
     ) -> JSONResponse:
         """Errori 422 con messaggio in italiano (invece di quello predefinito)."""
         return JSONResponse(status_code=422, content={"detail": _messaggio_422(exc)})
+
+    @app.exception_handler(SQLAlchemyError)
+    async def gestore_errore_database(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+        """Errore del database: 503 leggibile al telefono, traceback completo nel registro."""
+        logger.error(
+            "Errore del database su %s %s", request.method, request.url.path, exc_info=exc
+        )
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": (
+                    "Il database non è al momento disponibile: riprovare tra poco. "
+                    "Se era un carico o uno scarico, controllare la giacenza prima di ripetere."
+                )
+            },
+        )
 
     app.include_router(
         crea_router(session_factory, segrete, durata_token_secondi)

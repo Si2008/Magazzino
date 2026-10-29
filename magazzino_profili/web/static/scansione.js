@@ -21,12 +21,19 @@ const STATO = {
   token: null,      // token di sessione, solo in memoria
   utente: null,
   ruolo: null,
-  modalita: null,   // "carico" | "scarico"
+  modalita: null,   // "carico" | "scarico" | "consulta" | "lettore"
   scanner: null,    // istanza Html5Qrcode attiva (o null)
   in_corso: false,  // guardia contro doppi invii
 };
+// Esposto anche come proprietà globale (finestra in browser, oggetto del contesto
+// nei test): resta solo in memoria, mai in localStorage.
+globalThis.STATO = STATO;
 
 const $ = (id) => document.getElementById(id);
+
+// Oltre questo tempo la richiesta viene interrotta con un messaggio chiaro
+// (senza, un telefono con la rete a metà resta in attesa all'infinito).
+const TIMEOUT_RICHIESTA_MS = 15000;
 
 let timerPing = null;
 
@@ -57,16 +64,30 @@ function fermaPing() {
 /* ------------------------------------------------------------------ */
 /* Chiamate all'API (JSON, token Bearer in memoria)                    */
 /* ------------------------------------------------------------------ */
-async function chiedi(url, payload) {
-  const intestazioni = { "Content-Type": "application/json" };
-  if (STATO.token) {
-    intestazioni["Authorization"] = "Bearer " + STATO.token;
+async function inviaRichiesta(url, opzioni, esitoIncerto) {
+  const controllo = new AbortController();
+  const timer = setTimeout(() => controllo.abort(), TIMEOUT_RICHIESTA_MS);
+  let risposta;
+  try {
+    risposta = await fetch(url, Object.assign({}, opzioni, { signal: controllo.signal }));
+  } catch (erroreOriginale) {
+    // rete assente, connessione interrotta o tempo scaduto; un errore che porta
+    // già un codice numerico (es. 401 simulato nei test) viene conservato
+    const codice = erroreOriginale && typeof erroreOriginale.codice === "number"
+      ? erroreOriginale.codice
+      : 0;
+    const errore = new Error(
+      esitoIncerto
+        ? "Connessione assente o interrotta: l'esito dell'operazione è incerto. " +
+          "Prima di ripetere, controllare la giacenza con «Consulta»."
+        : "Connessione assente o interrotta: riprovare tra poco."
+    );
+    errore.codice = codice;
+    errore.esitoIncerto = Boolean(esitoIncerto);
+    throw errore;
+  } finally {
+    clearTimeout(timer);
   }
-  const risposta = await fetch(url, {
-    method: "POST",
-    headers: intestazioni,
-    body: JSON.stringify(payload),
-  });
   let corpo = {};
   try {
     corpo = await risposta.json();
@@ -81,6 +102,27 @@ async function chiedi(url, payload) {
     throw errore;
   }
   return corpo;
+}
+
+// POST: carico, scarico, login e invio al PC. Il comportamento in caso di risposta è invariato.
+async function chiedi(url, payload) {
+  const intestazioni = { "Content-Type": "application/json" };
+  if (STATO.token) {
+    intestazioni["Authorization"] = "Bearer " + STATO.token;
+  }
+  const movimento = url === "/api/carico" || url === "/api/scarico";
+  return inviaRichiesta(
+    url,
+    { method: "POST", headers: intestazioni, body: JSON.stringify(payload) },
+    movimento
+  );
+}
+
+// GET di sola consultazione: non modifica nulla, si può ripetere senza rischi.
+async function chiediGet(url) {
+  const intestazioni = {};
+  if (STATO.token) intestazioni.Authorization = "Bearer " + STATO.token;
+  return inviaRichiesta(url, { method: "GET", headers: intestazioni }, false);
 }
 
 /* ------------------------------------------------------------------ */
@@ -179,7 +221,15 @@ async function onLettura(testo) {
   if (!STATO.in_corso) return; // lettura in ritardo: la ignoro
   STATO.in_corso = false;
   await fermiScanner();
-  await inviaMovimento(testo.trim());
+  if (STATO.modalita === "consulta") {
+    try {
+      await consultaBarcode(testo.trim());
+    } catch (_) {
+      // 401: già gestito da consultaBarcode (messaggio + ritorno al login)
+    }
+  } else {
+    await inviaMovimento(testo.trim());
+  }
 }
 
 async function inviaMovimento(barcode) {
@@ -217,8 +267,13 @@ async function inviaMovimento(barcode) {
   if (causale) payload.causale = causale;
 
   mostraMessaggio("Invio del movimento in corso…", "successo");
+  const esitoIncerto = STATO.modalita === "carico" || STATO.modalita === "scarico";
   try {
-    const corpo = await chiedi("/api/" + STATO.modalita, payload);
+    const corpo = await inviaRichiesta(
+      "/api/" + STATO.modalita,
+      { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${STATO.token}` }, body: JSON.stringify(payload) },
+      esitoIncerto
+    );
     mostraMessaggio(
       corpo.dettaglio +
       " Pezzo: " + corpo.codice_profilo + " — " + corpo.descrizione +
@@ -237,6 +292,39 @@ async function inviaMovimento(barcode) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Consultazione di sola lettura (Fase 9)                              */
+/* ------------------------------------------------------------------ */
+async function consultaBarcode(barcode) {
+  if (!barcode) {
+    mostraMessaggio("Nessun barcode letto.", "errore");
+    return;
+  }
+  mostraMessaggio("Consultazione in corso…", "successo");
+  try {
+    const corpo = await chiediGet("/api/pezzi/" + encodeURIComponent(barcode));
+    // textContent (in mostraMessaggio): il vassoio è testo libero, mai interpretato come HTML
+    mostraMessaggio(
+      corpo.codice_profilo + " — " + corpo.descrizione + "\n" +
+      "Colore: " + corpo.colore + "\n" +
+      "Lunghezza: " + corpo.lunghezza_mm + " mm\n" +
+      "Giacenza: " + corpo.quantita_giacenza + "\n" +
+      "Vassoio: " + (corpo.numero_vassoio ?? "—") + "\n" +
+      "Stato: " + (corpo.stato ?? "—"),
+      "successo"
+    );
+  } catch (errore) {
+    // in ogni caso l'errore è propagato al chiamante (nei test: reject)
+    if (errore.codice === 401) {
+      mostraMessaggio("Sessione scaduta: effettuare nuovamente il login.", "errore");
+      esci();
+    } else {
+      mostraMessaggio(errore.message, "errore");
+    }
+    throw errore;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Avvio della pagina                                                  */
 /* ------------------------------------------------------------------ */
 document.addEventListener("DOMContentLoaded", () => {
@@ -244,5 +332,6 @@ document.addEventListener("DOMContentLoaded", () => {
   $("btn-carico").addEventListener("click", () => avviaScansione("carico"));
   $("btn-scarico").addEventListener("click", () => avviaScansione("scarico"));
   $("btn-lettore").addEventListener("click", () => avviaScansione("lettore"));
+  $("btn-consulta").addEventListener("click", () => avviaScansione("consulta"));
   $("btn-esci").addEventListener("click", esci);
 });

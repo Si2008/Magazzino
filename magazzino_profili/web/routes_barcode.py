@@ -33,6 +33,7 @@ from sqlalchemy import select
 
 from ..domain import Pezzo
 from ..domain.pezzo import QuantitaInsufficienteError
+from ..services import consultazione
 from ..services.carico import carica
 from ..services.eccezioni import PezzoNonTrovatoError, ProfiloNonTrovatoError
 from ..services.scarico import scarica
@@ -84,6 +85,8 @@ def _dettagli_pezzo(pezzo: Pezzo, esito: str) -> dict:
         "colore": pezzo.colore.nome_visualizzato,
         "lunghezza_mm": pezzo.lunghezza_mm,
         "quantita_giacenza": pezzo.quantita,
+        "numero_vassoio": pezzo.numero_vassoio,
+        "stato": pezzo.stato,
     }
 
 
@@ -137,7 +140,11 @@ def crea_router(
         # 1) Pre-verifica in una propria transazione: il barcode deve
         #    corrispondere a un pezzo già presente in magazzino.
         with session_factory() as session:
-            trovato = session.scalar(select(Pezzo).where(Pezzo.barcode == barcode))
+            # solo pezzi attivi: un barcode eliminato non è più disponibile da remoto
+            trovato = session.scalar(
+                select(Pezzo)
+                .where(Pezzo.barcode == barcode, Pezzo.eliminato_il.is_(None))
+            )
             if trovato is None:
                 raise HTTPException(
                     status_code=404,
@@ -199,6 +206,36 @@ def crea_router(
             except QuantitaInsufficienteError as errore:
                 raise HTTPException(status_code=409, detail=str(errore)) from errore
             return _dettagli_pezzo(movimento.pezzo, "Scarico registrato.")
+
+    @router.get("/pezzi/{barcode}")
+    def api_dettaglio_pezzo(
+        barcode: str,
+        utente: UtenteAutenticato = Depends(utente_autenticato),
+    ) -> dict:
+        """Dettaglio di sola lettura di un pezzo: nessun movimento, nessuna modifica.
+
+        Barcode vuoto o troppo lungo → 422; inesistente o eliminato → 404.
+        Ruoli senza il permesso ``inventario`` → 403.
+        """
+        verifica_permesso(utente, "inventario")
+        barcode_n = barcode.strip().upper()
+        if not barcode_n:
+            raise HTTPException(status_code=422, detail="Dati non validi: il barcode non può essere vuoto.")
+        if len(barcode_n) > 255:
+            raise HTTPException(
+                status_code=422, detail="Dati non validi: il barcode non può superare 255 caratteri."
+            )
+        with session_factory() as session:
+            pezzo = consultazione.pezzo_per_barcode(session, barcode_n)
+            if pezzo is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=(
+                        f"Pezzo non trovato: il barcode '{barcode_n}' non corrisponde a "
+                        "nessun pezzo in magazzino."
+                    ),
+                )
+            return _dettagli_pezzo(pezzo, "Dettaglio disponibile.")
 
     @router.post("/scansione")
     def api_scansione(
