@@ -22,6 +22,7 @@ from .backup import PianificatoreBackup, leggi_config_backup
 from .db import crea_engine, crea_session_factory, crea_tabelle, leggi_config
 from .db.server import ensure_running
 from .db.migrazioni import applica_migrazioni
+from .services.controllo_scadenze import ControlloScadenze
 from .sicurezza import Ruolo, Utente
 from .ui import FinestraPrincipale
 
@@ -85,7 +86,17 @@ def main() -> int:
     finestra = FinestraPrincipale(factory, utente.ruolo, utente.username)
     finestra.showMaximized()
 
+    # 6) Fase 8: controllo periodico delle scadenze in un thread di sottofondo.
+    # Il primo giro parte subito all'avvio; un errore non ferma il ciclo.
+    controllo_scadenze = ControlloScadenze(
+        factory,
+        intervallo_secondi=300,
+        su_eliminati=lambda n: finestra.scadenze_eliminate.emit(n),
+    )
+    controllo_scadenze.avvia()
+
     codice_uscita = app.exec()
+    controllo_scadenze.ferma()
     pianificatore.ferma()
     return codice_uscita
 
