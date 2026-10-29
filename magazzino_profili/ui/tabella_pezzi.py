@@ -37,8 +37,10 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
+    QInputDialog,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QSizePolicy,
     QStyledItemDelegate,
     QTabBar,
@@ -48,7 +50,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..services import consultazione, impostazioni
+from ..services import (
+    aggiorna_barcode,
+    consultazione,
+    elimina_manualmente,
+    impostazioni,
+    imposta_numero_vassoio,
+    imposta_stato,
+)
+from ..services.eccezioni import BarcodeDuplicatoError, PezzoEliminatoError, PezzoNonTrovatoError
 from . import animazioni, tema
 from .tema import M, colore_di_codice, rem, tema_attivo
 from .icone import ic_px, icona_svg, pixmap_icona
@@ -61,9 +71,11 @@ from .componenti import (
     icona_tessera,
 )
 
-_COLONNE = ["Barcode", "Profilo", "Colore", "Lunghezza", "Pezzi", "Peso tot.", "Ubicazione", "Stato"]
+_COLONNE = ["Barcode", "Profilo", "Colore", "Lunghezza", "Pezzi", "Peso tot.", "Ubicazione", "Stato", "Vassoio", "Stato barcode"]
 _COLORE = 2  # indice colonna "Colore" (contratto test: item(0, 2))
 _BARCODE = 0
+_VASSOIO = 8   # Fase 7: numero di vassoio (testo libero)
+_STATO_BARCODE = 9  # Fase 8: Caricato / Scaricato (colonna propria, distinta dallo stato di scorta)
 _TUTTE_UBICAZIONI = "Tutte le ubicazioni"
 _FLAG_CELLA = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
 _ALLINEA_SX = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
@@ -222,7 +234,7 @@ class TabellaPezzi(QWidget):
         self._tabbar.currentChanged.connect(self._su_cambio_tab)
         self.cerca.textChanged.connect(lambda _t: self._rinfresca_tabella())
         self.combo_ubicazione.editTextChanged.connect(lambda _t: self._rinfresca_tabella())
-        for c in (self.combo_profilo, self.combo_stato):
+        for c in (self.combo_profilo, self.combo_stato, self.combo_stato_barcode):
             c.currentIndexChanged.connect(lambda _i: self._rinfresca_tabella())
 
         self.aggiorna()
@@ -339,11 +351,17 @@ class TabellaPezzi(QWidget):
             self.combo_stato.addItem(etichetta, valore)
         h.addWidget(self.combo_stato)
 
+        # Fase 8: filtro sullo stato del barcode (Caricato / Scaricato)
+        self.combo_stato_barcode = QComboBox(barra)
+        for etichetta, valore in (("Stato barcode: tutti", None), ("Caricato", "Caricato"), ("Scaricato", "Scaricato")):
+            self.combo_stato_barcode.addItem(etichetta, valore)
+        h.addWidget(self.combo_stato_barcode)
+
         self.azzera = bottone("Azzera", icona="refresh", parent=barra)
         self.azzera.clicked.connect(self._azzera_filtri)
         h.addWidget(self.azzera)
         # i filtri si accorciano invece di sovrapporsi alla ricerca quando la card è stretta
-        for combo in (self.combo_profilo, self.combo_ubicazione, self.combo_stato):
+        for combo in (self.combo_profilo, self.combo_ubicazione, self.combo_stato, self.combo_stato_barcode):
             combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
             combo.setMinimumContentsLength(11)
             combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -542,7 +560,12 @@ class TabellaPezzi(QWidget):
             lab_e = QLabel(etichetta, s2)
             lab_e.setObjectName("Debole")
             griglia.addWidget(lab_e, i, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-            griglia.addWidget(valore, i, 1, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+            if isinstance(valore, QLabel):  # il colore è già un widget (_etichetta_colore)
+                griglia.addWidget(valore, i, 1)
+            else:
+                lab_v = QLabel(valore, s2)
+                lab_v.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+                griglia.addWidget(lab_v, i, 1)
         v2.addLayout(griglia)
 
         pulsanti = QGridLayout()
@@ -559,6 +582,58 @@ class TabellaPezzi(QWidget):
         pulsanti.addWidget(etichetta_pdf, 1, 0, 1, 2)
         v2.addLayout(pulsanti)
         self._pannello_l.addWidget(s2)
+
+        # --- sezione STATO BARCODE (Fase 8) + vassoio e barcode (Fase 7)
+        s3 = QFrame(self._pannello)
+        s3.setObjectName("Lat")
+        v3 = QVBoxLayout(s3)
+        v3.setContentsMargins(M.LAT_PH, M.LAT_PV, M.LAT_PH, M.LAT_PV)
+        v3.setSpacing(M.GAP_SM)
+        titolo3 = QLabel("STATO BARCODE", s3)
+        titolo3.setObjectName("LatSezione")
+        v3.addWidget(titolo3)
+
+        griglia3 = QGridLayout()
+        griglia3.setContentsMargins(0, 0, 0, 0)
+        griglia3.setHorizontalSpacing(M.GAP)
+        griglia3.setVerticalSpacing(M.GAP_SM)
+        lab_st = QLabel("Stato", s3)
+        lab_st.setObjectName("Debole")
+        val_st = QLabel(pezzo.stato or "—", s3)
+        griglia3.addWidget(lab_st, 0, 0)
+        griglia3.addWidget(val_st, 0, 1)
+        lab_v = QLabel("Vassoio", s3)
+        lab_v.setObjectName("Debole")
+        griglia3.addWidget(lab_v, 1, 0)
+        griglia3.addWidget(QLabel(pezzo.numero_vassoio or "—", s3), 1, 1)
+        v3.addLayout(griglia3)
+
+        riga_st = QHBoxLayout()
+        riga_st.setContentsMargins(0, 0, 0, 0)
+        riga_st.setSpacing(M.GAP_SM)
+        btn_caricato = bottone("Caricato", "ok", icona="up", parent=s3)
+        btn_scaricato = bottone("Scaricato", "pericolo", icona="down", parent=s3)
+        btn_caricato.clicked.connect(lambda: self._imposta_stato("Caricato"))
+        btn_scaricato.clicked.connect(lambda: self._imposta_stato("Scaricato"))
+        riga_st.addWidget(btn_caricato)
+        riga_st.addWidget(btn_scaricato)
+        v3.addLayout(riga_st)
+
+        riga_az = QHBoxLayout()
+        riga_az.setContentsMargins(0, 0, 0, 0)
+        riga_az.setSpacing(M.GAP_SM)
+        btn_vassoio = bottone("Imposta vassoio…", icona="layers", parent=s3)
+        btn_vassoio.clicked.connect(self._imposta_vassoio)
+        btn_barcode = bottone("Modifica barcode…", icona="tag", parent=s3)
+        btn_barcode.clicked.connect(self._modifica_barcode)
+        riga_az.addWidget(btn_vassoio)
+        riga_az.addWidget(btn_barcode)
+        v3.addLayout(riga_az)
+
+        btn_elimina = bottone("Elimina barcode", "pericolo", icona="x", parent=s3)
+        btn_elimina.clicked.connect(self._elimina_barcode)
+        v3.addWidget(btn_elimina)
+        self._pannello_l.addWidget(s3)
 
         # --- sezione MOVIMENTI DI QUESTO PEZZO
         self._sezione_movimenti("MOVIMENTI DI QUESTO PEZZO", pezzo.id, 4)
@@ -633,6 +708,102 @@ class TabellaPezzi(QWidget):
             self._footer.setText("Etichetta PDF generata")
         except ValueError as errore:
             self._footer.setText(f"Etichetta: {errore}")
+
+    # ------------------------------------------------------------------
+    # azioni su stato, vassoio, barcode (Fasi 7-8)
+    # ------------------------------------------------------------------
+    def _id_selezionato(self) -> int | None:
+        """ID del pezzo selezionato, cercato per barcode (il pannello usa ``_barcode_selezionato``)."""
+        if not self._barcode_selezionato:
+            return None
+        sessione = self._factory()
+        try:
+            pezzo = consultazione.pezzo_per_barcode(sessione, self._barcode_selezionato)
+            return pezzo.id if pezzo is not None else None
+        finally:
+            sessione.close()
+
+    def _imposta_stato(self, stato: str) -> None:
+        """Fase 8: imposta Caricato/Scaricato; in caso di errore l'UI resta invariata."""
+        pezzo_id = self._id_selezionato()
+        if pezzo_id is None:
+            return
+        sessione = self._factory()
+        try:
+            imposta_stato(sessione, pezzo_id, stato)
+        except (PezzoNonTrovatoError, PezzoEliminatoError, ValueError) as errore:
+            QMessageBox.warning(self, "Stato barcode", str(errore))
+            return  # UI non aggiornata
+        finally:
+            sessione.close()
+        self.aggiorna()  # conserva i filtri correnti
+
+    def _elimina_barcode(self) -> None:
+        """Fase 8: eliminazione logica manuale con conferma (default: No)."""
+        pezzo_id = self._id_selezionato()
+        if pezzo_id is None:
+            return
+        risposta = QMessageBox.question(
+            self, "Elimina barcode", "Eliminare questo barcode? Lo storico dei movimenti resta conservato.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,  # default: No
+        )
+        if risposta != QMessageBox.StandardButton.Yes:
+            return  # nessuna sessione aperta, nessun messaggio di successo
+        sessione = self._factory()
+        try:
+            elimina_manualmente(sessione, pezzo_id, confermato=True)
+        except (PezzoNonTrovatoError, PezzoEliminatoError, ValueError) as errore:
+            QMessageBox.warning(self, "Elimina barcode", str(errore))
+            return
+        finally:
+            sessione.close()
+        self._barcode_selezionato = None  # il record non è più selezionabile
+        self.aggiorna()
+
+    def _modifica_barcode(self) -> None:
+        """Fase 7: cambia il codice del barcode (id, movimenti, vassoio invariati)."""
+        pezzo_id = self._id_selezionato()
+        if pezzo_id is None:
+            return
+        nuovo, ok = QInputDialog.getText(self, "Modifica barcode", "Nuovo codice barcode:")
+        if not ok or not nuovo.strip():
+            return
+        sessione = self._factory()
+        try:
+            pezzo = aggiorna_barcode(sessione, pezzo_id, nuovo)
+        except (PezzoNonTrovatoError, PezzoEliminatoError, BarcodeDuplicatoError, ValueError) as errore:
+            QMessageBox.warning(self, "Modifica barcode", str(errore))
+            return
+        finally:
+            sessione.close()
+        self._barcode_selezionato = pezzo.barcode  # la selezione resta sul record, con il nuovo codice
+        self.aggiorna()
+
+    def _imposta_vassoio(self) -> None:
+        """Fase 7: imposta (o cancella, lasciando il campo vuoto) il numero di vassoio."""
+        pezzo_id = self._id_selezionato()
+        if pezzo_id is None:
+            return
+        attuale = ""
+        sessione = self._factory()
+        try:
+            pezzo = consultazione.pezzo_per_barcode(sessione, self._barcode_selezionato)
+            attuale = pezzo.numero_vassoio or "" if pezzo is not None else ""
+        finally:
+            sessione.close()
+        valore, ok = QInputDialog.getText(self, "Numero di vassoio", "Vassoio (vuoto per cancellare):", text=attuale)
+        if not ok:
+            return
+        sessione = self._factory()
+        try:
+            imposta_numero_vassoio(sessione, pezzo_id, valore)
+        except (PezzoNonTrovatoError, PezzoEliminatoError, ValueError) as errore:
+            QMessageBox.warning(self, "Numero di vassoio", str(errore))
+            return
+        finally:
+            sessione.close()
+        self.aggiorna()
 
     # ------------------------------------------------------------------
     # aggiornamento dati
@@ -719,6 +890,7 @@ class TabellaPezzi(QWidget):
                 profilo_id=self.combo_profilo.currentData(),
                 ubicazione=ubicazione,
                 soglia_globale=self._soglia,
+                stato_barcode=self.combo_stato_barcode.currentData(),
             )
         finally:
             sessione.close()
@@ -764,6 +936,16 @@ class TabellaPezzi(QWidget):
                 tab.setItem(riga, 4, pz_item)
                 tab.setItem(riga, 5, _item(_testo_peso(peso_tot), _ALLINEA_DX))
                 tab.setItem(riga, 6, _item(z.ubicazione or "—"))
+
+                # Fase 7: numero di vassoio (testo libero, "—" se non impostato)
+                tab.setItem(riga, _VASSOIO, _item(z.numero_vassoio or "—"))
+
+                # Fase 8: stato del barcode (NULL = record storico senza stato)
+                testo_sb = z.stato or "—"
+                sb_item = _item(testo_sb)
+                if z.stato == "Scaricato":
+                    sb_item.setForeground(QColor(t.pericolo))
+                tab.setItem(riga, _STATO_BARCODE, sb_item)
 
                 testo_stato, chiave = _STATO_INFO.get(stato_riga, ("OK", "ok"))
                 stato_item = _item("")
@@ -828,6 +1010,7 @@ class TabellaPezzi(QWidget):
         self.combo_profilo.setCurrentIndex(0)
         self.combo_ubicazione.setCurrentIndex(0)
         self.combo_stato.setCurrentIndex(0)
+        self.combo_stato_barcode.setCurrentIndex(0)
         self._rinfresca_tabella()
 
     def vai_a_colore(self, colore_id: int) -> None:

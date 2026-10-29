@@ -34,3 +34,19 @@ class SpezzoneNonTrovatoError(Exception):
     def __init__(self, spezzone_id: int) -> None:
         self.spezzone_id = spezzone_id
         super().__init__(f"Spezzone non trovato: id {spezzone_id}")
+
+
+class BarcodeDuplicatoError(Exception):
+    """Il barcode è già assegnato a un altro pezzo."""
+
+    def __init__(self, barcode: str) -> None:
+        self.barcode = barcode
+        super().__init__(f"Barcode già assegnato a un altro pezzo: '{barcode}'.")
+
+
+class PezzoEliminatoError(Exception):
+    """Il pezzo è stato eliminato logicamente e non è modificabile."""
+
+    def __init__(self, pezzo_id: int) -> None:
+        self.pezzo_id = pezzo_id
+        super().__init__(f"Pezzo eliminato: id {pezzo_id}.")

@@ -21,7 +21,7 @@ import sys
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from PySide6.QtCore import Qt, QTimer, SignalInstance
+from PySide6.QtCore import Qt, QTimer, Signal, SignalInstance
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
@@ -178,6 +178,8 @@ def _pallino(hx: str, d: int) -> "object":
 class FinestraPrincipale(QWidget):
     """Finestra principale con le schede di magazzino."""
 
+    scadenze_eliminate = Signal(int)  # emesso dal thread del controllo: Qt lo consegna al thread UI
+
     def __init__(
         self,
         factory,
@@ -243,6 +245,8 @@ class FinestraPrincipale(QWidget):
         dx = QShortcut(QKeySequence("Ctrl+Alt+Right"), self)
         dx.setContext(Qt.ShortcutContext.WindowShortcut)
         dx.activated.connect(lambda: self._muovi_tab_colori(1))
+
+        self.scadenze_eliminate.connect(self._su_scadenze_eliminate)
 
         self._messaggio("Apertura: accesso come " + self._nome_utente)
         self._aggiorna_stato_riepilogo()
@@ -480,6 +484,12 @@ class FinestraPrincipale(QWidget):
         self._tab.setCurrentWidget(self.scheda_inventario)
         self.scheda_inventario.vai_a_colore(colore_id)
         self._messaggio(f"Inventario: scheda colore selezionata da Avvisi (colore {colore_id})")
+
+    def _su_scadenze_eliminate(self, n: int) -> None:
+        """Fase 8: il controllo di sottofondo ha eliminato barcode scaduti."""
+        if self.scheda_inventario is not None:
+            self.scheda_inventario.aggiorna()
+        self._messaggio(f"{n} barcode scaduti eliminati automaticamente")
 
     def _su_soglia_cambiata(self, _valore: int) -> None:
         """La soglia globale è cambiata in Avvisi: rinfresca badge e KPI/Inventario."""

@@ -275,3 +275,42 @@ def test_quantita_non_intera_positiva_rifiutata_dal_telefono(percorso, quantita)
     with factory() as session:
         pezzo = session.scalar(select(Pezzo).where(Pezzo.barcode == BARCODE))
         assert pezzo.quantita == GIACENZA_INIZIALE
+
+
+# ----------------------------------------------------------------------
+# Fase 7: barcode modificato, vassoio/stato nella risposta, eliminati
+# ----------------------------------------------------------------------
+def test_telefono_trova_il_nuovo_barcode_con_vassoio_e_stato() -> None:
+    from magazzino_profili.services import aggiorna_barcode, imposta_numero_vassoio
+
+    client, factory = _app_con_dati()
+    token = _token(client)
+    with factory() as session:
+        pezzo_id = session.scalar(select(Pezzo.id).where(Pezzo.barcode == BARCODE))
+    with factory() as session:
+        aggiorna_barcode(session, pezzo_id, "nuovo-1")
+    with factory() as session:
+        imposta_numero_vassoio(session, pezzo_id, "Vassoio 4")
+
+    ok = client.post("/api/carico", json={"barcode": "nuovo-1", "quantita": 1}, headers=_intestazioni(token))
+    assert ok.status_code == 200
+    corpo = ok.json()
+    assert (corpo["barcode"], corpo["numero_vassoio"], corpo["stato"]) == ("NUOVO-1", "Vassoio 4", None)
+    vecchio = client.post("/api/carico", json={"barcode": BARCODE, "quantita": 1}, headers=_intestazioni(token))
+    assert vecchio.status_code == 404
+
+
+@pytest.mark.parametrize("percorso", ["/api/carico", "/api/scarico"])
+def test_telefono_pezzo_eliminato_non_disponibile_e_non_riattivato(percorso) -> None:
+    from datetime import datetime, timezone
+
+    client, factory = _app_con_dati()
+    token = _token(client)
+    with factory() as session, session.begin():
+        session.scalar(select(Pezzo).where(Pezzo.barcode == BARCODE)).eliminato_il = datetime.now(timezone.utc)
+    risposta = client.post(percorso, json={"barcode": BARCODE, "quantita": 1}, headers=_intestazioni(token))
+    assert risposta.status_code == 404
+    assert _conteggio(factory, Movimento) == 0
+    with factory() as session:
+        pezzo = session.scalar(select(Pezzo).where(Pezzo.barcode == BARCODE))
+        assert pezzo.eliminato_il is not None and pezzo.quantita == GIACENZA_INIZIALE

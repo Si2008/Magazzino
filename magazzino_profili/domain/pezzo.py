@@ -1,8 +1,9 @@
 """Giacenza: un pezzo è la combinazione profilo + colore + lunghezza."""
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db.normalizzazione import normalizza_codice
@@ -44,6 +45,12 @@ class Pezzo(Base):
     __table_args__ = (
         UniqueConstraint("profilo_id", "colore_id", "lunghezza_mm", name="combinazione"),
         CheckConstraint("quantita >= 0", name="quantita_non_negativa"),
+        # Solo i due stati persistiti sono ammessi; NULL = record storico
+        # privo di una transizione dimostrabile (migrazioni 004/005).
+        CheckConstraint(
+            "stato IS NULL OR stato IN ('Caricato', 'Scaricato')",
+            name="stato_valido",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -59,6 +66,19 @@ class Pezzo(Base):
     scorta_minima: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Generato dal sistema: CODICE-NORMALIZZATO-COLORE-NORMALIZZATO-lunghezza_mm.
     barcode: Mapped[str] = mapped_column(String(255), unique=True)
+    # Campi della Fase 6: nullable per i record esistenti (NULL = storico).
+    # Testo libero (es. "4", "Vassoio 4"): nessuna unicità richiesta.
+    numero_vassoio: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # "Caricato" | "Scaricato" | None (storico). Vincolato da stato_valido.
+    stato: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    # Ultimo cambio di stato (UTC); valorizzata solo insieme a ``stato``.
+    data_ultimo_cambio_stato: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # Cancellazione logica: valorizzata => il record non è più attivo.
+    eliminato_il: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
 
     profilo: Mapped["Profilo"] = relationship(back_populates="pezzi")
     colore: Mapped["Colore"] = relationship(back_populates="pezzi")

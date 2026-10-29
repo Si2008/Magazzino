@@ -9,13 +9,17 @@ nessuna unità viene persa. Creazione di colore e pezzo: se un'altra
 transazione li ha creati nel frattempo, si riusa quello creato dall'altra.
 """
 
+from collections.abc import Callable
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..db.normalizzazione import genera_barcode, normalizza_codice, normalizza_colore
 from ..domain import Colore, Pezzo, Profilo, TipoMovimento, registra_movimento
-from .eccezioni import PezzoNonTrovatoError, ProfiloNonTrovatoError
+from .eccezioni import BarcodeDuplicatoError, PezzoNonTrovatoError, ProfiloNonTrovatoError
+from .stati import _ora_utc, utc_now
 
 
 def _pezzo_bloccato(session: Session, profilo_id: int, colore_id: int, lunghezza_mm: int):
@@ -62,11 +66,13 @@ def _crea_pezzo(session: Session, profilo: Profilo, colore: Colore,
                 ubicazione=ubicazione,
             )
             session.add(pezzo)
-    except IntegrityError:
+    except IntegrityError as errore:
         # Creato da un'altra transazione nel frattempo: si riusa quello.
         pezzo = _pezzo_bloccato(session, profilo.id, colore.id, lunghezza_mm)
         if pezzo is None:
-            raise  # conflitto reale (es. barcode già usato da un'altra combinazione)
+            # Conflitto reale: il barcode generato è già di un altro pezzo (ad esempio
+            # dopo una modifica manuale del barcode). Errore leggibile, nulla viene creato.
+            raise BarcodeDuplicatoError(barcode) from errore
     return pezzo
 
 
@@ -80,6 +86,8 @@ def carica(
     causale: str,
     ubicazione: str | None = None,
     crea_se_mancante: bool = True,
+    *,
+    now: Callable[[], datetime] = utc_now,
 ) -> Pezzo:
     """Effettua un carico di magazzino (solo aumento di giacenza).
 
@@ -105,6 +113,19 @@ def carica(
         colore_db = _colore_o_crea(session, colore_n)
 
         pezzo = _pezzo_bloccato(session, profilo.id, colore_db.id, lunghezza_mm)
+        if pezzo is not None and pezzo.eliminato_il is not None:
+            if not crea_se_mancante:
+                # Per il telefono (crea_se_mancante=False) il pezzo eliminato
+                # non esiste: nessuna riattivazione da remoto.
+                raise PezzoNonTrovatoError(
+                    f"codice '{codice_n}', colore '{colore_n}', lunghezza {lunghezza_mm}"
+                )
+            # Desktop: si riattiva lo stesso record (id, barcode, vassoio, relazioni invariati).
+            pezzo.eliminato_il = None
+            # Tornando in magazzino con un carico il barcode è di nuovo «Caricato»: senza questo
+            # un record eliminato da «Scaricato» verrebbe rieliminato al controllo successivo.
+            pezzo.stato = "Caricato"
+            pezzo.data_ultimo_cambio_stato = _ora_utc(now)
         if pezzo is None:
             if not crea_se_mancante:
                 raise PezzoNonTrovatoError(

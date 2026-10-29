@@ -35,11 +35,19 @@ def _limite_sotto_scorta(soglia_globale: int | None):
     return func.coalesce(Pezzo.scorta_minima - 1, soglia_globale)
 
 
+def _condizione_pezzo_attivo():
+    """Esclude i pezzi eliminati logicamente (``eliminato_il`` valorizzato)."""
+    return Pezzo.eliminato_il.is_(None)
+
+
 def lista_pezzi(session: Session) -> list[Pezzo]:
-    """Tutti i pezzi in giacenza, ordinati per barcode."""
+    """Tutti i pezzi in giacenza attivi, ordinati per barcode."""
     return list(
         session.scalars(
-            select(Pezzo).options(*_opzioni_pezzo()).order_by(Pezzo.barcode)
+            select(Pezzo)
+            .options(*_opzioni_pezzo())
+            .where(_condizione_pezzo_attivo())
+            .order_by(Pezzo.barcode)
         )
     )
 
@@ -65,6 +73,7 @@ def pezzi_sotto_scora(session: Session, soglia_globale: int | None = None) -> li
             select(Pezzo)
             .options(*_opzioni_pezzo())
             .where(
+                _condizione_pezzo_attivo(),
                 Pezzo.quantita <= _limite_sotto_scorta(soglia_globale),
             )
         )
@@ -85,6 +94,7 @@ def cerca_pezzi(
     profilo_id: int | None = None,
     ubicazione: str | None = None,
     soglia_globale: int | None = None,
+    stato_barcode: str | None = None,
 ) -> list[Pezzo]:
     """Cerca pezzi per testo libero, colori, profilo, ubicazione e stato scorta.
 
@@ -98,9 +108,17 @@ def cerca_pezzi(
       ignorati) dell'ubicazione;
     - ``stato``: ``"sotto"`` = sotto scorta minima, ``"ok"`` = non
       sotto scorta, ``"esaurito"`` = giacenza zero, ``"riordino"`` =
-      esaurito o sotto scorta, ``None`` = tutti.
+      esaurito o sotto scorta, ``None`` = tutti;
+    - ``stato_barcode``: filtra sullo stato persistito del barcode
+      (``"Caricato"`` o ``"Scaricato"``), ``None`` = tutti.
+
+    Restituisce solo i pezzi attivi (non eliminati logicamente).
     """
-    condizioni = []
+    if stato_barcode not in (None, "Caricato", "Scaricato"):
+        raise ValueError("Stato barcode non valido: ammessi 'Caricato' e 'Scaricato'")
+    condizioni = [_condizione_pezzo_attivo()]
+    if stato_barcode is not None:
+        condizioni.append(Pezzo.stato == stato_barcode)
 
     for parola in testo.split():
         parola = parola.strip()
@@ -114,6 +132,7 @@ def cerca_pezzi(
                 Pezzo.profilo.has(Profilo.descrizione.ilike(like, escape="\\")),
                 Pezzo.colore.has(Colore.nome_visualizzato.ilike(like, escape="\\")),
                 Pezzo.ubicazione.ilike(like, escape="\\"),
+                Pezzo.numero_vassoio.ilike(like, escape="\\"),
             )
         )
 
@@ -235,7 +254,9 @@ def riepilogo_inventario(session: Session, soglia_globale: int | None = None) ->
             func.count(func.distinct(Pezzo.barcode)),
             func.coalesce(func.sum(peso), 0.0),
             func.coalesce(func.sum(case((da_riordinare, 1), else_=0)), 0),
-        ).select_from(Pezzo).join(Profilo, Pezzo.profilo_id == Profilo.id)
+        ).select_from(Pezzo)
+        .join(Profilo, Pezzo.profilo_id == Profilo.id)
+        .where(_condizione_pezzo_attivo())
     ).one()
     pezzi_totali = int(riga[1] or 0)
     return {
@@ -255,8 +276,11 @@ def pezzo_per_barcode(session: Session, barcode: str | None) -> Pezzo | None:
     valore = (barcode or "").strip().upper()
     if not valore:
         return None
+    # Solo pezzi attivi: un barcode eliminato non è più consultabile nei flussi.
     return session.scalar(
-        select(Pezzo).options(*_opzioni_pezzo()).where(Pezzo.barcode == valore)
+        select(Pezzo)
+        .options(*_opzioni_pezzo())
+        .where(Pezzo.barcode == valore, _condizione_pezzo_attivo())
     )
 
 
@@ -283,6 +307,7 @@ def pezzo_per_combinazione(
             Profilo.codice == codice_n,
             Colore.codice_normalizzato == colore_n,
             Pezzo.lunghezza_mm == lunghezza_mm,
+            _condizione_pezzo_attivo(),
         )
     )
 
@@ -320,7 +345,7 @@ def lista_ubicazioni(session: Session) -> list[str]:
     """Ubicazioni distinte e non vuote, in ordine naturale (Vassoio 2 < Vassoio 10)."""
     valori = session.scalars(
         select(Pezzo.ubicazione)
-        .where(Pezzo.ubicazione.is_not(None), Pezzo.ubicazione != "")
+        .where(_condizione_pezzo_attivo(), Pezzo.ubicazione.is_not(None), Pezzo.ubicazione != "")
         .distinct()
     ).all()
     return sorted({v.strip() for v in valori if v and v.strip()}, key=_chiave_naturale)
@@ -355,9 +380,11 @@ def lista_profili_con_giacenza(session: Session) -> list[tuple[Profilo, int]]:
     I profili senza pezzi hanno totale ``0`` (outer join).
     Ordinati per codice profilo.
     """
+    # La condizione "attivo" va nella clausola ON del join esterno:
+    # nel WHERE un profilo con solo pezzi eliminati sparirebbe dall'elenco.
     righe = session.execute(
         select(Profilo, func.coalesce(func.sum(Pezzo.quantita), 0))
-        .outerjoin(Pezzo, Pezzo.profilo_id == Profilo.id)
+        .outerjoin(Pezzo, and_(Pezzo.profilo_id == Profilo.id, _condizione_pezzo_attivo()))
         .group_by(Profilo.id)
         .order_by(Profilo.codice)
     ).all()
@@ -377,7 +404,7 @@ def lista_colori_con_conteggio(session: Session) -> list[tuple[Colore, int, int]
             func.count(Pezzo.id),
             func.coalesce(func.sum(Pezzo.quantita), 0),
         )
-        .outerjoin(Pezzo, Pezzo.colore_id == Colore.id)
+        .outerjoin(Pezzo, and_(Pezzo.colore_id == Colore.id, _condizione_pezzo_attivo()))
         .group_by(Colore.id)
         .order_by(Colore.codice_normalizzato)
     ).all()
@@ -391,10 +418,11 @@ def pezzi_da_riordinare(session: Session, soglia_globale: int | None = None) -> 
             select(Pezzo)
             .options(*_opzioni_pezzo())
             .where(
+                _condizione_pezzo_attivo(),
                 or_(
                     Pezzo.quantita <= 0,
                     Pezzo.quantita <= _limite_sotto_scorta(soglia_globale),
-                )
+                ),
             )
             .order_by(Pezzo.quantita.asc(), Pezzo.barcode)
         )
@@ -424,10 +452,11 @@ def pezzi_avvisi(session: Session, soglia_globale: int | None = None) -> list[Pe
             select(Pezzo)
             .options(*_opzioni_pezzo())
             .where(
+                _condizione_pezzo_attivo(),
                 or_(
                     Pezzo.quantita <= 0,
                     Pezzo.quantita <= riferimento * MOLTIPLICATORE_ESAURIMENTO,
-                )
+                ),
             )
             .order_by(Pezzo.quantita.asc(), Pezzo.barcode)
         )

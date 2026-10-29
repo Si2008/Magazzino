@@ -41,6 +41,16 @@ def applica_migrazioni(engine: Engine) -> list[str]:
         # Le migrazioni sono composte da istruzioni semplici separate da ';'.
         istruzioni = [s.strip() for s in sql.split(";") if s.strip()]
         with engine.begin() as conn:
+            if conn.dialect.name == "postgresql":
+                # Due avvii simultanei: il secondo attende il lock transazionale
+                # e poi trova la migrazione già registrata, quindi non la riesegue
+                # (senza il blocco falliva con IntegrityError su migrazioni_applicate).
+                conn.execute(text("SELECT pg_advisory_xact_lock(727001)"))
+                if conn.execute(
+                    text("SELECT 1 FROM migrazioni_applicate WHERE nome = :nome"),
+                    {"nome": file.name},
+                ).first():
+                    continue
             for istruzione in istruzioni:
                 conn.execute(text(istruzione))
             conn.execute(

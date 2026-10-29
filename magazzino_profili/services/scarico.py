@@ -32,9 +32,11 @@ def scarica(
     barcode_pulito = barcode.strip().upper()
 
     with session.begin():
+        # solo pezzi attivi: i barcode eliminati (cancellazione logica)
+        # non sono più movimentabili (regola Fase 7)
         pezzo = session.scalar(
             select(Pezzo)
-            .where(Pezzo.barcode == barcode_pulito)
+            .where(Pezzo.barcode == barcode_pulito, Pezzo.eliminato_il.is_(None))
             .with_for_update()
             .execution_options(populate_existing=True)
         )
