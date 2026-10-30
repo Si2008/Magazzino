@@ -76,6 +76,68 @@ def _crea_pezzo(session: Session, profilo: Profilo, colore: Colore,
     return pezzo
 
 
+def _carica_in_transazione(
+    session: Session,
+    codice: str,
+    colore: str,
+    lunghezza_mm: int,
+    quantita: int,
+    utente: str,
+    causale: str,
+    ubicazione: str | None = None,
+    crea_se_mancante: bool = True,
+    *,
+    now: Callable[[], datetime] = utc_now,
+) -> Pezzo:
+    """Corpo di ``carica`` SENZA aprire la transazione.
+
+    Il chiamante possiede ``session.begin()``: così più carichi possono
+    stare in un'unica transazione (import atomico). Non fa commit.
+    """
+    ubicazione_n = ubicazione.strip() if isinstance(ubicazione, str) and ubicazione.strip() else None
+    codice_n = normalizza_codice(codice)
+    colore_n = normalizza_colore(colore)
+
+    profilo = session.scalar(select(Profilo).where(Profilo.codice == codice_n))
+    if profilo is None:
+        raise ProfiloNonTrovatoError(codice_n)
+
+    colore_db = _colore_o_crea(session, colore_n)
+
+    pezzo = _pezzo_bloccato(session, profilo.id, colore_db.id, lunghezza_mm)
+    if pezzo is not None and pezzo.eliminato_il is not None:
+        if not crea_se_mancante:
+            # Per il telefono (crea_se_mancante=False) il pezzo eliminato
+            # non esiste: nessuna riattivazione da remoto.
+            raise PezzoNonTrovatoError(
+                f"codice '{codice_n}', colore '{colore_n}', lunghezza {lunghezza_mm}"
+            )
+        # Desktop: si riattiva lo stesso record (id, barcode, vassoio, relazioni invariati).
+        pezzo.eliminato_il = None
+        # Tornando in magazzino con un carico il barcode è di nuovo «Caricato»: senza questo
+        # un record eliminato da «Scaricato» verrebbe rieliminato al controllo successivo.
+        pezzo.stato = "Caricato"
+        pezzo.data_ultimo_cambio_stato = _ora_utc(now)
+    if pezzo is None:
+        if not crea_se_mancante:
+            raise PezzoNonTrovatoError(
+                f"profilo {codice_n}, colore {colore_n}, lunghezza {lunghezza_mm} mm"
+            )
+        pezzo = _crea_pezzo(session, profilo, colore_db, lunghezza_mm, ubicazione_n)
+    elif ubicazione_n and not (pezzo.ubicazione or "").strip():
+        pezzo.ubicazione = ubicazione_n
+
+    registra_movimento(
+        session,
+        pezzo,
+        TipoMovimento.CARICO,
+        quantita,
+        causale=causale,
+        utente=utente,
+    )
+    return pezzo
+
+
 def carica(
     session: Session,
     codice: str,
@@ -100,48 +162,21 @@ def carica(
     - ``ubicazione`` viene salvata solo se il pezzo non ne ha già una;
     - la quantità viene incrementata con un Movimento CARICO nella stessa
       transazione. Se un passo fallisce, nulla viene salvato.
+
+    La transazione è aperta qui; il lavoro è delegato a
+    ``_carica_in_transazione`` (così un import atomico può aprire la sua
+    transazione e chiamare più volte l'helper).
     """
-    ubicazione_n = ubicazione.strip() if isinstance(ubicazione, str) and ubicazione.strip() else None
-    codice_n = normalizza_codice(codice)
-    colore_n = normalizza_colore(colore)
-
     with session.begin():
-        profilo = session.scalar(select(Profilo).where(Profilo.codice == codice_n))
-        if profilo is None:
-            raise ProfiloNonTrovatoError(codice_n)
-
-        colore_db = _colore_o_crea(session, colore_n)
-
-        pezzo = _pezzo_bloccato(session, profilo.id, colore_db.id, lunghezza_mm)
-        if pezzo is not None and pezzo.eliminato_il is not None:
-            if not crea_se_mancante:
-                # Per il telefono (crea_se_mancante=False) il pezzo eliminato
-                # non esiste: nessuna riattivazione da remoto.
-                raise PezzoNonTrovatoError(
-                    f"codice '{codice_n}', colore '{colore_n}', lunghezza {lunghezza_mm}"
-                )
-            # Desktop: si riattiva lo stesso record (id, barcode, vassoio, relazioni invariati).
-            pezzo.eliminato_il = None
-            # Tornando in magazzino con un carico il barcode è di nuovo «Caricato»: senza questo
-            # un record eliminato da «Scaricato» verrebbe rieliminato al controllo successivo.
-            pezzo.stato = "Caricato"
-            pezzo.data_ultimo_cambio_stato = _ora_utc(now)
-        if pezzo is None:
-            if not crea_se_mancante:
-                raise PezzoNonTrovatoError(
-                    f"profilo {codice_n}, colore {colore_n}, lunghezza {lunghezza_mm} mm"
-                )
-            pezzo = _crea_pezzo(session, profilo, colore_db, lunghezza_mm, ubicazione_n)
-        elif ubicazione_n and not (pezzo.ubicazione or "").strip():
-            pezzo.ubicazione = ubicazione_n
-
-        registra_movimento(
+        return _carica_in_transazione(
             session,
-            pezzo,
-            TipoMovimento.CARICO,
+            codice,
+            colore,
+            lunghezza_mm,
             quantita,
-            causale=causale,
-            utente=utente,
+            utente,
+            causale,
+            ubicazione,
+            crea_se_mancante,
+            now=now,
         )
-
-    return pezzo

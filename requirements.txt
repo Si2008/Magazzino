@@ -6,6 +6,8 @@ pillow>=10.0
 bcrypt>=4.0
 pypdf>=4.0
 python-barcode>=0.16
+# Esportazione/validazione ODS (formato V2)
+odfpy>=1.4.1,<2
 # QR code per il pulsante "Collega telefono" (libreria pura Python, senza Pillow)
 qrcode>=7.4
 PySide6>=6.7

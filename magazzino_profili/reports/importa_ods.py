@@ -56,7 +56,12 @@ LUNGHEZZA_MAX_MM = 6500
 
 
 def _cell_text(cell: ET.Element) -> str:
-    """Testo di una cella ODS (paragrafi uniti, altrimenti valore numerico)."""
+    """Testo di una cella ODS (valore numerico esatto, altrimenti paragrafi uniti)."""
+    tipo = cell.get("{%s}value-type" % NS["office"])
+    if tipo in ("float", "percentage", "currency"):
+        valore = cell.get("{%s}value" % NS["office"])
+        if valore not in (None, ""):
+            return valore  # il testo mostrato può essere formattato ('1.234,00')
     paragrafi = ["".join(p.itertext()) for p in cell.iter("{%s}p" % NS["text"])]
     testo = " ".join(s for s in paragrafi if s.strip())
     if testo.strip():
@@ -89,10 +94,12 @@ def _ubicazione_da_vassoio(valore: str) -> str | None:
 
 
 def _intero(testo: str) -> int | None:
+    """Intero esatto o None: '3.0' e '3,0' valgono 3, '3.7' NON è un intero."""
     try:
-        return int(float(testo.strip().replace(",", ".")))
+        valore = float(testo.strip().replace(",", "."))
     except (ValueError, AttributeError):
         return None
+    return int(valore) if valore.is_integer() else None
 
 
 def leggi_foglio(tab: ET.Element) -> tuple[list[str], list[list[str]]]:

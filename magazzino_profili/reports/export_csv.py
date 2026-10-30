@@ -12,6 +12,7 @@ servizio ``carica``, quindi le regole di business restano nel dominio.
 from __future__ import annotations
 
 import csv
+import re
 from pathlib import Path
 
 from sqlalchemy import select
@@ -19,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from ..db.normalizzazione import normalizza_codice
 from ..domain import Profilo
-from ..services.carico import carica
+from ..services.carico import _carica_in_transazione, carica
 from ..services.consultazione import lista_pezzi
 from ..services.eccezioni import ProfiloNonTrovatoError
 
@@ -61,43 +62,58 @@ def esporta_inventario_csv(session: Session, percorso_output: str | Path) -> Pat
     return percorso
 
 
+_OBBLIGATORIE = ("Codice profil", "Colore", "Lunghezza (mm)", "Quantita")
+_INTERO = re.compile(r"[0-9]+")  # solo cifre ASCII: niente '1_000', '+5', cifre unicode
+
+
 def _leggi_righe(percorso: Path) -> list[tuple[int, str, str, int, int, str | None]]:
-    """Legge e valida il CSV. Solleva ``ValueError`` indicando la riga errata."""
-    with open(percorso, encoding="utf-8", newline="") as file:
+    """Legge e valida il CSV legacy. Solleva ``ValueError`` con TUTTI gli errori.
+
+    - letto con ``utf-8-sig``: accetta file con e senza BOM (Excel lo aggiunge);
+    - riga completamente vuota: ignorata;
+    - riga con dati ma senza codice o senza colore: ERRORE (non più scartata);
+    - lunghezza e quantità: interi > 0.
+    """
+    with open(percorso, encoding="utf-8-sig", newline="") as file:
         reader = csv.DictReader(file, delimiter=";")
         if reader.fieldnames is None:
             raise ValueError("Intestazione del CSV vuota")
         header = {nome.strip(): nome for nome in reader.fieldnames}
-        for obbligatoria in ("Codice profil", "Colore", "Lunghezza (mm)", "Quantita"):
+        for obbligatoria in _OBBLIGATORIE:
             if obbligatoria not in header:
                 raise ValueError(f"Intestazione CSV mancante: '{obbligatoria}'")
 
-        righe = []
+        righe: list[tuple[int, str, str, int, int, str | None]] = []
+        errori: list[str] = []
+
+        def valore(riga: dict, nome: str) -> str:
+            return (riga.get(header[nome]) or "").strip()
+
         for numero_riga, riga in enumerate(reader, start=2):
-            codice = (riga.get(header["Codice profil"]) or "").strip()
-            colore = (riga.get(header["Colore"]) or "").strip()
-            if not codice or not colore:
+            if not any((v or "").strip() for v in riga.values() if isinstance(v, str)):
+                continue  # riga vuota (anche ';;;;;;;')
+            codice, colore = valore(riga, "Codice profil"), valore(riga, "Colore")
+            lung_t, qta_t = valore(riga, "Lunghezza (mm)"), valore(riga, "Quantita")
+            problemi = []
+            if not codice:
+                problemi.append("codice profilo mancante")
+            if not colore:
+                problemi.append("colore mancante")
+            for nome, testo in (("lunghezza", lung_t), ("quantità", qta_t)):
+                if not _INTERO.fullmatch(testo):
+                    problemi.append(f"{nome} non è un intero (trovato '{testo}')")
+                elif int(testo) <= 0:
+                    problemi.append(f"{nome} deve essere maggiore di zero")
+            if problemi:
+                errori.append(f"riga {numero_riga}: " + "; ".join(problemi))
                 continue
-            lunghezza_testo = (riga.get(header["Lunghezza (mm)"]) or "").strip()
-            quantita_testo = (riga.get(header["Quantita"]) or "").strip()
-            try:
-                lunghezza = int(lunghezza_testo)
-                quantita = int(quantita_testo)
-            except ValueError as errore:
-                raise ValueError(
-                    f"Errore alla riga {numero_riga} del CSV: lunghezza e quantità "
-                    f"devono essere numeri interi (trovato '{lunghezza_testo}' / "
-                    f"'{quantita_testo}')."
-                ) from errore
-            if lunghezza <= 0 or quantita <= 0:
-                raise ValueError(
-                    f"Errore alla riga {numero_riga} del CSV: lunghezza e quantità "
-                    "devono essere maggiori di zero."
-                )
             ubicazione = None
             if "Ubicazione" in header:
-                ubicazione = (riga.get(header["Ubicazione"]) or "").strip() or None
-            righe.append((numero_riga, codice, colore, lunghezza, quantita, ubicazione))
+                ubicazione = valore(riga, "Ubicazione") or None
+            righe.append((numero_riga, codice, colore, int(lung_t), int(qta_t), ubicazione))
+    if errori:
+        elenco = "\n".join(errori[:50]) + (f"\n... e altri {len(errori) - 50}" if len(errori) > 50 else "")
+        raise ValueError(f"CSV non valido, nulla è stato importato:\n{elenco}")
     return righe
 
 
@@ -107,11 +123,12 @@ def importa_peczi_csv(
     utente: str = "",
     causale: str = "Importazione csv",
 ) -> int:
-    """Importa un inventario CSV: ogni riga è un ``carica``.
+    """Importa un inventario CSV legacy: ogni riga è un ``carica`` (CARICO).
 
-    Prima della scrittura si verificano tutte le righe: formato dei numeri,
-    valori positivi, e presenza di ogni profilo in anagrafica. Se una
-    verifica fallisce, nulla viene importato e l'errore indica la riga.
+    Tutto o niente: validazione completa prima della scrittura, poi UNA
+    transazione. Se un carico fallisce nessuna riga viene salvata.
+    Il barcode del file è ignorato (viene rigenerato). Righe con la stessa
+    combinazione si sommano: è la semantica del carico.
 
     Restituisce il numero di righe importate.
     """
@@ -121,23 +138,24 @@ def importa_peczi_csv(
 
     righe = _leggi_righe(percorso)
 
-    # Lettura su una sessione separata: la sessione del chiamante non viene
-    # toccata e ``carica`` può aprire le sue transazioni.
+    # Lettura su una sessione separata: la sessione del chiamante non deve
+    # avere una transazione già aperta, perché sotto si usa session.begin().
     with Session(bind=session.get_bind()) as lettura:
         codici_noti = set(lettura.scalars(select(Profilo.codice)))
     mancanti = sorted({normalizza_codice(r[1]) for r in righe} - codici_noti)
     if mancanti:
         raise ProfiloNonTrovatoError(", ".join(mancanti))
 
-    importate = 0
-    for numero_riga, codice, colore, lunghezza, quantita, ubicazione in righe:
-        try:
-            carica(session, codice, colore, lunghezza, quantita, utente, causale, ubicazione)
-        except Exception as errore:
-            # Errore imprevisto del database: le righe precedenti restano salvate.
-            raise RuntimeError(
-                f"Importazione interrotta alla riga {numero_riga} del CSV: {errore}. "
-                f"Le prime {importate} righe risultano già salvate."
-            ) from errore
-        importate += 1
-    return importate
+    riga_corrente = 0
+    try:
+        with session.begin():
+            for riga_corrente, codice, colore, lunghezza, quantita, ubicazione in righe:
+                _carica_in_transazione(
+                    session, codice, colore, lunghezza, quantita, utente, causale, ubicazione
+                )
+    except Exception as errore:
+        raise RuntimeError(
+            f"Importazione annullata alla riga {riga_corrente} del CSV: {errore}. "
+            "Nessuna riga è stata salvata."
+        ) from errore
+    return len(righe)
