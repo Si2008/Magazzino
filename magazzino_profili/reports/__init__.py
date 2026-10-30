@@ -1,4 +1,4 @@
-"""Pacchetto report: esportazioni del inventario (Excel, PDF, CSV)."""
+"""Pacchetto report: esportazioni del inventario (Excel, PDF, CSV) e backup."""
 
 from .export_excel import esporta_inventario_excel
 from .export_pdf import esporta_inventario_pdf
@@ -12,6 +12,14 @@ from .formato_v2 import (
     verifica_riferimenti_v2,
 )
 from .ods_v2 import esporta_inventario_ods_v2, leggi_righe_ods, valida_ods_v2
+from .backup_excel import (
+    BackupNonValidoError,
+    BackupValidato,
+    RipristinoRifiutatoError,
+    esporta_backup_logico_excel,
+    ripristina_backup_logico_excel,
+    valida_backup_logico_excel,
+)
 
 __all__ = [
     "esporta_inventario_excel",
@@ -27,4 +35,10 @@ __all__ = [
     "esporta_inventario_ods_v2",
     "leggi_righe_ods",
     "valida_ods_v2",
+    "BackupNonValidoError",
+    "BackupValidato",
+    "RipristinoRifiutatoError",
+    "esporta_backup_logico_excel",
+    "ripristina_backup_logico_excel",
+    "valida_backup_logico_excel",
 ]
