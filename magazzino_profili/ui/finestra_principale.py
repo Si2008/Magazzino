@@ -24,6 +24,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from PySide6.QtCore import Qt, QTimer, Signal, SignalInstance
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QDialog,
     QFrame,
     QFileDialog,
     QHBoxLayout,
@@ -74,11 +75,15 @@ def schede_consenti(ruolo: Ruolo | str) -> tuple[str, ...]:
 logger = logging.getLogger(__name__)
 
 
-class DialogoAccesso(QWidget):
+class DialogoAccesso(QDialog):
     """Richiede username + password e valida contro l'utente memorizzato.
 
     Serve una ``factory`` di sessioni: l'autenticazione usa il servizio
     congelato :func:`magazzino_profili.sicurezza.autentica`.
+
+    È un ``QDialog``: su credenziali valide chiama ``accept()`` (il codice
+    ``QDialog.Accepted``), su fallimento resta aperto e mostra il messaggio
+    (e un tooltip nella barra di stato).
     """
 
     def __init__(
@@ -89,6 +94,7 @@ class DialogoAccesso(QWidget):
         super().__init__(parent)
         self._factory = factory
         self._utente = None
+        self._fine = ""  # tooltip mostrato in barra di stato all'esito
         self.setWindowTitle("Accesso")
         icona = _icona_applicazione()
         if icona is not None:
@@ -134,8 +140,23 @@ class DialogoAccesso(QWidget):
         if self._utente is None:
             self.messaggio.setText("Credenziali non valide")
             self.password.clear()
+            self._fine = "Credenziali non valide"
+            if isinstance(self.parent(), QWidget):
+                barra = getattr(self.parent(), "statusBar", None)
+                if callable(barra) and hasattr(barra(), "showMessage"):
+                    barra().showMessage(self._fine, 5000)
             return
-        self.close()
+        self._fine = f"Accesso come {self._utente.username}"
+        if isinstance(self.parent(), QWidget):
+            barra = getattr(self.parent(), "statusBar", None)
+            if callable(barra) and hasattr(barra(), "showMessage"):
+                barra().showMessage(self._fine, 5000)
+        self.accept()  # QDialog.Accepted, chiude il dialogo
+
+    @property
+    def tooltip_fine(self) -> str:
+        """Messaggio da mostrare in barra di stato all'esito dell'accesso."""
+        return self._fine
 
     def utente(self):
         """L'utente autenticato (``None`` finché non è valida)."""

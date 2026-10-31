@@ -4,8 +4,11 @@ All'avvio:
 1. legge la configurazione del database da config.toml;
 2. crea l'engine e applica le migrazioni;
 3. avvia il backup automatico (immediato + ogni N ore, ultimi K);
-4. richiede l'accesso utente (username/password);
+4. richiede l'accesso utente (username/password); nessun account predefinito;
 5. apre la finestra principale con le schede consentite al ruolo.
+
+Il controllo delle scadenze NON gira in questo processo: è un worker del
+processo web separato (Fase 12). Chiude la finestra non deve fermarlo.
 
 Esecuzione::
 
@@ -22,8 +25,6 @@ from .backup import PianificatoreBackup, leggi_config_backup
 from .db import crea_engine, crea_session_factory, crea_tabelle, leggi_config
 from .db.server import ensure_running
 from .db.migrazioni import applica_migrazioni
-from .services.controllo_scadenze import ControlloScadenze
-from .sicurezza import Ruolo, Utente
 from .ui import FinestraPrincipale
 
 
@@ -76,29 +77,54 @@ def main() -> int:
     )
     pianificatore.avvia()
 
-    # 4) Accesso utente: autenticazione DISATTIVATA per le prove —
-    # si usa un amministratore predefinito senza chiedere credenziali.
-    # (Per riattivarla: reintrodurre il DialogoAccesso della UI.)
-    app = QApplication(sys.argv)
-    utente = Utente(username="simone", ruolo=Ruolo.AMMINISTRATORE.value)
+    # 4) Accesso utente (sempre richiesto; nessun account predefinito).
+    # Il controllo delle scadenze NON parte qui: è un worker del processo
+    # web (``python -m magazzino_profili.web.app``), così chiude la finestra
+    # non lo ferma.
+    from PySide6.QtWidgets import QDialog, QStatusBar
+
+    if not _esiste_almeno_un_utente(factory):
+        raise RuntimeError(
+            "La tabella utenti è vuota: crea il primo utente con "
+            "setup_database.py o il tool di gestione utenti."
+        )
+
+    try:
+        app = QApplication(sys.argv)
+    except Exception as errore:  # es. interfaccia già attiva nel processo (test)
+        print(f"ERRORE: impossibile avviare l'interfaccia: {errore}")
+        return 1
+
+    from .ui.finestra_principale import DialogoAccesso
+
+    dialog = DialogoAccesso(factory=factory, parent=None)
+    esito = dialog.exec()  # QDialog.DialogCode
+    if esito != QDialog.Accepted:
+        print(f"Accesso: {dialog.tooltip_fine}")
+        return 1
+    utente = dialog.utente()
+    print(f"Accesso: {dialog.tooltip_fine}")
 
     # 5) Finestra principale con i permessi del ruolo.
     finestra = FinestraPrincipale(factory, utente.ruolo, utente.username)
     finestra.showMaximized()
-
-    # 6) Fase 8: controllo periodico delle scadenze in un thread di sottofondo.
-    # Il primo giro parte subito all'avvio; un errore non ferma il ciclo.
-    controllo_scadenze = ControlloScadenze(
-        factory,
-        intervallo_secondi=300,
-        su_eliminati=lambda n: finestra.scadenze_eliminate.emit(n),
-    )
-    controllo_scadenze.avvia()
+    barra_stato = finestra.findChild(QStatusBar, "barraStato")
+    if barra_stato is not None:
+        barra_stato.showMessage(dialog.tooltip_fine, 5000)
 
     codice_uscita = app.exec()
-    controllo_scadenze.ferma()
-    pianificatore.ferma()
+    pianificatore.ferma(timeout=10.0)
     return codice_uscita
+
+
+def _esiste_almeno_un_utente(factory) -> bool:
+    """True se esiste almeno una riga nella tabella ``utenti``."""
+    from sqlalchemy import select
+
+    from .sicurezza import Utente as UtenteModel
+
+    with factory() as sessione:
+        return sessione.scalars(select(UtenteModel).limit(1)).first() is not None
 
 
 def _esegui_backup_singolo(

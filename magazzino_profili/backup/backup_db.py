@@ -168,10 +168,9 @@ class PianificatoreBackup:
         self._timer: threading.Timer | None = None
         self._blocco = threading.Lock()
         self._attivo = False
+        self._generazione = 0
 
     def _esegui_e_ripiani(self) -> None:
-        # Qualunque esito (anche un errore imprevisto) viene registrato e il
-        # backup successivo resta pianificato: un errore non può fermare il piano.
         try:
             self.azione_backup()
         except BackupErrore as errore:
@@ -192,14 +191,27 @@ class PianificatoreBackup:
             self._timer.start()
 
     def avvia(self) -> None:
-        """Avvia il servizio: backup immediato + pianificazione ricorrente."""
+        """Avvia il servizio: backup immediato + pianificazione ricorrente.
+
+        Idempotente: se un backup è già in corso o pianificato, una seconda
+        chiamata non avvia una seconda generazione (nessun backup in doppio).
+        """
         with self._blocco:
+            if self._attivo and self._timer is not None:
+                return
+            self._generazione += 1
             self._attivo = True
         self._esegui_e_ripiani()
 
-    def ferma(self) -> None:
-        """Interrompe la pianificazione (il backup in corso va a termine)."""
+    def ferma(self, timeout: float = 10.0) -> None:
+        """Ferma il servizio in modo deterministico.
+
+        Nessun timer sopravvive alla chiamata; il backup in corso (se presente)
+        è una chiamata singola e va a termine nel suo thread.
+        ``timeout`` resta come parametro per compatibilità di interfaccia.
+        """
         with self._blocco:
+            self._generazione += 1
             self._attivo = False
             if self._timer is not None:
                 self._timer.cancel()

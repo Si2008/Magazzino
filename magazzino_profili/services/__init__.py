@@ -11,6 +11,11 @@ from .eccezioni import (
 )
 from .pezzi import aggiorna_barcode, imposta_numero_vassoio, imposta_scorta_minima
 from .scarico import scarica
+from .scadenze import (
+    ParametriScadenze,
+    PianificatoreScadenze,
+    leggi_config_scadenze,
+)
 from .stati import (
     STATI_BARCODE,
     elimina_manualmente,
@@ -38,7 +43,10 @@ __all__ = [
     "imposta_scorta_minima",
     "imposta_stato",
     "lista_scaduti_per_eliminazione",
+    "ParametriScadenze",
+    "PianificatoreScadenze",
     "registra_spezzone",
     "scarica",
+    "leggi_config_scadenze",
     "utilizza_spezzone",
 ]
