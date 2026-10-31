@@ -89,7 +89,7 @@ def server_https(tmp_path):
         crea_utente(session, "remoto", "Password123!", Ruolo.AMMINISTRATORE)
         session.commit()
 
-    app = crea_app(session_factory=factory, durata_token_secondi=3600, segrete_token="segreto-https")
+    app = crea_app(session_factory=factory, durata_token_secondi=3600, segrete_token="segreto-di-https-molto-lungo-1234567890")
     pem, chiave = _certificato_autofirmato(tmp_path)
     porta = _porta_libera()
 

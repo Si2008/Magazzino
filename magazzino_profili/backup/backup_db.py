@@ -80,6 +80,8 @@ def esegui_backup(
     cartella: str | Path,
     max_backup: int = 7,
     comando_base: tuple[str, ...] | list[str] = ("pg_dump",),
+    *,
+    comando_verifica: tuple[str, ...] | list[str] | None = None,
 ) -> Path:
     """Esegue un backup del database e applica il limite di ``max_backup``.
 
@@ -128,9 +130,38 @@ def esegui_backup(
         )
     if not file_output.is_file():
         raise BackupErrore("Il comando ha terminato ma il file di backup non esiste")
+    if file_output.stat().st_size == 0:
+        file_output.unlink(missing_ok=True)
+        raise BackupErrore("Il file di backup è vuoto")
+    if comando_verifica is not None:
+        try:
+            verifica_backup(file_output, comando_verifica)
+        except BackupErrore:
+            file_output.unlink(missing_ok=True)  # un backup illeggibile non deve sostituire quelli buoni
+            raise
 
     rimuovi_backup_venuti(cartella_p, max_backup)
     return file_output
+
+
+def verifica_backup(
+    file_backup: str | Path,
+    comando_verifica: tuple[str, ...] | list[str],
+    timeout: int = 120,
+) -> None:
+    """Controlla che l'archivio sia leggibile (``pg_restore --list``). Solleva ``BackupErrore``."""
+    try:
+        risultato = subprocess.run(
+            [*comando_verifica, "--list", str(file_backup)],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except (subprocess.TimeoutExpired, OSError) as errore:
+        raise BackupErrore(f"Impossibile verificare il backup: {errore}") from errore
+    if risultato.returncode != 0:
+        dettaglio = (risultato.stderr or "").strip()
+        raise BackupErrore(f"Il backup non è leggibile (pg_restore codice {risultato.returncode}): {dettaglio}")
 
 
 def rimuovi_backup_venuti(cartella: str | Path, max_backup: int) -> None:

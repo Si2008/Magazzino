@@ -78,20 +78,21 @@ def _initdb(password: str) -> None:
     CARTELLA_DATA.mkdir(parents=True)
     pwfile = CARTELLA_DATA.parent / "pg_pass"
     pwfile.write_text(password, encoding="utf-8")
-    subprocess.run(
-        [
-            _exe("initdb"),
-            "-D",
-            str(CARTELLA_DATA),
-            "-U",
-            PG_USER,
-            "--auth=md5",
-            "--auth-host=md5",
-            "--auth-local=md5",
-            "--pwfile=" + str(pwfile),
-        ],
-        check=True,
-    )
+    try:
+        subprocess.run(
+            [
+                _exe("initdb"),
+                "-D",
+                str(CARTELLA_DATA),
+                "-U",
+                PG_USER,
+                "--auth=scram-sha-256",
+                "--pwfile=" + str(pwfile),
+            ],
+            check=True,
+        )
+    finally:
+        pwfile.unlink(missing_ok=True)  # la password in chiaro non deve restare su disco
     print("data folder created")
 
 

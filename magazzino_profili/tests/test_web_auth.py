@@ -28,7 +28,7 @@ def _app_con_utente(durata_token_secondi: int = 3600) -> tuple[TestClient, objec
     crea_tabelle(engine)
     factory = crea_session_factory(engine)
     with factory() as session:
-        crea_utente(session, "maria", "segreta", Ruolo.OPERATORE)
+        crea_utente(session, "maria", "segreta123", Ruolo.OPERATORE)
 
     app = crea_app(
         session_factory=factory,
@@ -41,7 +41,7 @@ def _app_con_utente(durata_token_secondi: int = 3600) -> tuple[TestClient, objec
 def test_login_con_credenziali_corrette_restituisce_token() -> None:
     client, _ = _app_con_utente()
     risposta = client.post(
-        "/api/login", json={"utente": "maria", "password": "segreta"}
+        "/api/login", json={"utente": "maria", "password": "segreta123"}
     )
     assert risposta.status_code == 200
     corpo = risposta.json()
@@ -81,7 +81,7 @@ def test_token_scaduto_viene_rifiutato() -> None:
     # Durata di 1 secondo: dopo l'attesa il token non è più valido.
     client, _ = _app_con_utente(durata_token_secondi=1)
     token = client.post(
-        "/api/login", json={"utente": "maria", "password": "segreta"}
+        "/api/login", json={"utente": "maria", "password": "segreta123"}
     ).json()["token"]
     assert token
 
@@ -106,7 +106,7 @@ def test_token_scaduto_viene_rifiutato() -> None:
 def test_token_ritoccato_viene_rifiutato() -> None:
     client, _ = _app_con_utente()
     token = client.post(
-        "/api/login", json={"utente": "maria", "password": "segreta"}
+        "/api/login", json={"utente": "maria", "password": "segreta123"}
     ).json()["token"]
     risposta = client.post(
         "/api/carico",

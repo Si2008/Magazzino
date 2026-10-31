@@ -7,6 +7,7 @@ from .backup_db import (
     leggi_config_backup,
     PianificatoreBackup,
     rimuovi_backup_venuti,
+    verifica_backup,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "esegui_backup",
     "leggi_config_backup",
     "rimuovi_backup_venuti",
+    "verifica_backup",
 ]

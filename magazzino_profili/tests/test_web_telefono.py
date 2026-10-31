@@ -59,7 +59,7 @@ def _crea_dati(factory) -> None:
 @pytest.fixture(scope="module")
 def client(factory):
     _crea_dati(factory)
-    app = crea_app(session_factory=factory, durata_token_secondi=3600, segrete_token="segreto-test")
+    app = crea_app(session_factory=factory, durata_token_secondi=3600, segrete_token="segreto-di-test-molto-lungo-1234567890")
     with TestClient(app) as c:
         yield c
 
@@ -86,7 +86,7 @@ def test_login_sbagliato_401(client):
 
 
 def test_token_scaduto_401(client, factory):
-    app = crea_app(session_factory=factory, durata_token_secondi=-1, segrete_token="segreto-test")
+    app = crea_app(session_factory=factory, durata_token_secondi=-1, segrete_token="segreto-di-test-molto-lungo-1234567890")
     with TestClient(app) as c:
         r = c.post("/api/login", json={"utente": "maria", "password": "Password123!"})
         assert r.status_code == 200
@@ -275,7 +275,7 @@ def test_conflitto_riconciliazione_su_postgres(factory):
         crea_utente(s, "pguser", "Password123!", Ruolo.OPERATORE)
         s.commit()
 
-    app = crea_app(session_factory=factory_pg, durata_token_secondi=3600, segrete_token="segreto-pg")
+    app = crea_app(session_factory=factory_pg, durata_token_secondi=3600, segrete_token="segreto-di-pg-molto-lungo-1234567890")
     with TestClient(app) as c:
         token = c.post("/api/login", json={"utente": "pguser", "password": "Password123!"}).json()["token"]
         esiti = []

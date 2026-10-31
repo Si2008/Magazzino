@@ -32,8 +32,8 @@ def _app_con_dati() -> tuple[TestClient, object]:
     crea_tabelle(engine)
     factory = crea_session_factory(engine)
     with factory() as session:
-        crea_utente(session, "maria", "segreta", Ruolo.OPERATORE)
-        crea_utente(session, "osservatore", "segreta", Ruolo.SOLA_LETTURA)
+        crea_utente(session, "maria", "segreta123", Ruolo.OPERATORE)
+        crea_utente(session, "osservatore", "segreta123", Ruolo.SOLA_LETTURA)
         profilo = Profilo(
             codice="AB12",
             descrizione="Profilo di prova",
@@ -66,7 +66,7 @@ def _app_con_dati() -> tuple[TestClient, object]:
 
 def _token(client: TestClient, utente: str = "maria") -> str:
     risposta = client.post(
-        "/api/login", json={"utente": utente, "password": "segreta"}
+        "/api/login", json={"utente": utente, "password": "segreta123"}
     )
     assert risposta.status_code == 200
     return risposta.json()["token"]

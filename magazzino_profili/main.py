@@ -142,7 +142,22 @@ def _esegui_backup_singolo(
         cartella=cartella,
         max_backup=max_backup,
         comando_base=(pg_dump,),
+        comando_verifica=_comando_pg_restore(pg_dump),
     )
+
+
+def _comando_pg_restore(pg_dump: str) -> tuple[str, ...] | None:
+    """``pg_restore`` accanto a ``pg_dump`` (stessa cartella); ``None`` se non si trova."""
+    percorso = Path(pg_dump)
+    if percorso.name.lower().removesuffix(".exe") != "pg_dump":
+        return None
+    if percorso.parent == Path("."):  # solo il nome: lo risolve il PATH
+        return ("pg_restore",)
+    candidato = percorso.with_name("pg_restore" + percorso.suffix)
+    if candidato.is_file():
+        return (str(candidato),)
+    logging.getLogger(__name__).warning("pg_restore non trovato accanto a pg_dump: backup non verificati")
+    return None
 
 
 def _configura_log() -> None:

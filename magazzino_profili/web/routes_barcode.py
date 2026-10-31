@@ -26,7 +26,7 @@ Codici di errore restituiti:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field, StrictInt
 
 from sqlalchemy import select
@@ -45,6 +45,7 @@ from .auth import (
     prova_login,
     verifica_permesso,
 )
+from .sicurezza_web import ProtezioneLogin
 
 
 class CadenzeLogin(BaseModel):
@@ -94,6 +95,7 @@ def crea_router(
     session_factory,
     segrete_token: bytes,
     durata_token_secondi: int,
+    protezione_login: ProtezioneLogin | None = None,
 ) -> APIRouter:
     """Costruisce il router ``/api`` con i servizi iniettati.
 
@@ -102,18 +104,24 @@ def crea_router(
     """
 
     router = APIRouter(prefix="/api")
+    protezione = protezione_login or ProtezioneLogin()
     utente_autenticato = crea_dipendenza_utente(segrete_token, session_factory)
 
     @router.post("/login")
-    def login(credenziali: CadenzeLogin) -> dict:
+    def login(credenziali: CadenzeLogin, richiesta: Request) -> dict:
         """Verifica le credenziali e restituisce un token con scadenza.
 
-        Credenziali errate o utente assente: HTTP 401.
+        Credenziali errate o utente assente: HTTP 401. Dopo troppi tentativi
+        falliti dallo stesso indirizzo/utente: HTTP 429 con ``Retry-After``.
         """
+        indirizzo = richiesta.client.host if richiesta.client else "sconosciuto"
+        protezione.controlla(indirizzo, credenziali.utente)  # prima del costoso controllo bcrypt
         with session_factory() as session:
             utente = prova_login(session, credenziali.utente, credenziali.password)
         if utente is None:
+            protezione.fallimento(indirizzo, credenziali.utente)
             raise HTTPException(status_code=401, detail="Credenziali non valide.")
+        protezione.successo(indirizzo, credenziali.utente)
         token = crea_token(
             utente.username, utente.ruolo, durata_token_secondi, segrete_token
         )

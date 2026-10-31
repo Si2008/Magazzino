@@ -46,6 +46,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import crea_engine, crea_session_factory, leggi_config
 from ..services import PianificatoreScadenze, leggi_config_scadenze
 from .routes_barcode import crea_router
+from .sicurezza_web import (
+    ProtezioneLogin,
+    installa_protezioni_http,
+    valida_segrete_token,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +151,7 @@ def crea_app(
     session_factory: Any | None = None,
     durata_token_secondi: int = 3600,
     segrete_token: str | None = None,
+    protezione_login: ProtezioneLogin | None = None,
 ) -> FastAPI:
     """Costruisce l'applicazione FastAPI (usa anche nei test).
 
@@ -164,6 +170,8 @@ def crea_app(
             "AVVISO: [web] segrete_token non definito in config.toml: "
             "i token saranno validi solo per la durata di questo avvio."
         )
+    else:
+        valida_segrete_token(segrete_token)
     segrete = segrete_token.encode("utf-8")
 
     app = FastAPI(
@@ -199,8 +207,9 @@ def crea_app(
             },
         )
 
+    installa_protezioni_http(app)
     app.include_router(
-        crea_router(session_factory, segrete, durata_token_secondi)
+        crea_router(session_factory, segrete, durata_token_secondi, protezione_login)
     )
 
     @app.get("/", include_in_schema=False)
@@ -240,6 +249,15 @@ def main() -> int:
     except ValueError as errore:
         print(f"ERRORE: {errore}")
         return 1
+
+    # La segrete dei token deve essere lunga, casuale e non il valore di esempio:
+    # senza di ciò i token potrebbero essere falsificati.
+    if web["segrete_token"] is not None:
+        try:
+            valida_segrete_token(web["segrete_token"])
+        except ValueError as errore:
+            print(f"ERRORE: {errore}")
+            return 1
 
     # HTTPS obbligatorio: senza i due file il server NON parte in chiaro.
     certificato = Path(web["certificato_pem"]) if web["certificato_pem"] else None
@@ -295,6 +313,8 @@ def main() -> int:
             port=web["porta"],
             ssl_certfile=str(certificato),
             ssl_keyfile=str(chiave),
+            timeout_keep_alive=10,
+            timeout_graceful_shutdown=10,
         )
     except KeyboardInterrupt:
         print("Server web arrestato.")

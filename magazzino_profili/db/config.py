@@ -11,8 +11,8 @@ Formato atteso::
     host = "localhost"
     porta = 5432
     nome = "magazzino_profili"
-    utente = "postgres"
-    password = "postgres"
+    utente = "LA_TUA_UTENZA"
+    password = "LA_TUA_PASSWORD"
     dbname = "magazzino_profili"
 """
 

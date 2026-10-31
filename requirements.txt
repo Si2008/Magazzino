@@ -2,9 +2,11 @@ SQLAlchemy>=2.0,<3.0
 psycopg[binary]>=3.1,<4.0
 reportlab>=4.0
 openpyxl>=3.1
-pillow>=10.0
+# Limiti inferiori ai primi rilasci senza vulnerabilità note (audit del 31/10/2026):
+# pillow>=13.0.0 (Pillow 12.3.0: 35 segnalazioni), pypdf>=6.21.1 (6 segnalazioni).
+pillow>=13.0.0
 bcrypt>=4.0
-pypdf>=4.0
+pypdf>=6.21.1
 python-barcode>=0.16
 # Esportazione/validazione ODS (formato V2)
 odfpy>=1.4.1,<2
