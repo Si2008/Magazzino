@@ -1,24 +1,42 @@
-"""Nucleo SICURO del download di un aggiornamento (Fase 13, parte verificabile).
+"""Sistema di aggiornamento (Fase 13 completa).
 
-Non contiene URL, chiavi, nomi di publisher né il parser del manifest: quelli
-dipendono dai valori che il proprietario deve fornire (tabella dei nove
-prerequisiti). Qui c'è solo ciò che vale per qualunque feed: confronto
-versioni, download su file temporaneo, controllo di dimensione e checksum,
-verifica di autenticità INIETTATA, un solo download alla volta, nessun file
-"pubblico" prima della verifica.
+Valori dei nove prerequisiti (decisi dal proprietario, 31/10/2026):
 
-Resto della Fase 13 in ATTESA dei nove valori:
-- URL del feed, publisher, formato del manifest, versione installata,
-  algoritmo di firma, chiave/certificato, installer, URL dell'installer,
-  procedura di recovery;
-- parser del feed reale, popup, installazione e riavvio.
+- URL feed:        ``https://<host>:<porta-web>/update/manifest.json``
+  (valore concreto in ``[update] feed_url`` di config.toml; il feed è
+  servito dal server web dell'app: ``web/routes_update.py``);
+- publisher:       "Magazzino Profili";
+- manifest:        JSON con ``versione``, ``url_installer``, ``sha256``,
+  ``dimensione``, ``pubblicato``, ``note`` e ``firma`` (base64);
+- versione installata: ``magazzino_profili.__version__``;
+- algoritmo firma: Ed25519 (RFC 8032) sul manifest in forma canonica
+  (JSON a chiavi ordinate); integrità dell'installer con SHA-256 preso
+  dal manifest firmato;
+- certificato:     coppia Ed25519 autofirmata; la chiave PRIVATA sta in
+  ``firme/chiave_privata.pem`` (mai inside l'eseguibile, esclusa da git),
+  la chiave PUBBLICA è incorporata qui sotto (è pubblica per costruzione);
+- installer:       l'eseguibile PyInstaller one-file stesso, prodotto con
+  ``pyinstaller MagazzinoProfili.spec``;
+- URL installer:   ``https://<host>:<porta-web>/update/MagazzinoProfili-<X.Y.Z>.exe``;
+- recovery:        l'eseguibile in esecuzione non viene MAI modificato;
+  il download avviene in ``%LOCALAPPDATA%\\magazzino_profili\\aggiornamenti``;
+  a ogni errore il file parziale è eliminato e l'app continua a funzionare
+  (procedura testuale in :func:`testo_recupero`).
+
+Qui c'è: confronto versioni, download su file temporaneo, controllo di
+dimensione e checksum, verifica di firma, un solo download alla volta,
+nessun file "pubblico" prima della verifica, riavvio controllato.
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
+import shlex
+import subprocess
+import sys
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -42,11 +60,11 @@ class Manifest:
     url_installer: str
     sha256: str  # esadecimale minuscolo
     dimensione: int  # byte
+    note: str | None = None  # testo facoltativo mostrato all'utente
 
     def __post_init__(self) -> None:
         parse_versione(self.versione)
-        if not self.url_installer.lower().startswith("https://"):
-            raise ErroreAggiornamento("L'indirizzo dell'installer deve usare HTTPS.")
+        _url_installer_accettabile(self.url_installer)
         if not _SHA256.fullmatch(self.sha256):
             raise ErroreAggiornamento("Checksum del manifest non valido.")
         if (
@@ -70,6 +88,269 @@ def parse_versione(testo: str) -> tuple[int, int, int]:
 def esiste_aggiornamento(disponibile: str, installata: str) -> bool:
     """True solo se la versione disponibile è STRETTAMENTE più recente."""
     return parse_versione(disponibile) > parse_versione(installata)
+
+
+def _url_installer_accettabile(url: str) -> None:
+    """HTTPS obbligatorio; ``http`` solo per localhost (server locale di test)."""
+    if isinstance(url, str) and url.startswith("https://"):
+        return
+    if isinstance(url, str) and url.startswith("http://"):
+        host = url[len("http://") :].split("/")[0].split(":")[0]
+        if host in ("localhost", "127.0.0.1"):
+            return
+    raise ErroreAggiornamento(
+        "L'indirizzo dell'installer deve usare HTTPS (http solo per localhost)."
+    )
+
+
+# Chiave PUBBLICA Ed25519 (base64) del publisher "Magazzino Profili".
+# È pubblica per costruzione: va bene che sia dentro l'eseguibile.
+# La chiave privata corrispondente è in firme/chiave_privata.pem (mai qui).
+# Per ruotare la firma: rigenerare la coppia, incollare il nuovo valore,
+# rifirmare il manifest e ricondizionare l'eseguibile (vedi firme/README.md).
+CHIAVE_PUBBLICA_ED25519_B64 = "1mX8/jUbj2hsffLxSpv2T12qbJbFjht/gDzW87WB8KU="
+
+
+def forma_canonica(dati: dict) -> bytes:
+    """Forma canonica del manifest firmata: chiavi ordinate, JSON compatto, UTF-8."""
+    return json.dumps(dati, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def firma_valida(
+    dati: dict,
+    firma_base64: str,
+    chiave_pubblica_b64: str = CHIAVE_PUBBLICA_ED25519_B64,
+) -> bool:
+    """Verifica la firma Ed25519 sul manifest (senza la chiave: solo la PUBBLICA)."""
+    import base64
+
+    try:
+        from cryptography.exceptions import InvalidSignature
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    except ImportError:
+        # Libreria di crittografia non installata: rifiuto (fail-closed).
+        return False
+
+    try:
+        chiave = Ed25519PublicKey.from_public_bytes(
+            base64.b64decode(chiave_pubblica_b64)
+        )
+        chiave.verify(base64.b64decode(firma_base64), forma_canonica(dati))
+        return True
+    except (InvalidSignature, ValueError, TypeError):
+        return False
+
+
+def valida_manifest(
+    dati: object,
+    chiave_pubblica_b64: str = CHIAVE_PUBBLICA_ED25519_B64,
+) -> Manifest:
+    """Dai dati grezzi del feed al :class:`Manifest` verificato.
+
+    Ordine: campi presenti -> FIRMA valida (prova che i campi non sono stati
+    alterati) -> validazione dei singoli campi. Solleva ``ErroreAggiornamento``.
+    """
+    if not isinstance(dati, dict):
+        raise ErroreAggiornamento("Manifest non valido: atteso un oggetto JSON.")
+    for campo in ("versione", "url_installer", "sha256", "dimensione", "firma"):
+        if campo not in dati:
+            raise ErroreAggiornamento(f"Manifest incompleto: manca {campo!r}.")
+    firma = dati["firma"]
+    corpo = {k: v for k, v in dati.items() if k != "firma"}
+    if not firma_valida(corpo, firma, chiave_pubblica_b64):
+        raise ErroreAggiornamento(
+            "Firma del manifest non valida: l'aggiornamento non è autentico e non verrà installato."
+        )
+    return Manifest(
+        versione=str(dati["versione"]),
+        url_installer=str(dati["url_installer"]),
+        sha256=str(dati["sha256"]),
+        dimensione=dati["dimensione"],
+        note=dati.get("note"),
+    )
+
+
+@dataclass(frozen=True)
+class ConfigAggiornamento:
+    """Sezione ``[update]`` di config.toml (default: disabilitato)."""
+
+    abilitato: bool = False
+    feed_url: str | None = None
+
+
+def leggi_config_aggiornamento(percorso: str | Path | None = None) -> ConfigAggiornamento:
+    """Legge la sezione ``[update]`` (assente o illeggibile → disabilitato).
+
+    La sezione è opzionale: la sua assenza non deve mai impedire l'avvio
+    dell'app (il feed assente equivale a "nessun aggiornamento").
+    """
+    import tomllib
+
+    from ..db.config import _candidati_config
+
+    file = next(
+        (p for p in _candidati_config(Path(percorso) if percorso is not None else None) if p.is_file()),
+        None,
+    )
+    if file is None:
+        return ConfigAggiornamento()
+    try:
+        with open(file, "rb") as fonte:
+            sezione = tomllib.load(fonte).get("update", {})
+    except (OSError, tomllib.TOMLDecodeError):
+        return ConfigAggiornamento()
+    return ConfigAggiornamento(
+        abilitato=bool(sezione.get("abilitato", False)),
+        feed_url=sezione.get("feed_url"),
+    )
+
+
+def leggi_feed(
+    feed_url: str,
+    apri: Apri | None = None,
+    timeout: int = 15,
+    chiave_pubblica_b64: str = CHIAVE_PUBBLICA_ED25519_B64,
+) -> Manifest:
+    """Scarica e verifica il manifest dal feed.
+
+    ``apri`` è iniettato nei test; in produzione usa ``urllib`` con la
+    verifica dei certificati ATTIVA (comportamento predefinito). HTTPS
+    obbligatorio, tranne localhost (server locale).
+    """
+    if not isinstance(feed_url, str) or not feed_url.startswith(("https://", "http://")):
+        raise ErroreAggiornamento("Indirizzo del feed non valido (atteso http/https).")
+    if feed_url.startswith("http://"):
+        host = feed_url[len("http://") :].split("/")[0].split(":")[0]
+        if host not in ("localhost", "127.0.0.1"):
+            raise ErroreAggiornamento("Il feed deve usare HTTPS (http solo per localhost).")
+
+    def _apri_reale(url: str) -> ContextManager[BinaryIO]:
+        import urllib.error
+        import urllib.request
+
+        @contextmanager
+        def _ctx():
+            try:
+                risposta = urllib.request.urlopen(url, timeout=timeout)
+                yield risposta
+            except urllib.error.URLError as errore:  # type: ignore[attr-defined]
+                raise ErroreAggiornamento(
+                    f"Impossibile raggiungere il feed degli aggiornamenti: {errore.reason}"
+                ) from errore
+            except (OSError, ValueError) as errore:
+                raise ErroreAggiornamento(
+                    "Errore di rete durante la lettura del feed degli aggiornamenti."
+                ) from errore
+
+        return _ctx()
+
+    apri_effettiva = apri if apri is not None else _apri_reale
+    try:
+        with apri_effettiva(feed_url) as risposta:
+            corpo = risposta.read()
+    except ErroreAggiornamento:
+        raise
+    except (OSError, ValueError) as errore:
+        raise ErroreAggiornamento("Errore di rete durante la lettura del feed degli aggiornamenti.") from errore
+    try:
+        dati = json.loads(corpo.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as errore:
+        raise ErroreAggiornamento("Manifest non valido: contenuto non è JSON.") from errore
+    return valida_manifest(dati, chiave_pubblica_b64)
+
+
+def apri_url(url: str, timeout: int = 30):
+    """Apre una URL (urllib, verifica dei certificati ATTIVA) in un context manager.
+
+    Usato dal worker di download del popup; i test lo sostituiscono con un
+    finto. Solleva ``ErroreAggiornamento`` se la rete non risponde.
+    """
+    import urllib.request
+
+    @contextmanager
+    def _ctx():
+        try:
+            yield from _apri_urllib(url, timeout)
+        except (OSError, ValueError) as errore:
+            raise ErroreAggiornamento(
+                "Errore di rete durante il download dell'installer."
+            ) from errore
+
+    return _ctx()
+
+
+def _apri_urllib(url: str, timeout: int):
+    import urllib.request
+
+    risposta = urllib.request.urlopen(url, timeout=timeout)
+    try:
+        yield risposta
+    finally:
+        risposta.close()
+
+
+def cartella_cache() -> Path:
+    """Cartella (scrivibile, per utente) in cui si scarica l'installer."""
+    if sys.platform == "win32":
+        base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
+    else:
+        base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+    return Path(base) / "magazzino_profili" / "aggiornamenti"
+
+
+def comando_riavvio(percorso_exe: str, attesa_secondi: int = 2) -> list[str]:
+    """Comando che riavvia la nuova versione DOPO che la vecchia si è chiusa.
+
+    L'attesa (breve) lascia tempo al processo vecchio di rilasciare il
+    database locale: la nuova istanza non parte in competizione con essa.
+    """
+    if not isinstance(percorso_exe, str) or not percorso_exe.strip():
+        raise ErroreAggiornamento("Percorso della nuova versione non valido.")
+    if isinstance(attesa_secondi, bool) or not isinstance(attesa_secondi, int) or attesa_secondi < 0:
+        raise ErroreAggiornamento("Attesa di riavvio non valida.")
+    if sys.platform == "win32":
+        return ["cmd", "/c", f'timeout /t {attesa_secondi} /nobreak >nul && start "" "{percorso_exe}"']
+    return ["sh", "-c", f"sleep {attesa_secondi}; exec {shlex.quote(percorso_exe)}"]
+
+
+def lancia_aggiornamento(
+    percorso_exe: str,
+    attesa_secondi: int = 2,
+    esegui: Callable[[list[str]], object] | None = None,
+) -> list[str]:
+    """Avvia il comando di riavvio in un processo staccato e restituisce il comando.
+
+    ``esegui`` è iniettato nei test (default: ``subprocess.Popen`` staccato).
+    """
+    comando = comando_riavvio(percorso_exe, attesa_secondi)
+    if esegui is not None:
+        esegui(comando)
+        return comando
+    if sys.platform == "win32":
+        Popen = subprocess.Popen  # type: ignore[misc]
+        Popen(
+            comando,
+            close_fds=True,
+            creationflags=0x00000008 | 0x00000200,  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+        )
+    else:
+        subprocess.Popen(comando, close_fds=True, start_new_session=True)
+    return comando
+
+
+def testo_recupero() -> str:
+    """Procedura di recovery (mostrata all'utente a ogni errore)."""
+    return (
+        "Recupero: l'applicazione in uso non è stata modificata e continua a funzionare.\n"
+        "1) Chiudere e riaprire l'applicazione: la verifica verrà ripetuta.\n"
+        "2) Se il problema persiste, verificare la connessione al server degli"
+        " aggiornamenti.\n"
+        "3) Installazione manuale: scaricare l'eseguibile dalla cartella\n"
+        "   %LOCALAPPDATA%\\magazzino_profili\\aggiornamenti (se presente) o dalla"
+        " cartella release del server, e avviarlo al posto di quello attuale.\n"
+        "4) Nessun dato dell'applicazione (database, impostazioni, file utente)"
+        " viene toccato dall'aggiornamento."
+    )
 
 
 # Un'unica "apertura" astratta: la rete reale (con verifica dei certificati
@@ -117,8 +398,9 @@ def scarica_e_verifica(
 
     Ordine: dimensione -> checksum -> autenticità -> ``os.replace`` (atomico).
     In qualunque errore il file parziale viene eliminato e non resta nulla
-    da eseguire.
+    da eseguire. La cartella di destinazione viene creata se mancante.
     """
+    Path(cartella).mkdir(parents=True, exist_ok=True)
     cartella = Path(cartella)
     cartella.mkdir(parents=True, exist_ok=True)
     nome = f"Installer-{manifest.versione}.exe"

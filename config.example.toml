@@ -48,3 +48,14 @@ segrete_token = "SEGRETE_LUNGA_E_CASUALE_MINIMO_32_CARATTERI"
 # Indirizzo HTTPS con cui il telefono raggiunge il server web (quello che hai esposto con
 # port forwarding, VPN o tunnel). Serve al pulsante "Collega telefono" per mostrare il QR.
 url_pubblico = "https://magazzino.esempio.it:8443/"
+
+# Feed di aggiornamento (Fase 13): il server web espone il manifest firmato
+# e l'installer; l'app desktop li scarica e li verifica (firma Ed25519).
+[update]
+# true = l'app controlla il feed all'avvio (dopo il login).
+abilitato = true
+# URL HTTPS del manifest (stesso host/porta del server web).
+feed_url = "https://localhost:8443/update/manifest.json"
+# Cartella con manifest.json e MagazzinoProfili-<X.Y.Z>.exe
+# (percorso relativo: rispetto a questo file di configurazione).
+cartella_rilasci = "release"

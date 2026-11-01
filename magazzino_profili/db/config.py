@@ -3,7 +3,8 @@
 Il file può stare:
 1. nel percorso esplicito passato a :func:`leggi_config`;
 2. nell'attuale directory di lavoro (``config.toml``);
-3. alla radice del progetto (due livelli sopra questo file).
+3. (solo eseguibile PyInstaller) accanto all'eseguibile stesso;
+4. alla radice del progetto (due livelli sopra questo file).
 
 Formato atteso::
 
@@ -18,6 +19,7 @@ Formato atteso::
 
 from __future__ import annotations
 
+import sys
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -57,10 +59,13 @@ class ConfigurazioneDatabase:
 def _candidati_config(percorso: Path | None) -> list[Path]:
     if percorso is not None:
         return [Path(percorso)]
-    return [
-        Path.cwd() / NOME_FILE_DEFAULT,
-        _RADICE_PROGETTO / NOME_FILE_DEFAULT,
-    ]
+    candidati = [Path.cwd() / NOME_FILE_DEFAULT]
+    if getattr(sys, "frozen", False):
+        # Eseguibile PyInstaller: la config vive ACCANTO all'exe
+        # (non è incorporata, perché contiene le credenziali).
+        candidati.append(Path(sys.executable).parent / NOME_FILE_DEFAULT)
+    candidati.append(_RADICE_PROGETTO / NOME_FILE_DEFAULT)
+    return candidati
 
 
 def leggi_config(percorso: str | Path | None = None) -> ConfigurazioneDatabase:

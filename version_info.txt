@@ -1,0 +1,34 @@
+# Versione Windows dell'eseguibile (PyInstaller: version_info='version_info.txt').
+# Deve restare ALLINEATA a magazzino_profili.__version__ (1.0.0).
+VSVersionInfo(
+    ffi=FixedFileInfo(
+        filevers=(1, 0, 0, 0),
+        prodvers=(1, 0, 0, 0),
+        mask=0x3F,
+        flags=0x0,
+        OS=0x40004,
+        fileType=0x1,
+        subtype=0x0,
+        date=(0, 0),
+    ),
+    kids=[
+        StringFileInfo(
+            [
+                StringTable(
+                    "041004B0",
+                    [
+                        StringStruct("CompanyName", "Magazzino Profili"),
+                        StringStruct("FileDescription", "Magazzino Profili"),
+                        StringStruct("FileVersion", "1.0.0.0"),
+                        StringStruct("InternalName", "MagazzinoProfili"),
+                        StringStruct("LegalCopyright", "(c) 2026 Magazzino Profili"),
+                        StringStruct("OriginalFilename", "MagazzinoProfili.exe"),
+                        StringStruct("ProductName", "Magazzino Profili"),
+                        StringStruct("ProductVersion", "1.0.0.0"),
+                    ],
+                )
+            ]
+        ),
+        VarFileInfo([VarStruct("Translation", [1040, 1200])]),
+    ],
+)

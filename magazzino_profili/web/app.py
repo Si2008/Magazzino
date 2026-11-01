@@ -46,6 +46,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import crea_engine, crea_session_factory, leggi_config
 from ..services import PianificatoreScadenze, leggi_config_scadenze
 from .routes_barcode import crea_router
+from .routes_update import crea_router as crea_router_aggiornamenti
 from .sicurezza_web import (
     ProtezioneLogin,
     installa_protezioni_http,
@@ -124,6 +125,47 @@ def leggi_sezione_web(percorso: str | Path | None = None) -> dict[str, Any]:
     return configurazione
 
 
+def leggi_sezione_update(percorso: str | Path | None = None) -> dict[str, Any]:
+    """Legge la sezione ``[update]`` di ``config.toml`` (Fase 13 completa).
+
+    Se la sezione (o il file) non c'è restituisce i valori di default
+    (aggiornamenti disabilitati): il feed è opzionale e la sua assenza
+    non deve impedire l'avvio del server.
+    """
+    configurazione: dict[str, Any] = {
+        "abilitato": False,
+        "feed_url": None,
+        "cartella_rilasci": "release",  # default: accanto alla config (il progetto)
+    }
+    file: Path | None = None
+    if percorso is not None:
+        file = Path(percorso)
+    else:
+        file = next(
+            (p for p in _candidati_config() if p.is_file()), None
+        )
+    if file is None or not file.is_file():
+        return configurazione
+    try:
+        with open(file, "rb") as fonte:
+            sezione = tomllib.load(fonte).get("update", {})
+    except (OSError, tomllib.TOMLDecodeError):
+        return configurazione
+    configurazione.update(
+        {
+            "abilitato": bool(sezione.get("abilitato", False)),
+            "feed_url": sezione.get("feed_url"),
+            "cartella_rilasci": sezione.get("cartella_rilasci", "release"),
+        }
+    )
+    cartella = Path(configurazione["cartella_rilasci"])
+    if not cartella.is_absolute():
+        configurazione["cartella_rilasci"] = str(file.parent / cartella)
+    else:
+        configurazione["cartella_rilasci"] = str(cartella)
+    return configurazione
+
+
 def _messaggio_422(exc: RequestValidationError) -> str:
     """Traduce i principali errori di validazione in italiano."""
     problemi: list[str] = []
@@ -152,6 +194,7 @@ def crea_app(
     durata_token_secondi: int = 3600,
     segrete_token: str | None = None,
     protezione_login: ProtezioneLogin | None = None,
+    cartella_rilasci: str | Path | None = None,
 ) -> FastAPI:
     """Costruisce l'applicazione FastAPI (usa anche nei test).
 
@@ -159,6 +202,11 @@ def crea_app(
     (stesso PostgreSQL dell'app desktop). ``segrete_token`` deve essere
     una stringa lunga e casuale; se assente, ne viene generata una
     valida solo per la durata di questo avvio (avviso a video).
+
+    ``cartella_rilasci`` (Fase 13 completa): se fornita, registra il
+    feed degli aggiornamenti (``/update/manifest.json`` e
+    ``/update/MagazzinoProfili-<X.Y.Z>.exe``); se None (default) il
+    comportamento è invariato e le rotte non esistono.
     """
     if session_factory is None:
         engine = crea_engine(config=leggi_config())
@@ -218,6 +266,9 @@ def crea_app(
         return FileResponse(_TEMPLATE_SCANSIONE, media_type="text/html")
 
     app.mount("/static", StaticFiles(directory=_CARTELLA_STATIC), name="static")
+
+    if cartella_rilasci is not None:
+        app.include_router(crea_router_aggiornamenti(cartella_rilasci))
     return app
 
 
@@ -297,11 +348,20 @@ def main() -> int:
     )
     avvia(pianificatore)
 
+    # Feed degli aggiornamenti (Fase 13 completa): se abilitato in
+    # config.toml, il server espone anche /update/manifest.json e gli
+    # installer della cartella rilasci.
+    update = leggi_sezione_update()
+    cartella_rilasci = (
+        Path(update["cartella_rilasci"]) if update["abilitato"] else None
+    )
+
     try:
         app = crea_app(
             session_factory=factory,
             durata_token_secondi=web["durata_token_secondi"],
             segrete_token=web["segrete_token"],
+            cartella_rilasci=cartella_rilasci,
         )
         print(
             f"Server web Magazzino Profili: https://{web['host']}:{web['porta']}/ "

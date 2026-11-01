@@ -24,3 +24,9 @@ config.toml
 # zip condiviso
 *.dump
 backup/*.dump
+
+# Chiave privata di firma: MAI in git
+firme/chiave_privata.pem
+
+# Rilasci (eseguibili): non in git
+release/

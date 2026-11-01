@@ -105,6 +105,13 @@ def main() -> int:
     utente = dialog.utente()
     print(f"Accesso: {dialog.tooltip_fine}")
 
+    # 4.5) Controllo aggiornamenti (Fase 13 completa), dopo il login:
+    # se c'è una nuova versione e l'utente sceglie di installarla, la nuova
+    # istanza viene lanciata e questa si chiude (senza aprire la finestra).
+    if _controlla_aggiornamento(app, pianificatore):
+        print("Aggiornamento: nuova versione avviata, la precedente si chiude.")
+        return 0
+
     # 5) Finestra principale con i permessi del ruolo.
     finestra = FinestraPrincipale(factory, utente.ruolo, utente.username)
     finestra.showMaximized()
@@ -115,6 +122,41 @@ def main() -> int:
     codice_uscita = app.exec()
     pianificatore.ferma(timeout=10.0)
     return codice_uscita
+
+
+def _controlla_aggiornamento(app, pianificatore) -> bool:
+    """Controlla il feed dopo il login (Fase 13 completa).
+
+    Ritorna True SOLO se è stata lanciata la nuova versione (la vecchia
+    deve chiudersi senza aprire la finestra principale). Feed assente,
+    errore di rete, sezione [update] disabilitata o versione uguale:
+    silenzio (log), l'app funziona normalmente.
+    """
+    from PySide6.QtWidgets import QDialog
+
+    from . import __version__
+    from .services import aggiornamenti as agg
+
+    configurazione = agg.leggi_config_aggiornamento()
+    if not (configurazione.abilitato and configurazione.feed_url):
+        return False
+    try:
+        manifest = agg.leggi_feed(configurazione.feed_url, timeout=8)
+    except agg.ErroreAggiornamento as errore:
+        logging.getLogger(__name__).info("Aggiornamenti: feed non disponibile: %s", errore)
+        return False
+    if not agg.esiste_aggiornamento(manifest.versione, __version__):
+        return False
+
+    from .ui.dialogo_aggiornamento import DialogoAggiornamento
+
+    dialogo = DialogoAggiornamento(manifest, parent=None)
+    if dialogo.exec() != QDialog.Accepted:
+        return False
+    # Il popup ha già lanciato la nuova versione staccata: chiudi la vecchia.
+    pianificatore.ferma(timeout=10.0)
+    app.quit()
+    return True
 
 
 def _esiste_almeno_un_utente(factory) -> bool:
