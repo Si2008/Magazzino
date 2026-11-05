@@ -108,9 +108,12 @@ class FinestraPrincipale(QWidget):
         ruolo: Ruolo | str,
         nome_utente: str,
         parent: QWidget | None = None,
+        *,
+        secondario: bool = False,
     ) -> None:
         super().__init__(parent)
         self._factory = factory
+        self._secondario = secondario
         self._ruolo = Ruolo.AMMINISTRATORE
         self._nome_utente = "operatore"
         self._toast: list[Toast] = []
@@ -132,7 +135,7 @@ class FinestraPrincipale(QWidget):
 
         self.setObjectName("Finestra")
         from .. import __version__
-        self.setWindowTitle(f"Magazzino Profili {__version__}")
+        self.setWindowTitle(f"Magazzino Profili {__version__}" + (" · PC secondario" if secondario else ""))
         icona = _icona_applicazione()
         if icona is not None:
             self.setWindowIcon(icona)
@@ -269,6 +272,26 @@ class FinestraPrincipale(QWidget):
         menu = QMenu(self.puls_report)
         from .postazione import configura
         menu.addAction('Configura postazione e cartella di rete…',lambda:configura(self))
+        if self._secondario:
+            menu.addSeparator()
+            self._azione_animazioni = QAction("Animazioni di transizione", menu)
+            self._azione_animazioni.setCheckable(True)
+            self._azione_animazioni.setChecked(animazioni.attive())
+            self._azione_animazioni.toggled.connect(lambda v: animazioni.imposta_attive(v))
+            menu.addAction(self._azione_animazioni)
+            self.puls_report.setText("Strumenti")
+            self.puls_report.setMenu(menu)
+            h.addWidget(self.puls_report)
+            icona_tema = "moon" if t is tema.CHIARO else "sun"
+            self.puls_tema = bottone("", dim="icona", icona=icona_tema, parent=barra)
+            self.puls_tema.setFixedSize(M.BTN_ICONA, M.BTN_ICONA)
+            self.puls_tema.setToolTip("Cambia tema scuro/chiaro")
+            self.puls_tema.setAccessibleName("Cambia tema scuro o chiaro")
+            self.puls_tema.clicked.connect(self._cambia_tema)
+            h.addWidget(self.puls_tema)
+            self._barra_titolo = barra
+            self._radice.insertWidget(0, barra)
+            return
         self._azione_excel = QAction("Esporta inventario in Excel", menu)
         self._azione_excel.setIcon(icona_svg("download", t.testo, ic_px(14)))
         self._azione_excel.triggered.connect(self._esporta_excel)
@@ -349,6 +372,8 @@ class FinestraPrincipale(QWidget):
         self._pallino_db.setPixmap(_pallino(t.testo_debole, M.PILL_PUNTO))
         h.addWidget(self._pallino_db)
         self._stato_db = QLabel("…", barra)
+        if self._secondario:
+            self._stato_db.setText("PC secondario · database non collegato")
         h.addWidget(self._stato_db)
 
         self._conta_riepilogo = QLabel(barra)
@@ -365,14 +390,25 @@ class FinestraPrincipale(QWidget):
         self._pagine = {}
         self._segnaposto = {}
         self._nomi_pagine = ["scheda_inventario", "scheda_carico", "scheda_scarico", "scheda_profilo", "scheda_avvisi", "scheda_commesse"]
-        self._fabbriche_pagine = {
-            "scheda_inventario": ("Inventario", lambda: TabellaPezzi(self._factory)),
-            "scheda_carico": ("Carico", lambda: SchedaCarico(self._factory, self._nome_utente)),
-            "scheda_scarico": ("Scarico", lambda: SchedaScarico(self._factory, self._nome_utente)),
-            "scheda_profilo": ("Profili", lambda: SchedaProfilo(self._factory)),
-            "scheda_avvisi": ("Avvisi", lambda: SchedaAvvisi(self._factory)),
-            "scheda_commesse": ("Commesse", self._crea_commesse),
-        }
+        if self._secondario:
+            from .postazione import SchedaSoloPrincipale
+            self._fabbriche_pagine = {
+                "scheda_inventario": ("Inventario", lambda: SchedaSoloPrincipale("Inventario", self)),
+                "scheda_carico": ("Carico", lambda: SchedaSoloPrincipale("Carico", self)),
+                "scheda_scarico": ("Scarico", lambda: SchedaSoloPrincipale("Scarico", self)),
+                "scheda_profilo": ("Profili", lambda: SchedaSoloPrincipale("Profili", self)),
+                "scheda_avvisi": ("Avvisi", lambda: SchedaSoloPrincipale("Avvisi", self)),
+                "scheda_commesse": ("Commesse", self._crea_commesse),
+            }
+        else:
+            self._fabbriche_pagine = {
+                "scheda_inventario": ("Inventario", lambda: TabellaPezzi(self._factory)),
+                "scheda_carico": ("Carico", lambda: SchedaCarico(self._factory, self._nome_utente)),
+                "scheda_scarico": ("Scarico", lambda: SchedaScarico(self._factory, self._nome_utente)),
+                "scheda_profilo": ("Profili", lambda: SchedaProfilo(self._factory)),
+                "scheda_avvisi": ("Avvisi", lambda: SchedaAvvisi(self._factory)),
+                "scheda_commesse": ("Commesse", self._crea_commesse),
+            }
         self._tab.blockSignals(True)
         self._tab.clear()
         self._icone_nomi.clear()
@@ -481,7 +517,7 @@ class FinestraPrincipale(QWidget):
     def _aggiorna_pulsanti_telefono(self) -> None:
         for nome in ("scheda_carico", "scheda_scarico"):
             scheda = self._pagina_pronta(nome)
-            if scheda is not None:
+            if scheda is not None and hasattr(scheda, "btn_telefono"):
                 aggiorna_pulsante_telefono(scheda.btn_telefono, self._controllo_telefono.collegato)
 
     def _apri_dialogo_telefono(self) -> None:
@@ -713,7 +749,7 @@ class FinestraPrincipale(QWidget):
         for card in self.findChildren(CardKPI):
             card.set_tono(getattr(card, "_tono", "accento"))
         self._aggiorna_icone_schede()
-        if self.scheda_inventario is not None:
+        if not self._secondario and self.scheda_inventario is not None:
             self.scheda_inventario.aggiorna()
         for nome_scheda in ("scheda_carico", "scheda_scarico"):
             scheda = self._pagina_pronta(nome_scheda)
@@ -732,6 +768,11 @@ class FinestraPrincipale(QWidget):
         self._barra_stato.setText(testo)
 
     def _aggiorna_stato_riepilogo(self) -> None:
+        if self._secondario:
+            self._stato_db.setText("PC secondario · magazzino sul principale")
+            self._pallino_db.setPixmap(_pallino(tema_attivo().testo_debole, M.PILL_PUNTO))
+            self._conta_riepilogo.setText("Gestisci le commesse da questa postazione")
+            return
         from ..services import consultazione, impostazioni
 
         t = tema_attivo()
@@ -753,6 +794,8 @@ class FinestraPrincipale(QWidget):
             self._conta_riepilogo.setText(f"{r['referenze']} referenze · {r['pezzi_totali']} pezzi")
 
     def _aggiorna_badge_avvisi(self) -> None:
+        if self._secondario:
+            return
         from ..services import consultazione, impostazioni
 
         try:

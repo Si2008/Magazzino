@@ -33,6 +33,9 @@ Al primo avvio scegliere **PC secondario**. In alternativa avviare:
 Il secondario legge e conserva le commesse localmente, senza connessione a
 PostgreSQL e senza schermate che modificano il magazzino. Configurare il ruolo
 e la cartella condivisa e riavviare se si cambia ruolo.
+La finestra secondaria mantiene la stessa barra, tema e schede del principale.
+Inventario, Carico, Scarico, Profili e Avvisi spiegano che i dati sono disponibili
+nel magazzino del principale; la scheda Commesse permette importazione e invio.
 
 ### Cartella di rete
 

@@ -139,8 +139,45 @@ def test_secondario_non_apre_database(monkeypatch,qapp):
     monkeypatch.setattr(qapp,'exec',lambda:0)
     class Finta:
         def show(self):pass
-    monkeypatch.setattr(ui,'FinestraSecondaria',Finta)
+    creata=[]
+    monkeypatch.setattr(ui,'FinestraSecondaria',lambda: creata.append(Finta()) or creata[-1])
     assert avvio.main()==0
+    assert len(creata)==1
+
+
+def test_avvio_secondario_senza_config_apre_la_finestra_completa(monkeypatch,qapp):
+    from magazzino_profili import main as avvio
+    from magazzino_profili.services import postazione
+    from magazzino_profili.ui import postazione as ui
+    from PySide6.QtCore import QTimer
+    monkeypatch.setattr(avvio,'_configura_log',lambda:None)
+    monkeypatch.setattr(postazione,'impostazioni',lambda:('secondario',''))
+    monkeypatch.setattr(postazione,'configurazione_database',lambda:'')
+    monkeypatch.setattr(avvio,'leggi_config',lambda:pytest.fail('Il secondario non deve richiedere config.toml'))
+    monkeypatch.setattr(QTimer,'singleShot',lambda *_:None)
+    monkeypatch.setattr(qapp,'exec',lambda:0)
+    creata=[]
+    originale=ui.FinestraSecondaria
+    monkeypatch.setattr(ui,'FinestraSecondaria',lambda:creata.append(originale()) or creata[-1])
+    assert avvio.main()==0
+    assert len(creata)==1 and creata[0]._factory is None
+    assert [creata[0]._tab.tabText(i) for i in range(6)]==[
+        'Inventario','Carico','Scarico','Profili','Avvisi','Commesse']
+
+
+def test_secondario_usa_la_stessa_finestra_e_navigazione_senza_database(qapp,qtbot):
+    from magazzino_profili.ui.postazione import FinestraSecondaria
+    from magazzino_profili.ui.finestra_principale import FinestraPrincipale
+    w=FinestraSecondaria();qtbot.addWidget(w)
+    assert isinstance(w,FinestraPrincipale)
+    assert [w._tab.tabText(i) for i in range(w._tab.count())]==[
+        'Inventario','Carico','Scarico','Profili','Avvisi','Commesse']
+    assert w._factory is None and w._secondario
+    assert w.windowTitle().endswith('PC secondario')
+    assert w._materializza_pagina('scheda_commesse')._locale is not None
+    assert w._pagina_pronta('scheda_inventario') is not None
+    w._esegui_cambio_tema()
+    assert w._tab.count()==6 and w._secondario
 
 
 def test_nome_colore_esatto_e_univoco_senza_cambiare_la_commessa(factory):

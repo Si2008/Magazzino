@@ -1,6 +1,6 @@
 """Configurazione LAN e finestra secondaria senza connessione al magazzino."""
 from PySide6.QtWidgets import (QWidget,QDialog,QVBoxLayout,QHBoxLayout,QLabel,QComboBox,
-    QLineEdit,QFileDialog,QMessageBox,QDialogButtonBox,QApplication)
+    QLineEdit,QFileDialog,QMessageBox,QDialogButtonBox,QApplication,QFrame)
 from PySide6.QtCore import QTimer
 from .componenti import bottone
 from ..services import postazione
@@ -35,23 +35,34 @@ def configura(parent=None):
     return d.exec()==QDialog.DialogCode.Accepted
 
 
-class FinestraSecondaria(QWidget):
+from .finestra_principale import FinestraPrincipale
+
+
+class FinestraSecondaria(FinestraPrincipale):
     def __init__(self):
-        super().__init__();self._lavori=[]
-        from .. import __version__
-        from . import tema
-        app=QApplication.instance();app.setPalette(tema.palette_tema(tema.tema_attivo()));app.setStyleSheet(tema.qss_globale(tema.tema_attivo()))
-        self.setWindowTitle('Magazzino Profili '+__version__+' · PC secondario');self.resize(1280,800)
-        v=QVBoxLayout(self)
-        b=bottone('Configura postazione e cartella di rete',parent=self);b.clicked.connect(lambda:configura(self));v.addWidget(b)
-        from .scheda_commesse import SchedaCommesse
-        self.commesse=SchedaCommesse(None,self._avvia_lavoro,self);v.addWidget(self.commesse,1)
-    def _avvia_lavoro(self,titolo,azione,completato=None):
-        from .finestra_principale import FinestraPrincipale
-        return FinestraPrincipale._avvia_lavoro(self,titolo,azione,completato)
-    def mostra_toast(self,testo,*_):self.commesse.stato.setText(testo)
-    def _prepara_riavvio(self):return not any(w.isRunning() for w in self._lavori)
-    def _riprendi_servizi(self):pass
-    def closeEvent(self,event):
-        if not self._prepara_riavvio():event.ignore();return
-        super().closeEvent(event)
+        # Stesso navigatore e stessa grafica del principale; il secondario non
+        # carica config.toml e indica in ogni scheda il ruolo di questa postazione.
+        from ..sicurezza import Ruolo
+        super().__init__(None, Ruolo.AMMINISTRATORE, "operatore", secondario=True)
+
+
+class SchedaSoloPrincipale(QWidget):
+    """Contenuto coerente con il tema mentre il magazzino resta sul PC principale."""
+    def __init__(self, nome, parent=None):
+        super().__init__(parent)
+        from .tema import M
+        root=QVBoxLayout(self);root.setContentsMargins(M.PAG_H,M.PAG_T,M.PAG_H,M.PAG_B)
+        card=QFrame(self);card.setObjectName("Card")
+        contenuto=QVBoxLayout(card);contenuto.setContentsMargins(M.CARD_PAD,M.CARD_PAD,M.CARD_PAD,M.CARD_PAD)
+        contenuto.setSpacing(M.GAP)
+        titolo=QLabel(nome,card);titolo.setObjectName("TitoloCard");contenuto.addWidget(titolo)
+        spiegazione=QLabel(
+            f"La scheda {nome} è disponibile con il magazzino sul PC principale. "
+            "Questa postazione non apre il database: usa la scheda Commesse per "
+            "caricare e inviare i documenti al principale.",card)
+        spiegazione.setObjectName("Suggerimento");spiegazione.setWordWrap(True)
+        contenuto.addWidget(spiegazione);contenuto.addStretch(1);root.addWidget(card,1)
+    def aggiorna(self):
+        return None
+    def _mostra_movimenti(self):
+        return None
