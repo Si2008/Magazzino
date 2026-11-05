@@ -165,6 +165,18 @@ def test_avvio_secondario_senza_config_apre_la_finestra_completa(monkeypatch,qap
         'Inventario','Carico','Scarico','Profili','Avvisi','Commesse']
 
 
+def test_config_principale_rifiuta_file_assente_o_invalido(tmp_path):
+    from magazzino_profili.services.postazione import valida_configurazione_database
+    with pytest.raises(Exception,match='config.toml non trovato'):
+        valida_configurazione_database(tmp_path/'assente.toml')
+    invalido=tmp_path/'invalido.toml';invalido.write_text('[web]\nporta=1234\n',encoding='utf-8')
+    with pytest.raises(Exception,match=r'sezione \[database\]'):
+        valida_configurazione_database(invalido)
+    valido=tmp_path/'valido.toml'
+    valido.write_text('[database]\nhost="127.0.0.1"\nporta=5432\nutente="test"\npassword="test"\ndbname="magazzino"\n',encoding='utf-8')
+    assert valida_configurazione_database(valido)==valido.resolve()
+
+
 def test_secondario_usa_la_stessa_finestra_e_navigazione_senza_database(qapp,qtbot):
     from magazzino_profili.ui.postazione import FinestraSecondaria
     from magazzino_profili.ui.finestra_principale import FinestraPrincipale

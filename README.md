@@ -18,6 +18,8 @@ Selezionare la configurazione TOML esistente da **Strumenti e backup → Configu
 postazione e cartella di rete**. Per una nuova installazione, copiare
 `config.example.toml` in `config.toml` e completare i parametri del proprio server
 e il percorso di `pg_dump`. Non distribuire questa configurazione con credenziali.
+La schermata di configurazione non permette di confermare il ruolo principale
+finché non è stato selezionato e validato un file TOML con la sezione `[database]`.
 
 L'avvio con migrazioni pendenti richiede prima un backup verificato. In caso di
 errore correggere la configurazione e non forzare la migrazione.

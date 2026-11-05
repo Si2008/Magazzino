@@ -2,8 +2,10 @@
 from PySide6.QtWidgets import (QWidget,QDialog,QVBoxLayout,QHBoxLayout,QLabel,QComboBox,
     QLineEdit,QFileDialog,QMessageBox,QDialogButtonBox,QApplication,QFrame)
 from PySide6.QtCore import QTimer
+from pathlib import Path
 from .componenti import bottone
 from ..services import postazione
+from ..db.config import ErroreConfigurazione, trova_config
 
 
 def configura(parent=None):
@@ -18,16 +20,43 @@ def configura(parent=None):
         p=QFileDialog.getExistingDirectory(d,'Cartella condivisa')
         if p:campo.setText(p)
     cerca.clicked.connect(scegli)
-    db=bottone('Seleziona configurazione PostgreSQL del principale…',parent=d);v.addWidget(db)
+    db=bottone('Seleziona config.toml del PC principale…',parent=d);v.addWidget(db)
+    percorso_iniziale=postazione.configurazione_database() or (str(trova_config()) if trova_config() else '')
+    percorso_label=QLabel(percorso_iniziale or 'Configurazione non selezionata',d)
+    percorso_label.setProperty('percorso_config',percorso_iniziale)
+    percorso_label.setWordWrap(True);percorso_label.setObjectName('Suggerimento');v.addWidget(percorso_label)
     def scegli_db():
-        p,_=QFileDialog.getOpenFileName(d,'Configurazione PostgreSQL','','Configurazione (*.toml)')
+        p,_=QFileDialog.getOpenFileName(d,'Seleziona la configurazione del database','','Configurazione (*.toml)')
         if p:
-            from PySide6.QtCore import QSettings
-            s=QSettings('MagazzinoProfili','Postazione');s.setValue('config_database',p);s.sync()
+            try:
+                postazione.valida_configurazione_database(p)
+            except (OSError,ValueError,ErroreConfigurazione) as errore:
+                QMessageBox.warning(d,'Configurazione PostgreSQL',
+                    'Il file selezionato non contiene una configurazione database valida.\n\n'+str(errore))
+                return
+            percorso_label.setText(p)
+            percorso_label.setProperty('percorso_config',p)
     db.clicked.connect(scegli_db)
     v.addWidget(QLabel('Il ruolo cambia al prossimo avvio. Nessun database viene trasferito nella cartella di rete.',d))
     pulsanti=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel,d);v.addWidget(pulsanti)
     def accetta():
+        if combo.currentData()=='principale':
+            percorso=(percorso_label.property('percorso_config') or percorso_iniziale).strip()
+            if not percorso or not Path(percorso).is_file():
+                QMessageBox.warning(d,'Configurazione PostgreSQL',
+                    'Per usare questo PC come principale seleziona il config.toml già usato dal magazzino. '
+                    'Il principale richiede PostgreSQL; il secondario invece non richiede questo file.')
+                return
+            try:
+                postazione.valida_configurazione_database(percorso)
+            except (OSError,ValueError,ErroreConfigurazione) as errore:
+                QMessageBox.warning(d,'Configurazione PostgreSQL','Impossibile leggere config.toml:\n\n'+str(errore))
+                return
+            from PySide6.QtCore import QSettings
+            s=QSettings('MagazzinoProfili','Postazione');s.setValue('config_database',percorso);s.sync()
+            if s.status()!=QSettings.Status.NoError:
+                QMessageBox.warning(d,'Configurazione PostgreSQL','Impossibile salvare il percorso della configurazione.')
+                return
         try:postazione.salva(combo.currentData(),campo.text())
         except (ValueError,OSError) as e:QMessageBox.warning(d,'Impostazioni',str(e));return
         d.accept()

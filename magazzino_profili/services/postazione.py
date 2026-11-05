@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 from PySide6.QtCore import QSettings
+from ..db.config import ErroreConfigurazione, leggi_config
 
 
 def impostazioni():
@@ -22,3 +23,15 @@ def archivio_locale():
 
 def configurazione_database():
     return str(QSettings('MagazzinoProfili','Postazione').value('config_database',''))
+
+
+def valida_configurazione_database(percorso):
+    """Rifiuta un ruolo principale finché non è selezionato un TOML valido."""
+    p=Path(percorso).expanduser()
+    if not p.is_file():
+        raise ErroreConfigurazione(
+            'config.toml non trovato. Seleziona il file usato dal PC principale; '
+            'il programma non crea né sostituisce una configurazione con credenziali inventate.'
+        )
+    leggi_config(p)
+    return p.resolve()
