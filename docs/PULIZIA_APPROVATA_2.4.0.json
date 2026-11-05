@@ -1,0 +1,140 @@
+[
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\__pycache__",
+    "file": 5,
+    "byte": 20391.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\fase6-file-modificati\\magazzino_profili\\tests\\__pycache__",
+    "file": 4,
+    "byte": 50294.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\firme\\__pycache__",
+    "file": 1,
+    "byte": 4634.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\__pycache__",
+    "file": 3,
+    "byte": 15299.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\backup\\__pycache__",
+    "file": 2,
+    "byte": 14288.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\barcode\\__pycache__",
+    "file": 4,
+    "byte": 16021.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\db\\__pycache__",
+    "file": 6,
+    "byte": 21655.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\domain\\__pycache__",
+    "file": 9,
+    "byte": 24245.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\reports\\__pycache__",
+    "file": 8,
+    "byte": 91615.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\services\\__pycache__",
+    "file": 18,
+    "byte": 150367.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\sicurezza\\__pycache__",
+    "file": 2,
+    "byte": 9529.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\tests\\__pycache__",
+    "file": 113,
+    "byte": 3025962.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\ui\\__pycache__",
+    "file": 17,
+    "byte": 408598.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\magazzino_profili\\web\\__pycache__",
+    "file": 6,
+    "byte": 61594.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\build",
+    "file": 14,
+    "byte": 96745866.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\.pytest_cache",
+    "file": 5,
+    "byte": 66438.0,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\scan_work\\at40_standard_test",
+    "file": 0,
+    "byte": null,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\scan_work\\at40_std_candidates",
+    "file": 0,
+    "byte": null,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\scan_work\\at40_to_candidates",
+    "file": 0,
+    "byte": null,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\scan_work\\at45_candidates",
+    "file": 0,
+    "byte": null,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\scan_work\\general_nc_candidates",
+    "file": 0,
+    "byte": null,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\scan_work\\profile_candidates",
+    "file": 0,
+    "byte": null,
+    "stato": "eliminato"
+  },
+  {
+    "percorso": "C:\\Users\\Simone\\Desktop\\magazzino\\scan_work\\woodslide_candidates",
+    "file": 0,
+    "byte": null,
+    "stato": "eliminato"
+  }
+]

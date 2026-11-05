@@ -12,7 +12,7 @@ from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from ..services.consultazione import lista_pezzi
+from ..services.consultazione import itera_pezzi
 
 # Intestazioni of the sheet, in the requested order.
 INTESTAZIONI = (
@@ -36,6 +36,14 @@ def esporta_inventario_pdf(
     percorso_output: str | Path,
     titolo: str = "Inventario",
 ) -> Path:
+    from ..file_sicuri import destinazione_atomica
+    percorso = Path(percorso_output)
+    with destinazione_atomica(percorso) as temporaneo:
+        _esporta_inventario_pdf(session, temporaneo, titolo)
+    return percorso
+
+
+def _esporta_inventario_pdf(session, percorso_output, titolo):
     """Esport the complete inventory in a printable PDF (A4 landscape).
 
     One row per piece with the same columns as the Excel export
@@ -46,7 +54,7 @@ def esporta_inventario_pdf(
     percorso.parent.mkdir(parents=True, exist_ok=True)
 
     larghezza, altura = A4[1], A4[0]  # landscape
-    piezas = lista_pezzi(session)
+    piezas = itera_pezzi(session)
 
     pdf = canvas.Canvas(str(percorso), pagesize=(larghezza, altura))
     colonne_w = (larghezza - 2 * MARGINE_SX) / len(INTESTAZIONI)

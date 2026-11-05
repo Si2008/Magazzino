@@ -79,16 +79,14 @@ def start(host: str = "localhost", porta: int = 5432) -> bool:
     if not cartella_bin or not CARTELLA_DATA.is_dir():
         return False
 
-    log_file = (CARTELLA_DATA / "log_app").open("ab")  # noqa: SIM115
     try:
-        subprocess.Popen(  # noqa: SIM511
-            [_commanda(cartella_bin, "postgres.exe"), "-D", str(CARTELLA_DATA)],
-            stdin=subprocess.DEVNULL,
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-            cwd=str(CARTELLA_DATA),
-            creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
-        )
+        with (CARTELLA_DATA / "log_app").open("ab") as log_file:
+            subprocess.Popen(
+                [_commanda(cartella_bin, "postgres.exe"), "-D", str(CARTELLA_DATA)],
+                stdin=subprocess.DEVNULL, stdout=log_file, stderr=subprocess.STDOUT,
+                cwd=str(CARTELLA_DATA),
+                creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+            )
     except OSError:
         return False
 

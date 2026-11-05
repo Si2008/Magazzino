@@ -19,7 +19,7 @@ FAKE_PG_DUMP = (
 )
 
 # Name of the backup file: prefix + date/time + suffix.
-NOME_BACKUP = re.compile(r"magazzino_profili_\d{8}_\d{6}\.dump")
+NOME_BACKUP = re.compile(r"magazzino_profili_\d{8}_\d{6}(?:_\d{6}_[a-f0-9]{8})?\.dump")
 
 
 def _fake_pgdump() -> list[str]:
@@ -95,7 +95,7 @@ def test_config_reads_the_backup_section(tmp_path):
     cfg = tmp_path / "config.toml"
     cfg.write_text('[backup]\ncartella = "bk"\nintervallo_ore = 12\nmax_backup = 3\n', encoding="utf-8")
     cfg_backup = pkg_backup.leggi_config_backup(cfg)
-    assert cfg_backup.cartella == "bk"
+    assert Path(cfg_backup.cartella) == tmp_path / "bk"
     assert cfg_backup.intervallo_ore == 12
     assert cfg_backup.max_backup == 3
 

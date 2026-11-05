@@ -46,4 +46,8 @@ def crea_session_factory(engine: Engine) -> sessionmaker[Session]:
 
 def crea_tabelle(engine: Engine) -> None:
     """Crea tutte le tabelle del dominio (solo per setup/ambiente di dev)."""
-    Base.metadata.create_all(engine)
+    from sqlalchemy import text
+    with engine.begin() as conn:
+        if conn.dialect.name == "postgresql":
+            conn.execute(text("SELECT pg_advisory_xact_lock(727001)"))
+        Base.metadata.create_all(conn)

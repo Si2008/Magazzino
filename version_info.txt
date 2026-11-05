@@ -1,0 +1,2 @@
+# I metadati Windows vengono generati da tools/compila_windows.py nella destinazione di build.
+# Fonte unica: magazzino_profili/__init__.py, __version__.

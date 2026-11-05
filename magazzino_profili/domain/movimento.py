@@ -69,6 +69,8 @@ def registra_movimento(
     quantita: int,
     causale: str,
     utente: str = "",
+    *,
+    now=None,
 ) -> Movimento:
     """Unica via ammessa per modificare la quantità di un pezzo.
 
@@ -80,8 +82,14 @@ def registra_movimento(
       sessione: è il chiamante a decidere se annullare la
       transazione (``session.rollback()``) o continuare.
     """
-    if not isinstance(quantita, int) or quantita <= 0:
+    if not isinstance(quantita, int) or isinstance(quantita, bool) or quantita <= 0:
         raise ValueError("La quantità del movimento deve essere un intero positivo")
+    if not isinstance(tipo, TipoMovimento):
+        raise ValueError("Tipo movimento non valido")
+    momento = now() if now is not None else datetime.now(timezone.utc)
+    if momento.tzinfo is None or momento.utcoffset() is None:
+        raise ValueError("L'orario del movimento deve avere un fuso orario")
+    momento = momento.astimezone(timezone.utc)
 
     if tipo is TipoMovimento.CARICO:
         nuova_quantita = pezzo.quantita + quantita
@@ -93,14 +101,24 @@ def registra_movimento(
                 quantita_richiesta=quantita,
             )
 
+    if pezzo.unitario and nuova_quantita not in (0, 1):
+        raise ValueError("Il barcode identifica un singolo pezzo: giacenza ammessa 0 oppure 1")
+
+    if nuova_quantita > 2147483647:
+        raise ValueError("Giacenza fuori dall'intervallo supportato")
     movimento = Movimento(
         pezzo=pezzo,
         tipo=tipo,
         quantita=quantita,
         causale=causale,
         utente=utente,
+        data_ora=momento,
     )
     session.add(movimento)
     pezzo.quantita = nuova_quantita
+    nuovo_stato = "Caricato" if nuova_quantita > 0 else "Scaricato"
+    if pezzo.stato != nuovo_stato or pezzo.data_ultimo_cambio_stato is None:
+        pezzo.stato = nuovo_stato
+        pezzo.data_ultimo_cambio_stato = momento
     session.flush()
     return movimento

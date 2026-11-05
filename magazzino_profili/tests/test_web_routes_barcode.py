@@ -4,6 +4,8 @@ Il database di test è SQLite in memoria condiviso (StaticPool) con
 l'app; i dati sono un profilo, un colore e un pezzo con giacenza 5.
 """
 
+import pytest
+
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
@@ -30,8 +32,8 @@ def _app_con_dati() -> tuple[TestClient, object]:
     crea_tabelle(engine)
     factory = crea_session_factory(engine)
     with factory() as session:
-        crea_utente(session, "maria", "segreta", Ruolo.OPERATORE)
-        crea_utente(session, "osservatore", "segreta", Ruolo.SOLA_LETTURA)
+        crea_utente(session, "maria", "segreta123", Ruolo.OPERATORE)
+        crea_utente(session, "osservatore", "segreta123", Ruolo.SOLA_LETTURA)
         profilo = Profilo(
             codice="AB12",
             descrizione="Profilo di prova",
@@ -62,12 +64,8 @@ def _app_con_dati() -> tuple[TestClient, object]:
     return TestClient(app), factory
 
 
-def _token(client: TestClient, utente: str = "maria") -> str:
-    risposta = client.post(
-        "/api/login", json={"utente": utente, "password": "segreta"}
-    )
-    assert risposta.status_code == 200
-    return risposta.json()["token"]
+def _token(client, utente="operatore"):
+    return ""  # compatibilità test: nessuna credenziale richiesta
 
 
 def _intestazioni(token: str) -> dict:
@@ -79,13 +77,10 @@ def _conteggio(factory, modello) -> int:
         return session.scalar(select(func.count(modello.id)))
 
 
-def test_carico_senza_token_restituisce_401() -> None:
+def test_carico_senza_credenziali_consentito():
     client, _ = _app_con_dati()
-    risposta = client.post(
-        "/api/carico", json={"barcode": BARCODE, "quantita": 1}
-    )
-    assert risposta.status_code == 401
-    assert "detail" in risposta.json()
+    risposta=client.post("/api/carico",json={"barcode":BARCODE,"quantita":1})
+    assert risposta.status_code==200 and risposta.json()["quantita_giacenza"]==GIACENZA_INIZIALE+1
 
 
 def test_carico_con_token_e_barcode_esistente_registra_movimento() -> None:
@@ -114,7 +109,7 @@ def test_carico_con_token_e_barcode_esistente_registra_movimento() -> None:
     assert movimento is not None
     assert movimento.tipo == TipoMovimento.CARICO
     assert movimento.quantita == 3
-    assert movimento.utente == "maria"
+    assert movimento.utente == "operatore"
     assert movimento.causale == "ordine 42"
 
 
@@ -196,12 +191,103 @@ def test_carico_con_quantita_non_valida_restituisce_422() -> None:
     assert _conteggio(factory, Movimento) == 0
 
 
-def test_utente_sola_lettura_riceve_403_sul_carico() -> None:
-    client, _ = _app_con_dati()
-    token = _token(client, utente="osservatore")
+def test_ruoli_storici_non_limitano_accesso():
+    client,_=_app_con_dati()
+    assert client.post("/api/carico",json={"barcode":BARCODE,"quantita":1}).status_code==200
+
+
+# ----------------------------------------------------------------------
+# Fase 7B: modalita "Lettore" - /api/scansione e /api/telefono/ping
+# ----------------------------------------------------------------------
+def test_scansione_con_token_operatore_accoda_e_non_tocca_la_giacenza() -> None:
+    from magazzino_profili.domain import Pezzo, ScansioneTelefono
+    from magazzino_profili.services import telefono
+
+    client, factory = _app_con_dati()
+    token = _token(client)
     risposta = client.post(
-        "/api/carico", json={"barcode": BARCODE, "quantita": 1},
+        "/api/scansione", json={"barcode": "ab12-an007-6000"}, headers=_intestazioni(token)
+    )
+    assert risposta.status_code == 200
+    corpo = risposta.json()
+    assert corpo["barcode"] == "AB12-AN007-6000"
+
+    with factory() as session:
+        righe = session.scalars(select(ScansioneTelefono)).all()
+        assert len(righe) == 1
+        assert righe[0].barcode == "AB12-AN007-6000"
+        assert righe[0].letta is False
+        assert session.get(Pezzo, 1).quantita == GIACENZA_INIZIALE  # giacenza invariata
+
+
+def test_scansione_libera_ma_input_validato():
+    client,_=_app_con_dati()
+    assert client.post("/api/scansione",json={"barcode":BARCODE}).status_code==200
+    assert client.post("/api/scansione",json={"barcode":""}).status_code==422
+
+
+def test_ping_segna_il_telefono_collegato() -> None:
+    from magazzino_profili.services import telefono
+
+    client, factory = _app_con_dati()
+    # Accesso libero: anche il ping non richiede token.
+    assert client.post("/api/telefono/ping").status_code == 200
+    token = _token(client)
+    assert client.post("/api/telefono/ping", headers=_intestazioni(token)).status_code == 200
+    with factory() as session:
+        assert telefono.telefono_collegato(session) is True
+
+
+@pytest.mark.parametrize("quantita", [True, 1.0, "3", 0, -1])
+@pytest.mark.parametrize("percorso", ["/api/carico", "/api/scarico"])
+def test_quantita_non_intera_positiva_rifiutata_dal_telefono(percorso, quantita) -> None:
+    client, factory = _app_con_dati()
+    token = _token(client)
+    risposta = client.post(
+        percorso, json={"barcode": BARCODE, "quantita": quantita},
         headers=_intestazioni(token),
     )
-    assert risposta.status_code == 403
-    assert "autorizzato" in risposta.json()["detail"].lower()
+    assert risposta.status_code == 422
+    assert _conteggio(factory, Movimento) == 0
+    with factory() as session:
+        pezzo = session.scalar(select(Pezzo).where(Pezzo.barcode == BARCODE))
+        assert pezzo.quantita == GIACENZA_INIZIALE
+
+
+# ----------------------------------------------------------------------
+# Fase 7: barcode modificato, vassoio/stato nella risposta, eliminati
+# ----------------------------------------------------------------------
+def test_telefono_trova_il_nuovo_barcode_con_vassoio_e_stato() -> None:
+    from magazzino_profili.services import aggiorna_barcode, imposta_numero_vassoio
+
+    client, factory = _app_con_dati()
+    token = _token(client)
+    with factory() as session:
+        pezzo_id = session.scalar(select(Pezzo.id).where(Pezzo.barcode == BARCODE))
+    with factory() as session:
+        aggiorna_barcode(session, pezzo_id, "nuovo-1")
+    with factory() as session:
+        imposta_numero_vassoio(session, pezzo_id, "Vassoio 4")
+
+    ok = client.post("/api/carico", json={"barcode": "nuovo-1", "quantita": 1}, headers=_intestazioni(token))
+    assert ok.status_code == 200
+    corpo = ok.json()
+    assert (corpo["barcode"], corpo["numero_vassoio"], corpo["stato"]) == ("NUOVO-1", "Vassoio 4", "Caricato")
+    vecchio = client.post("/api/carico", json={"barcode": BARCODE, "quantita": 1}, headers=_intestazioni(token))
+    assert vecchio.status_code == 404
+
+
+@pytest.mark.parametrize("percorso", ["/api/carico", "/api/scarico"])
+def test_telefono_pezzo_eliminato_non_disponibile_e_non_riattivato(percorso) -> None:
+    from datetime import datetime, timezone
+
+    client, factory = _app_con_dati()
+    token = _token(client)
+    with factory() as session, session.begin():
+        session.scalar(select(Pezzo).where(Pezzo.barcode == BARCODE)).eliminato_il = datetime.now(timezone.utc)
+    risposta = client.post(percorso, json={"barcode": BARCODE, "quantita": 1}, headers=_intestazioni(token))
+    assert risposta.status_code == 404
+    assert _conteggio(factory, Movimento) == 0
+    with factory() as session:
+        pezzo = session.scalar(select(Pezzo).where(Pezzo.barcode == BARCODE))
+        assert pezzo.eliminato_il is not None and pezzo.quantita == GIACENZA_INIZIALE

@@ -135,8 +135,12 @@ def test_selezione_colore_filtra_e_nasconde_colonna(qapp, factory, dati) -> None
 
     # filtro testo libera: "RAL9010" corrisponde solo alla riga RAL
     scheda.cerca.setText("RAL9010")
+    from PySide6.QtTest import QTest
+    QTest.qWait(300)
     assert tabella.rowCount() == 0  # su questa scheda c'è solo AN007
     scheda.cerca.clear()
+    from PySide6.QtTest import QTest
+    QTest.qWait(300)
     assert tabella.rowCount() == 1
 
     bar.setCurrentIndex(0)  # "Tutti"
@@ -190,15 +194,21 @@ def test_ubicazione_uguaglianza_esatta(qapp, factory, dati) -> None:
 
     scheda = TabellaPezzi(factory)
     scheda.combo_ubicazione.setEditText("Vassoio 1")
+    from PySide6.QtTest import QTest
+    QTest.qWait(300)
     assert scheda._tabella.rowCount() == 1
     assert scheda._tabella.item(0, 2).text() == "Antracite"  # colonna Colore
 
     # "vassoio" da solo NON deve corrispondere (uguaglianza, non sottostringa)
     scheda.combo_ubicazione.setEditText("Vassoio")
+    from PySide6.QtTest import QTest
+    QTest.qWait(300)
     assert scheda._tabella.rowCount() == 0
 
     # maiuscole/minuscole non contano
     scheda.combo_ubicazione.setEditText("vassOIO 1")
+    from PySide6.QtTest import QTest
+    QTest.qWait(300)
     assert scheda._tabella.rowCount() == 1
 
 
@@ -208,7 +218,7 @@ def test_card_kpi_coerenti(qapp, factory, dati) -> None:
     scheda = TabellaPezzi(factory)
     assert scheda.kpi_pezzi._valore.text() == "15"
     assert scheda.kpi_profili._valore.text() == "2"
-    assert scheda.kpi_peso._valore.text() == "112.5 kg"  # (10+5) * 6 m * 1,25 kg/m
+    assert scheda.kpi_peso._valore.text() == "112,5 kg"  # (10+5) * 6 m * 1,25 kg/m (formato italiano)
     assert scheda.kpi_riordino._valore.text() == "1"  # RAL sotto scorta
 
 
@@ -237,4 +247,4 @@ def test_finestra_principale_ruolo_operatore(qapp, factory, dati) -> None:
 
     finestra = FinestraPrincipale(factory, Ruolo.OPERATORE, "test")
     nomi = [finestra._tab.tabText(i) for i in range(finestra._tab.count())]
-    assert nomi == ["Carico", "Scarico"]
+    assert nomi == ["Inventario", "Carico", "Scarico", "Profili", "Avvisi", "Commesse"]

@@ -47,7 +47,7 @@ def test_csv_has_a_row_per_piece(factory, tmp_path) -> None:
     out = esporta_inventario_csv(factory(), tmp_path / "inv.csv")
     assert out.exists()
 
-    with open(out, encoding="utf-8", newline="") as handle:
+    with open(out, encoding="utf-8-sig", newline="") as handle:
         righe = list(csv.reader(handle, delimiter=";"))
 
     assert tuple(righe[0]) == INTESTAZIONI
@@ -65,7 +65,7 @@ def test_csv_import_is_a_carico(factory, tmp_path) -> None:
     assert imported == 2
 
     again = esporta_inventario_csv(factory(), tmp_path / "inv2.csv")
-    with open(again, encoding="utf-8", newline="") as handle:
+    with open(again, encoding="utf-8-sig", newline="") as handle:
         righe = list(csv.reader(handle, delimiter=";"))
 
     assert len(righe) == 3  # still one row per combination
@@ -78,7 +78,7 @@ def test_csv_import_unknown_profile_raises(factory, tmp_path) -> None:
     path.write_text(
         ";".join(INTESTAZIONI) + "\n"
         + "ZZ99;no;Antracite;6000;3;loc;ZZ99-AN007-6000\n",
-        encoding="utf-8",
+        encoding="utf-8-sig",
     )
     with pytest.raises(ProfiloNonTrovatoError):
         importa_peczi_csv(factory(), path)
@@ -87,6 +87,6 @@ def test_csv_import_unknown_profile_raises(factory, tmp_path) -> None:
 def test_csv_import_bad_header(factory, tmp_path) -> None:
     """A CSV without the mandatory columns raises ValueError."""
     path = tmp_path / "bad.csv"
-    path.write_text("Codice profil;Colore\nAB12;AN007\n", encoding="utf-8")
+    path.write_text("Codice profil;Colore\nAB12;AN007\n", encoding="utf-8-sig")
     with pytest.raises(ValueError):
         importa_peczi_csv(factory(), path)

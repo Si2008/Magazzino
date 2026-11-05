@@ -24,3 +24,18 @@ config.toml
 # zip condiviso
 *.dump
 backup/*.dump
+
+# Chiave privata di firma: MAI in git
+firme/chiave_privata.pem
+
+# Rilasci (eseguibili): non in git
+release/
+
+# Stato locale: mai includerlo nei sorgenti condivisi o nel pacchetto.
+pg_data/
+pgsql/
+*.log
+*.log.*
+**/chiave_privata.key
+**/chiave_privata.pem
+**/server.key
