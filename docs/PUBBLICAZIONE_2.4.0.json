@@ -1,0 +1,14 @@
+{
+  "release": "https://github.com/Si2008/Magazzino/releases/tag/v2.4.0",
+  "feed": "https://github.com/Si2008/Magazzino/releases/latest/download/manifest.json",
+  "download_senza_autenticazione": true,
+  "firma_valida": true,
+  "confronto_versioni": true,
+  "sha256": "e9b63cf35c834a2f66ba102a52929e602edf9a9b4765ced0a79072341e826eed",
+  "dimensione": 91649558,
+  "pacchetto_pubblico_identico": true,
+  "installazione_e_avvio": true,
+  "commit": "37e0af3592c838ff1147b20052ca75441880f92d",
+  "branch": "codex/release-2.4.0",
+  "main_non_modificato": true
+}
