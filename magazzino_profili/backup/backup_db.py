@@ -13,6 +13,7 @@ esposta al processo ``pg_dump`` tramite la variabile d'ambiente
 
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 import threading
@@ -20,8 +21,13 @@ import tomllib
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from uuid import uuid4
+from ..db.config import leggi_sezione
+from ..file_sicuri import blocco_cartella, destinazione_atomica
 
 PERCORSO_CONFIG_PREDEFINITO = Path(__file__).resolve().parents[2] / "config.toml"
+
+logger = logging.getLogger(__name__)
 
 # Prefisso comune dei file di backup.
 PREFISSO_FILE = "magazzino_profili_"
@@ -49,15 +55,18 @@ def leggi_config_backup(
     """Legge la sezione ``[backup]`` di config.toml con valori di ripiego."""
     cartella, intervallo, massimo = "backup", 6, 7
     dump = "pg_dump"
-    percorso = Path(percorso_config) if percorso_config else PERCORSO_CONFIG_PREDEFINITO
-    if percorso.is_file():
-        with open(percorso, "rb") as file:
-            dati = tomllib.load(file)
-        sezione = dati.get("backup", {})
-        cartella = str(sezione.get("cartella", cartella))
-        dump = str(sezione.get("pg_dump", "pg_dump"))
-        intervallo = int(sezione.get("intervallo_ore", intervallo))
-        massimo = int(sezione.get("max_backup", massimo))
+    sezione, base = leggi_sezione("backup", percorso_config)
+    cartella = str(sezione.get("cartella", cartella))
+    if not Path(cartella).is_absolute():
+        cartella = str(base / cartella)
+    from ..percorsi_installazione import installata, cartella_dati
+    if installata():
+        cartella = str(cartella_dati()/"backup")
+    dump = str(sezione.get("pg_dump", "pg_dump"))
+    if ("/" in dump or "\\" in dump) and not Path(dump).is_absolute():
+        dump = str(base / dump)
+    intervallo = int(sezione.get("intervallo_ore", intervallo))
+    massimo = int(sezione.get("max_backup", massimo))
     if intervallo <= 0 or massimo <= 0:
         raise ValueError("intervallo_ore e max_backup devono essere positivi")
     return ConfigurazioneBackup(
@@ -77,7 +86,28 @@ def esegui_backup(
     cartella: str | Path,
     max_backup: int = 7,
     comando_base: tuple[str, ...] | list[str] = ("pg_dump",),
+    *,
+    comando_verifica: tuple[str, ...] | list[str] | None = None,
+    conserva_precedenti: bool = False,
 ) -> Path:
+    """Backup serializzato fra processi; pubblicazione solo dopo verifica."""
+    if isinstance(max_backup, bool) or max_backup < 1:
+        raise ValueError("max_backup deve essere positivo")
+    cartella = Path(cartella)
+    cartella.mkdir(parents=True, exist_ok=True)
+    finale = cartella / (PREFISSO_FILE + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                        + "_" + uuid4().hex[:8] + SUFFISSO_FILE)
+    with blocco_cartella(cartella):
+        with destinazione_atomica(finale) as temporaneo:
+            _crea_dump(host, porta, utente, password, dbname, temporaneo,
+                       comando_base, comando_verifica)
+        if not conserva_precedenti:
+            rimuovi_backup_venuti(cartella, max_backup)
+    return finale
+
+
+def _crea_dump(host, porta, utente, password, dbname, file_output,
+               comando_base, comando_verifica):
     """Esegue un backup del database e applica il limite di ``max_backup``.
 
     - ``comando_base`` è il prefisso del comando da eseguire (di default
@@ -88,13 +118,6 @@ def esegui_backup(
 
     Restituisce il percorso del file appena creato.
     """
-    cartella_p = Path(cartella)
-    cartella_p.mkdir(parents=True, exist_ok=True)
-
-    ora = datetime.now()
-    nome_file = f"{PREFISSO_FILE}{ora.strftime('%Y%m%d_%H%M%S')}{SUFFISSO_FILE}"
-    file_output = cartella_p / nome_file
-
     comando = list(comando_base) + [
         "-h", host,
         "-p", str(porta),
@@ -105,7 +128,7 @@ def esegui_backup(
     ]
 
     ambiente = dict(os.environ)
-    ambiente["PGPASSWORD"] = password
+    ambiente["PGPASSWORD"] = password or ""
 
     try:
         risultato = subprocess.run(
@@ -125,9 +148,37 @@ def esegui_backup(
         )
     if not file_output.is_file():
         raise BackupErrore("Il comando ha terminato ma il file di backup non esiste")
+    if file_output.stat().st_size == 0:
+        file_output.unlink(missing_ok=True)
+        raise BackupErrore("Il file di backup è vuoto")
+    if comando_verifica is not None:
+        try:
+            verifica_backup(file_output, comando_verifica)
+        except BackupErrore:
+            file_output.unlink(missing_ok=True)  # un backup illeggibile non deve sostituire quelli buoni
+            raise
 
-    rimuovi_backup_venuti(cartella_p, max_backup)
     return file_output
+
+
+def verifica_backup(
+    file_backup: str | Path,
+    comando_verifica: tuple[str, ...] | list[str],
+    timeout: int = 120,
+) -> None:
+    """Controlla che l'archivio sia leggibile (``pg_restore --list``). Solleva ``BackupErrore``."""
+    try:
+        risultato = subprocess.run(
+            [*comando_verifica, "--list", str(file_backup)],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except (subprocess.TimeoutExpired, OSError) as errore:
+        raise BackupErrore(f"Impossibile verificare il backup: {errore}") from errore
+    if risultato.returncode != 0:
+        dettaglio = (risultato.stderr or "").strip()
+        raise BackupErrore(f"Il backup non è leggibile (pg_restore codice {risultato.returncode}): {dettaglio}")
 
 
 def rimuovi_backup_venuti(cartella: str | Path, max_backup: int) -> None:
@@ -165,16 +216,31 @@ class PianificatoreBackup:
         self._timer: threading.Timer | None = None
         self._blocco = threading.Lock()
         self._attivo = False
+        self._generazione = 0
+        self._worker = None
+        self._in_corso = threading.Event()
+        self.ultimo_esito = "Backup non ancora eseguito"
 
     def _esegui_e_ripiani(self) -> None:
+        self._worker = threading.current_thread()
+        self._in_corso.set()
         try:
             self.azione_backup()
-        except BackupErrore:
-            # In caso di errore (es. pg_dump assente) il backup non
-            # interrompe il programma: il tentativo successivo avverrà
-            # comunque allo scadere dell'intervallo.
-            pass
-        self._pianifica_prossimo()
+            self.ultimo_esito = "Backup completato: " + datetime.now().astimezone().isoformat(timespec="seconds")
+        except BackupErrore as errore:
+            self.ultimo_esito = f"Backup non riuscito: {errore}"
+            logger.error("Backup automatico non riuscito: %s", errore)
+        except Exception:
+            self.ultimo_esito = "Backup non riuscito: consultare il registro"
+            logger.exception("Errore imprevisto durante il backup automatico")
+        finally:
+            self._in_corso.clear()
+            self._pianifica_prossimo()
+            self._worker = None
+
+    @property
+    def in_corso(self):
+        return self._in_corso.is_set() or (self._worker is not None and self._worker.is_alive())
 
     def _pianifica_prossimo(self) -> None:
         with self._blocco:
@@ -186,16 +252,41 @@ class PianificatoreBackup:
             self._timer.daemon = True
             self._timer.start()
 
-    def avvia(self) -> None:
-        """Avvia il servizio: backup immediato + pianificazione ricorrente."""
-        with self._blocco:
-            self._attivo = True
-        self._esegui_e_ripiani()
+    def avvia(self, *, asincrono: bool = False) -> None:
+        """Avvia il servizio: backup immediato + pianificazione ricorrente.
 
-    def ferma(self) -> None:
-        """Interrompe la pianificazione (il backup in corso va a termine)."""
+        Idempotente: se un backup è già in corso o pianificato, una seconda
+        chiamata non avvia una seconda generazione (nessun backup in doppio).
+        """
         with self._blocco:
+            if self._attivo:
+                return
+            self._generazione += 1
+            self._attivo = True
+        if asincrono:
+            self._worker = threading.Thread(target=self._esegui_e_ripiani,
+                                            name="backup-iniziale", daemon=True)
+            self._worker.start()
+        else:
+            self._esegui_e_ripiani()
+
+    def ferma(self, timeout: float = 10.0) -> bool:
+        """Ferma il servizio in modo deterministico.
+
+        Nessun timer sopravvive alla chiamata; il backup in corso (se presente)
+        è una chiamata singola e va a termine nel suo thread.
+        ``timeout`` resta come parametro per compatibilità di interfaccia.
+        """
+        with self._blocco:
+            self._generazione += 1
             self._attivo = False
             if self._timer is not None:
                 self._timer.cancel()
+                timer = self._timer
                 self._timer = None
+            else:
+                timer = None
+        for worker in (timer, self._worker):
+            if worker is not None and worker is not threading.current_thread() and worker.is_alive():
+                worker.join(timeout)
+        return not self.in_corso

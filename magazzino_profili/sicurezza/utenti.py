@@ -13,6 +13,7 @@ scritte in database.
 from __future__ import annotations
 
 import enum
+import functools
 
 import bcrypt
 from sqlalchemy import String, select
@@ -63,6 +64,24 @@ def verifica_password(password: str, password_hash: str) -> bool:
         return False
 
 
+PASSWORD_MIN_CARATTERI = 8
+PASSWORD_MAX_BYTE = 72  # limite di bcrypt: oltre, la password verrebbe troncata o rifiutata
+
+
+def valida_password_nuova(password: str) -> None:
+    """Regole per le password NUOVE (quelle già salvate non vengono toccate)."""
+    if not isinstance(password, str) or len(password) < PASSWORD_MIN_CARATTERI:
+        raise ValueError(f"La password deve avere almeno {PASSWORD_MIN_CARATTERI} caratteri")
+    if len(password.encode("utf-8")) > PASSWORD_MAX_BYTE:
+        raise ValueError(f"La password non può superare {PASSWORD_MAX_BYTE} byte")
+
+
+@functools.lru_cache(maxsize=1)
+def _hash_fittizio() -> str:
+    """Hash usato per rendere uguale il tempo di risposta con utente inesistente."""
+    return hash_password("password-fittizia-non-valida")
+
+
 # ---------------------------------------------------------------------------
 # Operazioni su utente (transazioni esplicite)
 # ---------------------------------------------------------------------------
@@ -77,6 +96,7 @@ def crea_utente(
     username_pulito = username.strip()
     if not username_pulito:
         raise ValueError("Il nome utente non può essere vuoto")
+    valida_password_nuova(password)
     ruolo_valore = ruolo.value if isinstance(ruolo, Ruolo) else Ruolo(ruolo).value
 
     with session.begin():
@@ -94,11 +114,16 @@ def crea_utente(
 
 
 def autentica(session: Session, username: str, password: str) -> Utente | None:
-    """Verifica le credenziali; restituisce l'utente o ``None``."""
+    """Verifica le credenziali; restituisce l'utente o ``None``.
+
+    Con un utente inesistente esegue comunque un controllo bcrypt: altrimenti la
+    differenza di tempo (millisecondi contro ~300 ms) rivelerebbe quali nomi esistono.
+    """
     utente = session.scalar(
         select(Utente).where(Utente.username == username.strip())
     )
     if utente is None:
+        verifica_password(password, _hash_fittizio())
         return None
     if not verifica_password(password, utente.password_hash):
         return None
@@ -128,11 +153,9 @@ AZIONI_CONSENTITE: dict[Ruolo, frozenset[str]] = {
 
 def schede_consenti(ruolo: Ruolo | str) -> tuple[str, ...]:
     """Schede della finestra principale visibili per il ruolo."""
-    ruolo = ruolo if isinstance(ruolo, Ruolo) else Ruolo(ruolo)
-    return SCHEDE_CONSENTITE[ruolo]
+    return SCHEDE_CONSENTITE[Ruolo.AMMINISTRATORE]
 
 
 def puo(ruolo: Ruolo | str, azione: str) -> bool:
-    """Indica se il ruolo può compiere l'azione (es. ``"carico"``, ``"report"``)."""
-    ruolo = ruolo if isinstance(ruolo, Ruolo) else Ruolo(ruolo)
-    return azione in AZIONI_CONSENTITE[ruolo]
+    """Accesso libero richiesto dal proprietario: sempre privilegi massimi."""
+    return azione in AZIONI_CONSENTITE[Ruolo.AMMINISTRATORE]

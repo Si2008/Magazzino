@@ -1,0 +1,2285 @@
+{
+  "data": "2026-11-06",
+  "ambiente": "Copia esterna, SQLite sintetico, QSettings isolati; HTTP con loopback autorizzato, nessun DB operativo",
+  "riepilogo_python": {
+    "superato": 321,
+    "non eseguito": 35
+  },
+  "python": [
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_navigazione_senza_profili_editor_conservato[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_navigazione_senza_profili_editor_conservato[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_editor_senza_peso_conserva_dato_storico[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_editor_senza_peso_conserva_dato_storico[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_inventario_immagine_e_segnaposto[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_inventario_immagine_e_segnaposto[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_png_non_indicizzato_resta_associato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_locale_selezione_e_filtro[chiaro-False]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_locale_selezione_e_filtro[chiaro-True]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_locale_selezione_e_filtro[scuro-False]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_locale_selezione_e_filtro[scuro-True]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_paginata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_isolata_e_db_non_disponibile[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_isolata_e_db_non_disponibile[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_cambio_tema_aggiorna_anteprima_senza_perdere_campi",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_contrasti_palette[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_contrasti_palette[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_pillole_leggibili_anche_sulla_selezione[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_pillole_leggibili_anche_sulla_selezione[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_import_v2_ignora_peso_csv_ods",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_excel_senza_peso_e_compatibilita_storica",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_handler_mobile_crea_profilo_senza_peso[False]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_handler_mobile_crea_profilo_senza_peso[True]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_inventario_quattro_tab",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_tab_colore_zero_pezzi_esiste",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_selezione_colore_filtra_e_nasconde_colonna",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_tab_dinamica_dopo_carico_e_selezione_stabile",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_vai_a_colore_da_avvisi",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_ubicazione_uguaglianza_esatta",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_card_kpi_coerenti",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_finestra_principale_cinque_schede_e_avvisi",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_finestra_principale_ruolo_operatore",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_fogli_intestazioni_conteggi[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_fogli_intestazioni_conteggi[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_intestazioni_coprono_lo_schema",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_roundtrip_db_vuoto[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_roundtrip_db_vuoto[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_roundtrip_preserva_vassoio_stato_eliminati[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_roundtrip_preserva_vassoio_stato_eliminati[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_sequenze_senza_riallineamento_falliscono_su_postgres[sqlite]",
+      "stato": "non eseguito",
+      "motivo": "solo PostgreSQL",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_sequenze_senza_riallineamento_falliscono_su_postgres[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_testo_utente_resta_testo[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_testo_utente_resta_testo[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_testo_lungo_e_caratteri_illegali[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_testo_lungo_e_caratteri_illegali[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Pezzi-2-profilo_id-999-Profili.id=999 inesistente]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Pezzi-3-id-1-duplicato]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Pezzi-3-barcode-AB12-RAL7016-6000-duplicato]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Pezzi-2-lunghezza_mm-abc-intero atteso]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Pezzi-2-quantita--1-almeno 0]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Pezzi-2-stato-Scaduto-non ammesso]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Pezzi-2-stato-Caricato-None]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Movimenti-2-tipo-BOH-non ammesso]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Movimenti-2-data_ora-2026-10-20T10:00:00-fuso]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Movimenti-2-data_ora-ieri-ISO 8601]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Movimenti-2-pezzo_id-77-Pezzi.id=77]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Spezzoni-2-utilizzato-si-booleano]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Profili-2-lunghezza_standard_mm-lunga-intero atteso]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[sqlite-Metadati-2-valore-99-versione_formato]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Pezzi-2-profilo_id-999-Profili.id=999 inesistente]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Pezzi-3-id-1-duplicato]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Pezzi-3-barcode-AB12-RAL7016-6000-duplicato]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Pezzi-2-lunghezza_mm-abc-intero atteso]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Pezzi-2-quantita--1-almeno 0]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Pezzi-2-stato-Scaduto-non ammesso]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Pezzi-2-stato-Caricato-None]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Movimenti-2-tipo-BOH-non ammesso]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Movimenti-2-data_ora-2026-10-20T10:00:00-fuso]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Movimenti-2-data_ora-ieri-ISO 8601]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Movimenti-2-pezzo_id-77-Pezzi.id=77]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Spezzoni-2-utilizzato-si-booleano]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Profili-2-lunghezza_standard_mm-lunga-intero atteso]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_errori_con_foglio_riga_colonna[postgres-Metadati-2-valore-99-versione_formato]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_numeri_come_float_accettati[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_numeri_come_float_accettati[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_conteggio_metadati_e_righe_cancellate[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_conteggio_metadati_e_righe_cancellate[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_file_malformati[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_file_malformati[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_file_storico_foglio_singolo_e_ripristino_parziale[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_file_storico_foglio_singolo_e_ripristino_parziale[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_backup_vuoto[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_backup_vuoto[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_db_non_vuoto_rifiutato_senza_modifiche[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_db_non_vuoto_rifiutato_senza_modifiche[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_merge_rifiuta_collisioni_e_non_aggiorna[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_merge_rifiuta_collisioni_e_non_aggiorna[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_merge_aggiunge_solo_record_nuovi[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_merge_aggiunge_solo_record_nuovi[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_rollback_completo_su_errore[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_rollback_completo_su_errore[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_sessione_gia_in_transazione_e_argomenti[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_sessione_gia_in_transazione_e_argomenti[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_molte_righe[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_molte_righe[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_limite_righe_excel[sqlite]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel::test_limite_righe_excel[postgres]",
+      "stato": "non eseguito",
+      "motivo": "MAGAZZINO_TEST_DB_URL non impostata",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_cognome_letto_e_obbligatorio",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_codici_e_colori_originali_senza_catalogo",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_reimportazione_omonimo_e_nessuna_sovrascrittura",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_identita_stessa_con_dati_diversi_rifiutata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_pacchetti_malformati_non_modificano_db[{}]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_pacchetti_malformati_non_modificano_db[[]]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_pacchetti_malformati_non_modificano_db[{\"formato\":99}]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_pacchetti_malformati_non_modificano_db[errore]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_pacchetti_malformati_non_modificano_db[\\xff]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_offline_invii_e_ricevute_durevoli",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_omonimie_archivio_secondario",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_assegnazione_persistente_inventario_carico_scarico",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_prelievo_non_prende_pezzi_di_altra_commessa",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_backup_ripristina_commesse_e_associazioni",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_ui_colore_immutabile_e_commesse_multiple",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_secondario_non_apre_database",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_avvio_secondario_senza_config_apre_la_finestra_completa",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_config_principale_rifiuta_file_assente_o_invalido",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_secondario_usa_la_stessa_finestra_e_navigazione_senza_database",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_nome_colore_esatto_e_univoco_senza_cambiare_la_commessa",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_backup_vecchio_formato_tre_senza_commesse_resta_leggibile",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_commesse_multiple::test_invii_rifiutati_ripubblicati_e_omonimie_riprese",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_nuovo_profilo_mostra_proposta",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_nuovo_profilo_codice_assente_nessuna_immagine",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_profilo_esistente_mai_proposta",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_manuale_non_sovrascritto_dal_cambiamento_codice",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_rimossa_niente_riproposta_finche_codice_non_cambia",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_pulsante_nuovo_azzera_stato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_salva_file_sparito_nessun_profilo",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_salva_con_proposta_crea_profilo_con_immagine",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_roundtrip[csv]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_roundtrip[ods]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_ods_reale",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_timestamp_e_bom",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga0-deve essere 2]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga1-almeno 1]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga2-non \\xe8 un intero]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga3-non \\xe8 un intero]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga4-almeno 1]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga5-mancante]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga6-non valido]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga7-fuso]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga8-ISO]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga9-colonne]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_errori[riga10-non \\xe8 un intero]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_vassoio_e_stato_validi",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_duplicati_header_vuoto",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_malformati",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_riferimenti",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_piezzo_completo_e_eliminato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_2000_righe",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_formato_v2_fase10::test_ods_celle_ripetute_libreoffice",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_input_numerici::test_lunghezza_accetta_piu_cifre",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_input_numerici::test_quantita_carico_accetta_piu_cifre",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_input_numerici::test_quantita_scarico_accetta_piu_cifre",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_input_numerici::test_validatore_rifiuta_lettere",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_input_numerici::test_scansione_barcode_esistente_non_crea_pezzi_nuovi",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_input_numerici::test_salvataggio_carico_con_lunghezza_multi_cifra",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_ubicazione_non_scelta_non_salva_il_segnaposto",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_card_kpi_non_trasmette_stile_alle_etichette",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_movimenti_distinguono_caricato_e_scaricato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_anteprima_mostra_il_pezzo_e_la_giacenza",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_anteprima_segnala_barcode_inesistente",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_totale_richiede_conferma_e_puo_essere_annullato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_totale_confermato_azzera_la_giacenza",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_parziale_non_chiede_conferma",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_errore_giacenza_spiegato_in_italiano",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_errore_imprevisto_non_mostra_dettagli_tecnici",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_errore_database_indica_postgres",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7a::test_stepper_soglia_default_e_sottotitolo",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7a::test_cambio_soglia_salva_e_emette",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7a::test_riga_sotto_scorta_e_in_esaurimento",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_controllo_avvia_scarta_la_coda_poi_riceve_le_nuove",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_controllo_stato_collegato_e_ferma",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_scarico_ricevi_scansione_compila_e_chiede_causale",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_carico_ricevi_scansione_compila_il_campo",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_aggiorna_pulsante_telefono",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_finestra_consegna_la_scansione_solo_sulla_scheda_attiva",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_dialogo_telefono_stati",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_colonne_vassoio_e_stato_barcode",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_vassoio_in_tabella_e_aggiornato_dallazione",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_filtro_stato_barcode",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_imposta_stato_dallazione_laterale",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_stato_non_valido_da_errore_e_ui_invariata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_elimina_barcode_rifiutata_il_recordResta",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_elimina_barcode_confermata_il_record_diventa_invisibile",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv::test_csv_has_a_row_per_piece",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv::test_csv_import_is_a_carico",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv::test_csv_import_unknown_profile_raises",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv::test_csv_import_bad_header",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_bom",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_colore_vuoto_e_errore",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_riga_vuota_ignorata_e_errori_multipli",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_atomico_rollback",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_duplicati_si_sommano_e_doppio_import",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_carica_invariata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_colonne_mancanti",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_solo_intestazione",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_file_vuoto_zero_byte",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_ods_non_tronca",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_ods_float_formattata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_csv_legacy_fase10::test_ods_roundtrip_ubicazione_vassoio",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_export::test_export_contains_a_row_per_piece",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_export_colori::test_excel_un_foglio_per_codice_senza_perdere_o_duplicare_pezzi",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_export_colori::test_ods_fogli_colore_reimporta_tutti_i_pezzi_senza_nuovi_movimenti",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_export_colori::test_export_vuoti_apribili_con_intestazioni",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_export_colori::test_nomi_fogli_validi_univoci_anche_dopo_pulizia_e_troncamento",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel_colori::test_roundtrip_con_colore_hex",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel_colori::test_file_vecchio_senza_colonna_resta_valido",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_backup_excel_colori::test_valore_non_valido_blocca_il_ripristino",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_cinque_pezzi_cinque_barcode_senza_quantita",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_scarica_esattamente_il_pezzo_letto_e_rientra_stesso_barcode",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_rifiuta_doppio_carico_e_non_crea_movimenti",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_scadenza_non_elimina_mai_quantita_positive_neppure_stato_errato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_scadenza_48_ore_utc_riapertura",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_snapshot_csv_e_ods_conservano_identita_unitaria",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_backup_excel_preserva_seriali_multipli",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_file_precedente_preservato_se_export_fallisce",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_paginazione_limita_risultati",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_sola_lettura_blocca_tutte_le_rettifiche",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_claim_destinatario_conferma_e_presenza",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_scorta_per_materiale_non_per_numero_di_etichette",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_conversione_conserva_totale_storico_e_blocca_piano_obsoleto",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_archivio_portabile_ripristina_immagini_e_barcode",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_catalogo_compare_su_profilo_storico_senza_modificare_db",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_blocchi_indipendenti_per_cartelle_diverse",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_backup_excel_ha_le_schede_del_programma_e_preserva_soglia",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_import_ods_unitario_richiede_anagrafica_profili_sconosciuti",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_dati::test_esportazione_legge_a_blocchi_senza_query_per_ogni_pezzo",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_importa_ods_fase7::test_profilo_nuovo_riceve_immagine",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_importa_ods_fase7::test_profilo_esistente_non_riceve_immagine",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_importa_ods_fase7::test_catalogo_assente_import_ok",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_importa_ods_fase7::test_png_invalido_import_ok_senza_immagine",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_trova_varie_grafie",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_trova_grafia_con_trattino",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_trova_codice_con_slash_nessun_accesso_fuori",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_trova_ambiguita_ignorata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_trova_file_senza_firma_ignorato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_png_valido_rifiuta_firma_errata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_indice_ricostruito_dopo_aggiunta",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_indice_ricostruito_dopo_rimozione",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_file_con_prefisso_sottolineato_ignorado",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_ordine_variabile_config_default",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_percorso_relativo_rispetto_base_non_cwd",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_config_malformato_default_senza_eccezioni",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_catalogo_immagini::test_config_con_chiave_mancante",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_immagini_visibili::test_profilo_storico_mostra_miniatura_e_anteprima_in_alto",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_proposta_immagine::test_proposta_trovata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_proposta_immagine::test_nessuna_se_assente",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_proposta_immagine::test_codice_vuoto_non_chiamata_catalogo",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_proposta_immagine::test_manuale_non_sovrascritto",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_proposta_immagine::test_rimossa_niente_riproposta_stesso_codice",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_proposta_immagine::test_azzera",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-regressione-pura.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_pagina_senza_login",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_endpoint_login_assente",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_nessun_token_necessario",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_intestazioni_autorizzazione_ignorate",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_consultazione_200",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_consultazione_lower_case",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_consultazione_whitespace",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_consultazione_404",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_sola_lettura_consulta",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_operatore_consulta_singolo_barcode",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_barcode_vuoto_422",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_barcode_troppo_lungo_422",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_richieste_malformate_non_producono_errori_500",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_carico_valido_aumenta_giacenza",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_carico_quantita_zero_422",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_carico_quantita_negativa_422",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_carico_quantita_stringa_422",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_carico_404_non_crea_pezzo",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_carico_accessibile_senza_ruolo",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_scarico_valido",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_scarico_eccessivo_409",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_scarico_404_non_modifica",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_operatore_scarico",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_telefono::test_conflitto_riconciliazione_su_postgres",
+      "stato": "non eseguito",
+      "motivo": "serve MAGAZZINO_TEST_DB_URL verso un database *_test",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_carico_senza_credenziali_consentito",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_carico_con_token_e_barcode_esistente_registra_movimento",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_carico_con_barcode_inesistente_restituisce_404_e_non_crea_nienta",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_scarico_con_quantita_sopra_la_giacenza_restituisce_409",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_scarico_valido_diminuisce_la_giacenza",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_carico_con_quantita_non_valida_restituisce_422",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_ruoli_storici_non_limitano_accesso",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_scansione_con_token_operatore_accoda_e_non_tocca_la_giacenza",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_scansione_libera_ma_input_validato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_ping_segna_il_telefono_collegato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/carico-True]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/carico-1.0]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/carico-3]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/carico-0]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/carico--1]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/scarico-True]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/scarico-1.0]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/scarico-3]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/scarico-0]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_quantita_non_intera_positiva_rifiutata_dal_telefono[/api/scarico--1]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_telefono_trova_il_nuovo_barcode_con_vassoio_e_stato",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_telefono_pezzo_eliminato_non_disponibile_e_non_riattivato[/api/carico]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_web_routes_barcode::test_telefono_pezzo_eliminato_non_disponibile_e_non_riattivato[/api/scarico]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_nuova_anagrafica_non_richiede_ne_espone_peso[False]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_nuova_anagrafica_non_richiede_ne_espone_peso[True]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_cors_solo_pagina_pubblicata_vercel",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_creazione_unitaria_retry_immagine_e_scarico",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_stessa_chiave_con_dati_diversi_rifiutata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_quantita_non_intera_rifiutata_e_accesso_libero",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_pagina_mobile_risorse_locali_e_stato_servizio",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_immagine_compare_automaticamente_nel_catalogo_mobile",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_vecchio_qr_dopo_riavvio_non_lascia_scansione_in_attesa_per_sempre",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_correzioni_telefono::test_caratteri_di_controllo_non_arrivano_al_database",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_segrete_non_accettabili[]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_segrete_non_accettabili[corta]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_segrete_non_accettabili[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_segrete_non_accettabili[SEGRETE_LUNGA_E_CASUALE_MINIMO_32_CARATTERI]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_segrete_non_accettabili[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_segrete_non_accettabili[abababababababababababababababababababab]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_segrete_non_accettabili[None]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_segrete_non_accettabili[123]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_segrete_valida",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_app_non_richiede_segrete_autenticazione",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_limitatore_blocca_poi_sblocca_e_il_successo_azzera",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_limitatore_finestra_scorrevole_e_memoria_limitata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_limitatore_parametri_non_validi[args0]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_limitatore_parametri_non_validi[args1]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_limitatore_parametri_non_validi[args2]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_login_429_dopo_cinque_errori_anche_con_password_giusta",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_password_nuova_non_valida[]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_password_nuova_non_valida[1234567]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_password_nuova_non_valida[xxxxxxx]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_password_nuova_non_valida[\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_password_nuova_valida_e_crea_utente_la_applica",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_utente_con_password_vecchia_e_corta_entra_ancora",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_autentica_con_utente_inesistente_esegue_comunque_bcrypt",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_intestazioni_di_sicurezza_e_no_store",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_corpo_troppo_grande_413_e_corpo_normale_ok",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_content_length_non_numerico_e_trasferimento_senza_lunghezza",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_nessuno_script_di_terzi_e_libreria_verificata",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_la_libreria_e_servita_dal_server",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_backup_leggibile_ruota_i_vecchi",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_backup_illeggibile_viene_eliminato_e_i_buoni_restano",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_backup_vuoto_e_errore_e_non_ruota",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_verifica_comando_inesistente_e_errore",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_comportamento_precedente_senza_verifica",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_pg_restore_accanto_a_pg_dump",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_backup_reale_postgresql_verificato_e_troncato_rifiutato",
+      "stato": "non eseguito",
+      "motivo": "serve PostgreSQL con pg_dump/pg_restore e MAGAZZINO_TEST_DB_URL",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_initdb_cancella_il_file_password_e_usa_scram",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-sicurezza-completamento.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_initdb_cancella_il_file_password_anche_se_fallisce",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-sicurezza-completamento.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_nessun_segreto_scritto_nel_codice",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_gitignore_esclude_config_con_credenziali",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-sicurezza-completamento.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_lo_spec_non_incorpora_config_toml",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-sicurezza-completamento.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_ogni_ruolo_vede_solo_le_sue_schede[AMMINISTRATORE]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_ogni_ruolo_vede_solo_le_sue_schede[OPERATORE]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_ogni_ruolo_vede_solo_le_sue_schede[SOLA_LETTURA]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_sola_lettura_non_vede_le_schede_che_modificano",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_sicurezza_fase14::test_main_apre_direttamente_con_privilegi_massimi",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-api.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_riclic_sulla_stessa_riga_ricompila_il_form[chiaro-False]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_riclic_sulla_stessa_riga_ricompila_il_form[chiaro-True]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_riclic_sulla_stessa_riga_ricompila_il_form[scuro-False]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_riclic_sulla_stessa_riga_ricompila_il_form[scuro-True]",
+      "stato": "superato",
+      "motivo": "",
+      "sorgente_esito": "esito-ui-ultimo.xml"
+    }
+  ],
+  "javascript": [
+    {
+      "test": "la pagina Vercel passa solo dal ponte con il PC del QR",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "una richiesta pendente non passa a un altro magazzino dopo un nuovo QR",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "consultazione senza credenziali né Authorization",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "rete interrotta nella consultazione segnala errore",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "404 applicativo mostrato senza interpretare HTML",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "quantità decimale rifiutata senza richieste",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "movimento invia una chiave idempotenza e nessuna credenziale",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "retry dopo rete interrotta riusa esattamente la stessa richiesta",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "il doppio tap durante l'invio produce una sola richiesta",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "lettore senza QR non invia a un PC casuale",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "accodamento non equivale a esecuzione: attende ACK del PC",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "risposta JSON interrotta conserva richiesta pendente",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "rifiuto 409 libera la richiesta senza retry automatico",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "pausa blocca nuove operazioni senza chiedere login",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "nuovi pezzi: numero pezzi separato dal barcode",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "scheda pezzo: valori remoti mostrati come testo e campi mancanti leggibili",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "la preferenza tema funziona anche senza memoria locale disponibile",
+      "stato": "superato",
+      "motivo": ""
+    },
+    {
+      "test": "nuova anagrafica senza campo peso nel form e nella richiesta",
+      "stato": "superato",
+      "motivo": ""
+    }
+  ],
+  "controlli_manuali": [
+    {
+      "test": "Qt Inventario/Carico/Scarico/Gestione profili nei due temi",
+      "stato": "superato",
+      "motivo": "Schermate su SQLite sintetico, esaminate visivamente."
+    },
+    {
+      "test": "Confronto visivo browser del mockup HTML",
+      "stato": "bloccato",
+      "motivo": "La policy browser vieta file://; nessun aggiramento."
+    },
+    {
+      "test": "Avvio standalone 2.4.3 secondario",
+      "stato": "superato",
+      "motivo": "Finestra osservata nell’inventario Windows, senza DB operativo."
+    },
+    {
+      "test": "Controllo grafico interattivo standalone nei due temi",
+      "stato": "bloccato",
+      "motivo": "Autorizzazione computer-use scaduta prima del controllo della finestra."
+    },
+    {
+      "test": "Avvio standalone principale su PostgreSQL operativo",
+      "stato": "non eseguito",
+      "motivo": "Questa fase ha usato solo SQLite sintetico; nessuna migrazione operativa eseguita."
+    },
+    {
+      "test": "Telefono reale e confronto visivo dei due temi web",
+      "stato": "non eseguito",
+      "motivo": "Nessuna prova su dispositivo; browser locale bloccato. Palette e flusso JS/API verificati separatamente."
+    },
+    {
+      "test": "Build locale pagina telefono con palette.css",
+      "stato": "superato",
+      "motivo": "Build su copia esterna; asset palette presente e form senza nuovo-peso."
+    },
+    {
+      "test": "Coerenza palette Qt/HTML e copie CSS",
+      "stato": "superato",
+      "motivo": "Copie generate identiche; 100 coppie di contrasto superate."
+    },
+    {
+      "test": "Sintassi Python/JavaScript mockup e git diff --check",
+      "stato": "superato",
+      "motivo": "Nessun errore; Git segnala soltanto normalizzazione LF/CRLF configurata."
+    }
+  ]
+}

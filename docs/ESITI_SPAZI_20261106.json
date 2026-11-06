@@ -1,0 +1,890 @@
+{
+  "versione": "2.4.5",
+  "riepilogo": {
+    "superato": 145
+  },
+  "test": [
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[chiaro-inventario-dimensioni0]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[chiaro-inventario-dimensioni1]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[chiaro-inventario-dimensioni2]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[chiaro-carico-dimensioni0]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[chiaro-carico-dimensioni1]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[chiaro-carico-dimensioni2]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[chiaro-scarico-dimensioni0]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[chiaro-scarico-dimensioni1]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[chiaro-scarico-dimensioni2]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[scuro-inventario-dimensioni0]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[scuro-inventario-dimensioni1]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[scuro-inventario-dimensioni2]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[scuro-carico-dimensioni0]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[scuro-carico-dimensioni1]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[scuro-carico-dimensioni2]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[scuro-scarico-dimensioni0]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[scuro-scarico-dimensioni1]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_colonne_utilizzabili_e_ridimensionabili[scuro-scarico-dimensioni2]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_spazi_ui::test_mockup_rispecchia_colonne_e_righe",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi-finale.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_navigazione_senza_profili_editor_conservato[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_navigazione_senza_profili_editor_conservato[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_editor_senza_peso_conserva_dato_storico[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_editor_senza_peso_conserva_dato_storico[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_inventario_immagine_e_segnaposto[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_inventario_immagine_e_segnaposto[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_png_non_indicizzato_resta_associato",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_locale_selezione_e_filtro[chiaro-False]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_locale_selezione_e_filtro[chiaro-True]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_locale_selezione_e_filtro[scuro-False]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_locale_selezione_e_filtro[scuro-True]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_paginata",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_riclic_sulla_stessa_riga_ricompila_il_form[chiaro-False]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_riclic_sulla_stessa_riga_ricompila_il_form[chiaro-True]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_riclic_sulla_stessa_riga_ricompila_il_form[scuro-False]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_riclic_sulla_stessa_riga_ricompila_il_form[scuro-True]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_isolata_e_db_non_disponibile[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_ricerca_isolata_e_db_non_disponibile[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_cambio_tema_aggiorna_anteprima_senza_perdere_campi",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_contrasti_palette[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_contrasti_palette[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_pillole_leggibili_anche_sulla_selezione[chiaro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_pillole_leggibili_anche_sulla_selezione[scuro]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_import_v2_ignora_peso_csv_ods",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_excel_senza_peso_e_compatibilita_storica",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_handler_mobile_crea_profilo_senza_peso[False]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_novembre::test_handler_mobile_crea_profilo_senza_peso[True]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_animazioni::test_spente_di_default_nei_test",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_animazioni::test_dissolvenza_ripulisce_l_effetto",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_animazioni::test_conta_su_valori_crescenti_e_testo_finale_esatto",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_animazioni::test_conta_su_senza_animazioni_e_immediato",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_animazioni::test_scuoti_torna_alla_posizione_di_partenza",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_animazioni::test_cambio_tema_non_lascia_overlay",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_animazioni::test_toast_entra_e_si_chiude",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_animazioni::test_barra_avviso_arriva_alla_larghezza_finale",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-spazi.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_colonne_vassoio_e_stato_barcode",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_vassoio_in_tabella_e_aggiornato_dallazione",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_filtro_stato_barcode",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_imposta_stato_dallazione_laterale",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_stato_non_valido_da_errore_e_ui_invariata",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_elimina_barcode_rifiutata_il_recordResta",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_vassoio_stati::test_elimina_barcode_confermata_il_record_diventa_invisibile",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_inventario_quattro_tab",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_tab_colore_zero_pezzi_esiste",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_selezione_colore_filtra_e_nasconde_colonna",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_tab_dinamica_dopo_carico_e_selezione_stabile",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_vai_a_colore_da_avvisi",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_ubicazione_uguaglianza_esatta",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_card_kpi_coerenti",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_finestra_principale_cinque_schede_e_avvisi",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_smoke::test_finestra_principale_ruolo_operatore",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_controllo_avvia_scarta_la_coda_poi_riceve_le_nuove",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_controllo_stato_collegato_e_ferma",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_scarico_ricevi_scansione_compila_e_chiede_causale",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_carico_ricevi_scansione_compila_il_campo",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_aggiorna_pulsante_telefono",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_finestra_consegna_la_scansione_solo_sulla_scheda_attiva",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7b::test_dialogo_telefono_stati",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7a::test_stepper_soglia_default_e_sottotitolo",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7a::test_cambio_soglia_salva_e_emette",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase7a::test_riga_sotto_scorta_e_in_esaurimento",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_ubicazione_non_scelta_non_salva_il_segnaposto",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_card_kpi_non_trasmette_stile_alle_etichette",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_movimenti_distinguono_caricato_e_scaricato",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_anteprima_mostra_il_pezzo_e_la_giacenza",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_anteprima_segnala_barcode_inesistente",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_totale_richiede_conferma_e_puo_essere_annullato",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_totale_confermato_azzera_la_giacenza",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_scarico_parziale_non_chiede_conferma",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_errore_giacenza_spiegato_in_italiano",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_errore_imprevisto_non_mostra_dettagli_tecnici",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_ui_fase4::test_errore_database_indica_postgres",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_nuovo_profilo_mostra_proposta",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_nuovo_profilo_codice_assente_nessuna_immagine",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_profilo_esistente_mai_proposta",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_manuale_non_sovrascritto_dal_cambiamento_codice",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_rimossa_niente_riproposta_finche_codice_non_cambia",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_pulsante_nuovo_azzera_stato",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_salva_file_sparito_nessun_profilo",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_scheda_profilo_catalogo::test_salva_con_proposta_crea_profilo_con_immagine",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_inventario_colori::test_icona_colore_offscreen",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_inventario_colori::test_tabella_pezzi_chip_e_tooltip",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_inventario_colori::test_chip_cambia_dopo_imposta_e_aggiorna",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_inventario_colori::test_dialogo_gestione_colori",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_immagini_visibili::test_profilo_storico_mostra_miniatura_e_anteprima_in_alto",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_dialogo_aggiornamento::test_dialogo_mostra_versioni_e_note",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_dialogo_aggiornamento::test_più_tardi_chiude_con_rejected",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_dialogo_aggiornamento::test_flusso_installa_lancia_nuova_versione",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_dialogo_aggiornamento::test_errore_download_mostra_recupero_e_permette_riprovare",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_dialogo_aggiornamento::test_avanzamento_barra",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_dialogo_aggiornamento::test_config_aggiornamento_github_di_default",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_dialogo_aggiornamento::test_config_aggiornamento_da_file",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_dialogo_aggiornamento::test_config_aggiornamento_file_ileggibile",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_conserva_id_movimenti_e_spezzoni",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_stesso_valore_non_fa_nulla",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_duplicato_rifiutato_e_dati_invariati",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_valori_non_validi[]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_valori_non_validi[   ]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_valori_non_validi[AB 12]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_valori_non_validi[AB/12]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_valori_non_validi[\\xc0B-1]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_valori_non_validi[AB\\t1]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_valori_non_validi[valore6]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_non_testo",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_aggiorna_barcode_pezzo_assente_o_eliminato",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_dopo_la_modifica_il_carico_usa_lo_stesso_record",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_barcode_generato_gia_usato_da_altro_pezzo_da_errore_leggibile",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_normalizzato_e_riletto[None-None]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_normalizzato_e_riletto[-None]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_normalizzato_e_riletto[   -None]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_normalizzato_e_riletto[4-4]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_normalizzato_e_riletto[ Vassoio 4 -Vassoio 4]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_normalizzato_e_riletto[Corsia B / scaffale 2-Corsia B / scaffale 2]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_non_valido[valore0]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_non_valido[4]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_non_valido[4.0]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_non_valido[valore3]",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_vassoio_non_toglie_il_valore_se_la_validazione_fallisce",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_pezzo_eliminato_nascosto_ovunque",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_profili_e_colori_senza_pezzi_attivi_restano_elencati_con_zero",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_movimenti_storici_restano_leggibili",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_filtro_stato_barcode_separato_dallo_stato_scorta",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_scarico_su_eliminato_come_non_trovato",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_carico_desktop_riattiva_lo_stesso_record",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_carico_da_telefono_non_riattiva",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    },
+    {
+      "test": "magazzino_profili.tests.test_barcode_vassoio::test_riconosce_solo_il_conflitto_di_barcode",
+      "stato": "superato",
+      "motivo": "",
+      "origine": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\verifica-spazi-20261106-152601\\esito-regressione-ui.xml"
+    }
+  ],
+  "contrasti": "100 coppie superate",
+  "sintassi_javascript": "superato: node --check",
+  "schermate": "18 rendering Qt sintetici, temi chiaro/scuro, 1024x768, 1366x768, 1920x1080",
+  "installer": {
+    "file": "dist\\installer-2.4.5-spazi-finale-20261106\\MagazzinoProfili-2.4.5-setup.exe",
+    "sha256": "48372bc9c44efc5965a2ca50776a84b34f0fc97b5928688db1d2781719c3e354",
+    "dimensione": 81562770,
+    "firma_manifest": "superato",
+    "installazione_reale": "non eseguito: ambiente pulito non disponibile"
+  },
+  "avvisi": "RuntimeWarning di disconnessione segnali Qt nel teardown, già presenti nella fase precedente; nessun fallimento.",
+  "tentativi_precedenti": "Aggiunto controllo overflow del dettaglio: due test con font offscreen non enumerati fallivano; caricati i font Windows nel processo di test, poi 19/19 superati."
+}

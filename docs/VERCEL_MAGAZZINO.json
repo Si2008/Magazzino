@@ -1,0 +1,10 @@
+{
+  "project_id": "prj_IcGKk4pFjvcG84F6JdOBDBnHhE1A",
+  "deployment_id": "dpl_HuzQt78fFcFSbBvQndayaybjzvcZ",
+  "store_id": "store_ZHdzUQTWFPvOzzKm",
+  "url": "https://magazzino-profili-telefono.vercel.app",
+  "stato": "READY",
+  "storage": "privato",
+  "database_operativo_pubblicato": false,
+  "code_temporanee": true
+}

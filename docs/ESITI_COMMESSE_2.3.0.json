@@ -1,0 +1,92 @@
+{
+  "versione": "2.3.0",
+  "data": "2026-11-05",
+  "superati": 65,
+  "falliti": 0,
+  "errori": 0,
+  "saltati": 0,
+  "nuovi_test_commesse": 24,
+  "regressioni": 41,
+  "metodo": "Processi separati per modulo; copia temporanea; solo database sintetici",
+  "pdf": {
+    "barre_originali": 35,
+    "codici": 8,
+    "righe_misure": 21,
+    "pezzi_richiesti": 151,
+    "barre_non_lette": 0,
+    "lettura_locale_s": 1.426,
+    "dati_operativi_usati": false
+  },
+  "benchmark": {
+    "pezzi_richiesti": 151,
+    "prelievi_sintetici": 44,
+    "mancanti": 0,
+    "benchmark_candidati": 50000,
+    "benchmark_calcolo_s": 0.064,
+    "dati_operativi_usati": false,
+    "benchmark_richieste": 10000
+  },
+  "eseguibile": {
+    "server_pronto_s": 2.151,
+    "pagina_mobile": true,
+    "risorse_locali": true,
+    "creazione_unitari": 3,
+    "idempotenza": true,
+    "barcode_png": true,
+    "immagine_catalogo": true,
+    "scarico": true,
+    "arresto_server": 0,
+    "launcher_config_e_argomenti": true,
+    "desktop_avviato_senza_errori": true
+  },
+  "evidenze": [
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\test_commesse.xml",
+      "sha256": "3fbac0609958604161309ca68f430a454a1d29848a9699bbf13e37d1df45e3b5"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\test_ui_smoke.xml",
+      "sha256": "fa3da64073880c47e97eb499313deb8b5a01d0a3c0299579d3e2087fe1a50b5b"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\test_ui_fase7a.xml",
+      "sha256": "c33814092a4536c0b2086a2e727915ce9d8e29f5ac7dcace8ddd1e7760f9b24c"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\test_ui_fase7b.xml",
+      "sha256": "a77070a3c027a465edd50af8e6560e24fbafee66f317b7963890baff84387a95"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\test_regressione_fase3b_ui.xml",
+      "sha256": "8602bf7d7ff4f17e21a7a6cf4b9db44cc41bc47e318685032553f0e278909cbe"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\test_tonalita_remoto.xml",
+      "sha256": "2ad599ddda4d295f5f814ec1d567f80b7cc33f3d924aff2be68e1d3e7c593211"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\test_export_colori.xml",
+      "sha256": "aec40c2cfbaa20c9d2362d286d9d01a8a5f91786a9d807fc4312acfc56181f42"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\test_immagini_visibili.xml",
+      "sha256": "bddea6718a6b215f498e02639ec2a8e68a9bcc14d22364cc3265138d2e39331e"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\test_ui_fase4.xml",
+      "sha256": "0f77b1f0025ad6b170eec6410f23a2443f95dcf5774f5b2f33f717c2bc9a52a6"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\esito_pdf_reale.json",
+      "sha256": "8517134798de813cca4abb8d9397d56d6d7fd621a8c42bccef1ff41794ee2783"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\commesse_230\\esito_anteprima.json",
+      "sha256": "227acba9358935d2f78f708e455dcaa7029f3203326c84349761c5be5b4e0cd6"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\eseguibile_qa_230_prelievo_finale\\esito.json",
+      "sha256": "c2bc0f26649a48a77939e4e1e01396fac3ed625af8a943564f3131192018e168"
+    }
+  ]
+}

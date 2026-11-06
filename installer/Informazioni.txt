@@ -1,0 +1,19 @@
+Magazzino Profili
+
+Installazione per il solo utente corrente, per Windows 10/11 a 64 bit.
+Non sono necessari Python o privilegi amministrativi per installare il programma.
+
+Il PC principale richiede un server PostgreSQL gia disponibile e una configurazione
+valida. Il setup non installa, reimposta o modifica il servizio PostgreSQL.
+Il PC secondario puo importare e inviare commesse senza PostgreSQL locale.
+
+I dati e le impostazioni locali sono separati dal programma, in:
+%LOCALAPPDATA%\Magazzino Profili
+Aggiornamenti e reinstallazioni conservano sempre questa cartella.
+La disinstallazione propone di conservarla. In modalita silenziosa viene conservata.
+
+La sincronizzazione tra PC usa la cartella condivisa gia prevista dal programma.
+Non vengono aggiunte regole firewall, associazioni di file o avvii automatici Windows.
+
+Il setup di questa distribuzione non e firmato con un certificato Authenticode.
+Verificare la provenienza e il checksum indicati nella documentazione di consegna.

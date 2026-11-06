@@ -19,6 +19,9 @@ class Colore(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     codice_normalizzato: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     nome_visualizzato: Mapped[str] = mapped_column(String(128))
+    # Fase 8: esagono #RRGGBB del colore reale associato al codice
+    # (es. "#D32F2F" per "Rosso"); NULL = l'interfaccia usa il colore neutro.
+    colore_hex: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
     # Collegamento verso i pezzi in giacenza.
     pezzi: Mapped[list["Pezzo"]] = relationship(back_populates="colore")

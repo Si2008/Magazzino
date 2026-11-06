@@ -1,0 +1,585 @@
+<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anteprima mobile · Magazzino</title><style>*{box-sizing:border-box}body{margin:0;background:#e9eef5;color:#192944;font:15px system-ui;display:grid;justify-items:center;gap:16px;padding:24px}header{text-align:center;max-width:560px}h1{font-size:22px;margin:0 0 8px}p{line-height:1.5;margin:0}iframe{width:390px;max-width:100%;height:780px;height:min(780px,calc(100dvh - 160px));min-height:420px;border:7px solid #25354b;border-radius:32px;box-shadow:0 24px 70px #19294425;background:white}select{font:inherit;padding:7px;margin-top:10px;border:1px solid #bac8dc;border-radius:8px;background:white}@media(max-width:450px){body{padding:12px 6px}iframe{border-width:3px;border-radius:18px}}</style><header><h1>La nuova interfaccia mobile</h1><p>Prova le cinque schede, il tema scuro e una scansione simulata.<br>Solo dati di esempio: nessuna modifica al magazzino.</p><label>Schermo <select id="larghezza"><option value="390">390 px</option><option value="320">320 px</option><option value="430">430 px</option></select></label></header><iframe title="Anteprima interattiva del telefono" srcdoc="<!doctype html>
+<html lang=&quot;it&quot;>
+<head>
+<meta charset=&quot;utf-8&quot;><meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1,viewport-fit=cover&quot;>
+<meta name=&quot;color-scheme&quot; content=&quot;light dark&quot;><meta name=&quot;theme-color&quot; content=&quot;#f4f6fa&quot;>
+<title>Magazzino Profili · Telefono</title>
+<style>@import url(&quot;palette.css&quot;);
+:root {font-family:&quot;Segoe UI&quot;,system-ui,sans-serif;font-size:16px;}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--sfondo); color: var(--testo); }
+main { max-width: 640px; margin: auto; padding: max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(116px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+button, input { font: inherit; }
+button { min-height: 48px; padding: 12px 16px; border: 1px solid var(--bordo-campo); border-radius: 14px; background: var(--carta); color: var(--testo); font-weight: 650; cursor: pointer; touch-action: manipulation; transition: background .15s, transform .15s; }
+button:active { transform: translateY(1px); }
+button:disabled { opacity: 1; color: var(--testo-debole); background: var(--carta2); border-color: var(--bordo); cursor: default; }
+:where(button,input,summary,a):focus-visible { outline: 3px solid var(--accento); outline-offset: 4px; }
+.testata,.utente,.riga-titolo,.collegamento { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.testata { margin-bottom: 20px; }
+.marca { display: flex; align-items: center; gap: 11px; text-decoration: none; color: var(--testo); font-weight: 750; font-size: 1.2rem; letter-spacing: -.03em; }
+.marca small { display: block; margin-top: 4px; font-size: .62rem; letter-spacing: .15em; color: var(--secondario); }
+.simbolo { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--accento); color: var(--su-accento); font-size: 30px; }
+.icona { width: 48px; padding: 4px; font-size: 25px; border-radius: 50%; }
+.collegamento { justify-content: flex-start; font-size: .78rem; line-height: 1.45; padding: 12px 14px; border: 1px solid var(--bordo); border-radius: 14px; background: var(--carta); }
+.pallino { width: 8px; height: 8px; border-radius: 50%; background: var(--secondario); flex-shrink: 0; }
+.pallino.ok { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-vel); }
+.pallino.no { background: var(--errore); }
+.etichetta { font-size: .6rem; letter-spacing: .07em; font-weight: 700; color: var(--secondario); background: var(--tenue); padding: 6px 8px; border-radius: 6px; }
+.collegamento .etichetta { margin-left: auto; flex-shrink: 0; }
+.utente { padding: 10px 4px; font-size: .8rem; }
+.utente small { display: block; margin-top: 3px; color: var(--secondario); font-size: .72rem; }
+.testo { border: 0; background: transparent; color: var(--secondario); font-size: .8rem; }
+.pannello { padding: 22px; margin-bottom: 16px; background: var(--carta); border: 1px solid var(--bordo); border-radius: 24px; box-shadow: var(--ombra); }
+.sopratitolo { margin: 0 0 10px; font-size: .63rem; font-weight: 750; letter-spacing: .12em; color: var(--accento); }
+h1 { margin: 0 0 16px; font-size: clamp(1.65rem,6.5vw,2rem); font-weight: 750; letter-spacing: -.04em; line-height: 1.15; text-wrap: balance; }
+h2 { font-size: 1rem; line-height: 1.4; margin: 0; }
+.nota { margin: 0 0 20px; color: var(--secondario); font-size: .85rem; line-height: 1.55; }
+.modalita { position: fixed; z-index: 20; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 4px; max-width: 640px; margin: auto; padding: 10px max(10px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); border: 1px solid var(--bordo); border-bottom: 0; border-radius: 22px 22px 0 0; background: var(--carta); box-shadow: var(--ombra); }
+.modalita button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 0; min-height: 62px; padding: 6px 2px; border-color: transparent; background: transparent; color: var(--secondario); border-radius: 13px; }
+.modalita button[aria-pressed=true] { background: transparent; color: var(--accento); border-color: transparent; }
+.modalita strong { font-size: .72rem; white-space: nowrap; }
+.modalita small { display: none; }
+.segno { font-size: 25px; line-height: 1; font-weight: 500; }
+.camera { min-height: 212px; overflow: hidden; position: relative; text-align: center; border-radius: 18px; border: 1px solid var(--bordo); background: var(--camera-fondo); color: var(--camera-testo); }
+#camera-riposo { padding: 24px 12px 18px; }
+.camera strong { display: block; font-size: 1rem; }
+.camera p { font-size: .8rem; line-height: 1.6; margin: 8px 0 0; color: var(--camera-secondario); }
+.mirino { display: grid; place-items: center; width: 92px; height: 58px; margin: 0 auto 18px; border: 2px solid var(--accento); border-radius: 12px; }
+.barcode-illustrazione { width: 54px; height: 28px; background: repeating-linear-gradient(90deg,var(--testo) 0 2px,transparent 2px 5px,var(--testo) 5px 9px,transparent 9px 12px,var(--testo) 12px 13px,transparent 13px 17px); }
+#lettore-barcode { border: 0 !important; }
+#lettore-barcode video { width: 100%; display: block; }
+#lettore-barcode video { object-fit: contain; }
+.comandi-camera { flex-wrap: wrap; }
+.guida-camera { margin: 0 0 12px; }
+.foto-barcode { display: block; border: 1px solid var(--bordo); border-radius: 12px; padding: 12px; margin: 8px 0 16px; font-size: .85rem; }
+.foto-barcode input { display: block; width: 100%; min-width: 0; margin-top: 8px; }
+.comandi-camera { display: flex; gap: 8px; margin: 12px 0 16px; }
+.comandi-camera button { min-height: 54px; }
+.comandi-camera button:first-child { flex: 1; }
+.primario { background: var(--accento); border-color: var(--accento); color: var(--su-accento); }
+.secondario-btn { background: var(--tenue); }
+summary { min-height: 44px; padding: 12px 0; color: var(--secondario); font-size: .85rem; cursor: pointer; line-height: 1.5; }
+#manuale { border-top: 1px solid var(--bordo); }
+.manuale { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.manuale input { min-width: 0; flex: 1 1 150px; }
+.manuale button { flex: 0 0 auto; }
+label { display: block; font-weight: 650; font-size: .85rem; line-height: 1.45; margin: 18px 0 8px; }
+input { width: 100%; min-width: 0; min-height: 52px; padding: 13px 12px; border: 1px solid var(--bordo); border-radius: 12px; background: var(--tenue); color: var(--testo); font-size: 1rem; }
+input::placeholder { color: var(--secondario); opacity: 1; }
+.parametri { display: grid; grid-template-columns: minmax(90px,1fr) minmax(0,2fr); gap: 12px; align-items: end; margin: 18px 0; }
+.parametri>* { min-width: 0; }
+.parametri label { margin-top: 0; }
+.micro,.secondario { color: var(--secondario); font-size: .82rem; line-height: 1.6; }
+.sezione-form { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--bordo); padding-top: 22px; margin: 24px 0 12px; font-size: .95rem; }
+.sezione-form span { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 28px; border-radius: 9px; background: var(--accento-tenue); color: var(--accento); font-size: .78rem; }
+#anagrafica-nuova { padding: 10px 14px; margin: 16px 0; border: 1px solid var(--bordo); border-radius: 14px; }
+#crea-anagrafica { width: 22px; min-height: 22px; vertical-align: middle; margin-right: 8px; accent-color: var(--accento); }
+.pieno { width: 100%; margin-top: 18px; }
+#btn-crea { min-height: 56px; }
+.esito { font-size: .92rem; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; border-radius: 14px; scroll-margin: 20px; }
+.esito:not(:empty) { padding: 16px; margin-top: 18px; background: var(--tenue); border: 1px solid var(--bordo); }
+.esito.successo { background: var(--accento-tenue); border-color: var(--accento); }
+.esito.errore { background: var(--errore-bg); border-color: var(--errore); color: var(--errore); }
+.storico { padding: 20px; }
+.riga-titolo { flex-wrap: wrap; gap: 8px; }
+#storico-vuoto { margin-bottom: 0; }
+#lista-storico { padding: 0; list-style: none; margin: 0; }
+#lista-storico li { border-top: 1px solid var(--bordo); padding: 14px 0; display: flex; flex-direction: column; gap: 5px; font-size: .85rem; overflow-wrap: anywhere; }
+#lista-storico li:first-child { margin-top: 16px; }
+#lista-storico small { font-size: .73rem; color: var(--secondario); }
+#barcode-creati { margin: 22px 0; }
+.etichetta-pezzo,#anteprima-sezione { border: 1px solid var(--bordo); padding: 14px; border-radius: 14px; margin: 14px 0; overflow-wrap: anywhere; }
+.etichetta-pezzo img { display: block; width: 100%; height: auto; background: white; margin: 12px 0; }
+.etichetta-pezzo a { display: inline-block; padding: 14px 0; color: var(--accento); font-weight: 650; }
+.etichetta-pezzo code { font-size: .8rem; }
+#immagine-profilo { display: block; max-height: 200px; max-width: 100%; margin: auto; background: white; }
+#anteprima-sezione figcaption { font-size: .75rem; line-height: 1.5; color: var(--secondario); margin-top: 10px; }
+footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: .7rem; line-height: 1.5; color: var(--secondario); padding: 6px 4px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+@media (max-width: 360px) {
+  main { padding-left: max(10px,env(safe-area-inset-left)); padding-right: max(10px,env(safe-area-inset-right)); }
+  .pannello { padding: 17px; border-radius: 20px; }
+  .collegamento .etichetta { display: none; }
+  .modalita strong { font-size: .68rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  button { transition: none; }
+  button:active { transform: none; }
+}
+
+/* Icone outline e feedback di interazione. */
+.segno,.icona{display:grid;place-items:center}.segno svg,.icona svg,.simbolo svg{width:24px;height:24px;display:block}.simbolo svg{width:28px;height:28px}
+#btn-scansiona::before{content:&quot;&quot;;display:inline-block;width:20px;height:20px;margin-right:8px;vertical-align:-4px;background:currentColor;mask:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M8%206%2010%203h4l2%203h4v14H4V6Z%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%224%22%2F%3E%3C%2Fsvg%3E&quot;) center/contain no-repeat}
+#btn-ferma::before{content:&quot;&quot;;display:inline-block;width:20px;height:20px;margin-right:8px;vertical-align:-4px;background:currentColor;mask:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20aria-hidden%3D%22true%22%3E%3Crect%20x%3D%225%22%20y%3D%225%22%20width%3D%2214%22%20height%3D%2214%22%20rx%3D%222%22%2F%3E%3C%2Fsvg%3E&quot;) center/contain no-repeat}
+#btn-esci::before{content:&quot;&quot;;display:inline-block;width:20px;height:20px;margin-right:8px;vertical-align:-4px;background:currentColor;mask:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M8%204v16M16%204v16%22%2F%3E%3C%2Fsvg%3E&quot;) center/contain no-repeat}
+#btn-invia::before{content:&quot;&quot;;display:inline-block;width:20px;height:20px;margin-right:8px;vertical-align:-4px;background:currentColor;mask:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%2012h16m-6-6%206%206-6%206%22%2F%3E%3C%2Fsvg%3E&quot;) center/contain no-repeat}
+#btn-crea::before{content:&quot;&quot;;display:inline-block;width:20px;height:20px;margin-right:8px;vertical-align:-4px;background:currentColor;mask:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22m3%207%209-4%209%204-9%204Zm0%200v10l9%204%209-4V7M12%2011v10M7.5%205l9%204%22%2F%3E%3C%2Fsvg%3E&quot;) center/contain no-repeat}
+#btn-riprova::before{content:&quot;&quot;;display:inline-block;width:20px;height:20px;margin-right:8px;vertical-align:-4px;background:currentColor;mask:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M3%2010a9%209%200%201%201%202%208M3%204v6h6%22%2F%3E%3C%2Fsvg%3E&quot;) center/contain no-repeat}
+button{transition:background .18s,border-color .18s,color .18s,transform .18s,box-shadow .18s}button:active{transform:scale(.97)}input{transition:border-color .18s,box-shadow .18s}input:focus{border-color:var(--accento);box-shadow:0 0 0 3px var(--accento-tenue)}.modalita .segno{transition:background .18s,color .18s,transform .18s}.modalita button[aria-pressed=true] .segno{background:var(--accento-tenue);transform:none}.icona:active svg{transform:rotate(-25deg)}.icona svg{transition:transform .25s}summary::marker{color:var(--accento)}details[open]>form{animation:appari .22s ease-out}.pannello{animation:appari .32s ease-out}.storico{animation-delay:.06s}.esito:not(:empty),#lista-storico li:first-child{animation:appari .22s ease-out}.mirino{position:relative}.camera:has(#camera-riposo[hidden])::after{content:&quot;&quot;;position:absolute;left:12%;right:12%;top:25%;height:2px;background:var(--accento);box-shadow:0 0 12px var(--accento);pointer-events:none;animation:scansiona 2.2s ease-in-out infinite}@keyframes scansiona{50%{top:75%}}@keyframes appari{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@media(hover:hover){button:not(:disabled):hover{box-shadow:var(--ombra);transform:translateY(-1px)}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}button:active,.modalita button[aria-pressed=true] .segno{transform:none}}
+/* Gerarchia visiva e dettagli operativi. */
+body{background-image:radial-gradient(ellipse at 50% 0,var(--accento-tenue),transparent 520px)}
+.testata{margin-bottom:16px}.utente{padding:6px 4px 12px}.utente small{font-size:.7rem}.pannello.operazioni{border-top:3px solid var(--accento)}
+.sopratitolo{display:flex;align-items:center;gap:7px}.sopratitolo::before{content:&quot;&quot;;width:5px;height:5px;background:currentColor;border-radius:50%}
+.camera{min-height:198px}.camera strong{letter-spacing:-.02em}.mirino{border-color:var(--accento)}
+#parametri-movimento{padding:14px;background:var(--tenue);border:1px solid var(--bordo);border-radius:16px}#parametri-movimento input{background:var(--carta)}
+#form-nuovo>h2{margin-top:22px}.opzioni-form{margin:22px 0 0;padding:0 14px;border:1px solid var(--bordo);border-radius:14px}.opzioni-form[open]{padding-bottom:14px}.opzioni-form summary span{display:block;font-size:.72rem;padding-left:16px;color:var(--secondario)}
+#manuale{padding-top:4px}#campo-barcode{font-family:ui-monospace,Consolas,monospace;font-size:1rem}.manuale input::placeholder{font-family:&quot;Segoe UI&quot;,system-ui,sans-serif;font-size:.87rem}
+.storico{background:var(--tenue)}.storico .etichetta{background:var(--carta)}#lista-storico li{position:relative;padding-left:18px}#lista-storico li::before{content:&quot;&quot;;position:absolute;top:21px;left:0;width:6px;height:6px;background:var(--accento);border-radius:50%}#lista-storico b{font-weight:600}
+.scheda-pezzo{margin-top:22px;padding:20px;border:1px solid var(--accento);border-radius:18px;background:var(--accento-tenue);animation:appari .25s ease-out}.scheda-pezzo h2{font-size:1.45rem;letter-spacing:-.03em}.scheda-pezzo p{font-size:.85rem;color:var(--secondario);margin:5px 0 18px}.scheda-pezzo dl{display:grid;grid-template-columns:1fr 1fr;gap:18px 12px;margin:0}.scheda-pezzo dt{font-size:.72rem;color:var(--secondario);margin-bottom:5px}.scheda-pezzo dd{font-size:.95rem;font-weight:650;margin:0;overflow-wrap:anywhere}.scheda-pezzo dl>div:last-child{grid-column:1/-1;padding-top:14px;border-top:1px solid var(--bordo)}
+/* Il riepilogo testuale rimane disponibile agli screen reader. */
+.scheda-pezzo:not([hidden])+.esito{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;margin:0;border:0}
+.etichetta-pezzo button{width:100%;margin-top:12px}.etichetta-pezzo strong{display:block}.etichetta-pezzo code{display:block;margin:6px 0}
+button:disabled:active{transform:none}input,button,summary{scroll-margin-bottom:110px}
+@media(min-width:560px){.pannello{padding:28px}.camera{min-height:220px}.scheda-pezzo dl{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:360px){.parametri{grid-template-columns:1fr 1.6fr}.marca{font-size:1.1rem}.scheda-pezzo{padding:15px}}
+@media(prefers-reduced-motion:reduce){.scheda-pezzo{animation:none}}
+
+/* Navbar: area ottica identica e indicatore selezionato dietro l'icona. */
+.modalita button{gap:3px;padding:4px 0;min-height:66px}
+.modalita .segno{display:grid;place-items:center;width:52px;height:34px;border-radius:12px;flex:none;line-height:0}
+.modalita .segno svg{display:block;width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.modalita button[aria-pressed=true] strong{font-weight:750}
+@media(hover:hover){.modalita button:not(:disabled):hover{transform:none;box-shadow:none}.modalita button:hover .segno{background:var(--tenue)}.modalita button[aria-pressed=true]:hover .segno{background:var(--accento-tenue)}}
+@media(max-width:360px){.modalita .segno{width:46px}}
+</style>
+
+</head>
+<body>
+<main>
+<header class=&quot;testata&quot;><a class=&quot;marca&quot; href=&quot;#&quot; aria-label=&quot;Magazzino Profili&quot;><span class=&quot;simbolo&quot; aria-hidden=&quot;true&quot;><svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;><path d=&quot;m3 9 9-6 9 6v12H3Z&quot;/><path d=&quot;M8 21V11h8v10M8 16h8&quot;/></svg></span><span>Magazzino<small>PROFILI · MOBILE</small></span></a><button id=&quot;btn-tema&quot; class=&quot;icona&quot; type=&quot;button&quot; aria-label=&quot;Cambia tema&quot;><svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;><path d=&quot;M20 14A9 9 0 0 1 10 4a9 9 0 1 0 10 10Z&quot;/></svg></button></header>
+<div class=&quot;collegamento&quot; role=&quot;status&quot;><span class=&quot;pallino&quot; id=&quot;indicatore-rete&quot;></span><span id=&quot;stato-rete&quot;>Controllo del servizio…</span><span class=&quot;etichetta&quot;>HTTPS</span></div>
+<div id=&quot;zona-operazione&quot;>
+<div class=&quot;utente&quot;><span><b id=&quot;nome-utente&quot;>Accesso libero</b><small id=&quot;ruolo-utente&quot;>Operazioni di magazzino</small></span><button id=&quot;btn-esci&quot; class=&quot;testo&quot; type=&quot;button&quot;>Pausa</button></div>
+<section class=&quot;pannello operazioni&quot;>
+<p class=&quot;sopratitolo&quot;>OPERAZIONI DI MAGAZZINO</p><h1 id=&quot;titolo-operazione&quot; tabindex=&quot;-1&quot;>Scansiona un pezzo.</h1>
+<div class=&quot;modalita&quot; role=&quot;group&quot; aria-label=&quot;Operazioni del magazzino&quot;>
+<button id=&quot;btn-lettore&quot; data-modo=&quot;lettore&quot; type=&quot;button&quot;><span class=&quot;segno&quot; aria-hidden=&quot;true&quot;><svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;24&quot; height=&quot;24&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot; focusable=&quot;false&quot;><rect x=&quot;3&quot; y=&quot;4&quot; width=&quot;18&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M8 21h8m-4-4v4M7 8v5m3-5v5m4-5v5m3-5v5&quot;/></svg></span><strong>Al PC</strong><small>Invia alla scheda attiva</small></button>
+<button id=&quot;btn-consulta&quot; data-modo=&quot;consulta&quot; type=&quot;button&quot;><span class=&quot;segno&quot; aria-hidden=&quot;true&quot;><svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;24&quot; height=&quot;24&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot; focusable=&quot;false&quot;><circle cx=&quot;10.5&quot; cy=&quot;10.5&quot; r=&quot;6.5&quot;/><path d=&quot;m15.5 15.5 4.5 4.5&quot;/></svg></span><strong>Consulta</strong><small>Giacenza e vassoio</small></button>
+<button id=&quot;btn-carico&quot; data-modo=&quot;carico&quot; type=&quot;button&quot;><span class=&quot;segno&quot; aria-hidden=&quot;true&quot;><svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;24&quot; height=&quot;24&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot; focusable=&quot;false&quot;><path d=&quot;M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5M12 3v12m-4-4 4 4 4-4&quot;/></svg></span><strong>Rientro</strong><small>Aggiungi al magazzino</small></button>
+
+<button id=&quot;btn-scarico&quot; data-modo=&quot;scarico&quot; type=&quot;button&quot;><span class=&quot;segno&quot; aria-hidden=&quot;true&quot;><svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;24&quot; height=&quot;24&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot; focusable=&quot;false&quot;><path d=&quot;M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5M12 15V3m-4 4 4-4 4 4&quot;/></svg></span><strong>Scarico</strong><small>Registra un'uscita</small></button>
+<button id=&quot;btn-nuovo&quot; data-modo=&quot;nuovo&quot; type=&quot;button&quot;><span class=&quot;segno&quot; aria-hidden=&quot;true&quot;><svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;24&quot; height=&quot;24&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot; focusable=&quot;false&quot;><path d=&quot;m3 7 7-4 7 4-7 4ZM3 7v9l7 4 3-1.7M10 11v9M17 7v5M18 15v6m-3-3h6&quot;/></svg></span><strong>Nuovi</strong><small>Un barcode per pezzo</small></button>
+</div>
+<div class=&quot;nota&quot; id=&quot;nota-modalita&quot;>Lettore PC: in Carico compila il pezzo; in Scarico esegue l'uscita con quantità e causale impostate sul PC.</div>
+<div id=&quot;parametri-movimento&quot; hidden class=&quot;parametri&quot;><div><label for=&quot;campo-quantita&quot;>Quantità</label><input id=&quot;campo-quantita&quot; type=&quot;number&quot; min=&quot;1&quot; max=&quot;2147483647&quot; step=&quot;1&quot; value=&quot;1&quot; inputmode=&quot;numeric&quot;></div><div><label for=&quot;campo-causale&quot;>Causale</label><input id=&quot;campo-causale&quot; type=&quot;text&quot; maxlength=&quot;512&quot; placeholder=&quot;Es. ordine 42&quot;></div></div>
+<form id=&quot;form-nuovo&quot; hidden>
+<h2>Nuovi pezzi, barcode distinti</h2><p class=&quot;micro&quot;>Ogni pezzo riceve un codice seriale: inserendone 5 otterrai 5 etichette diverse. La quantità non fa parte del barcode.</p>
+<h3 class=&quot;sezione-form&quot;><span>1</span> Scegli il profilo</h3><label for=&quot;nuovo-profilo&quot;>Codice profilo</label><input id=&quot;nuovo-profilo&quot; list=&quot;elenco-profili&quot; maxlength=&quot;64&quot; autocomplete=&quot;off&quot; autocapitalize=&quot;characters&quot; required placeholder=&quot;Cerca un profilo esistente&quot;><datalist id=&quot;elenco-profili&quot;></datalist><p id=&quot;dettaglio-profilo&quot; class=&quot;micro&quot;></p><figure id=&quot;anteprima-sezione&quot; hidden><img id=&quot;immagine-profilo&quot; alt=&quot;Sezione del profilo selezionato&quot; loading=&quot;lazy&quot;><figcaption>Sezione associata automaticamente al profilo</figcaption></figure>
+<details id=&quot;anagrafica-nuova&quot; hidden><summary>Il profilo non esiste? Crea l'anagrafica</summary><label><input id=&quot;crea-anagrafica&quot; type=&quot;checkbox&quot;> Crea anche un nuovo profilo</label><label for=&quot;nuovo-descrizione&quot;>Descrizione del profilo</label><input id=&quot;nuovo-descrizione&quot; maxlength=&quot;2000&quot;><div class=&quot;parametri&quot;><div><label for=&quot;nuovo-standard&quot;>Lunghezza standard mm</label><input id=&quot;nuovo-standard&quot; type=&quot;number&quot; min=&quot;1&quot; step=&quot;1&quot; inputmode=&quot;numeric&quot;></div></div></details>
+<h3 class=&quot;sezione-form&quot;><span>2</span> Descrivi i pezzi</h3><label for=&quot;nuovo-colore&quot;>Codice colore</label><input id=&quot;nuovo-colore&quot; maxlength=&quot;64&quot; required autocapitalize=&quot;characters&quot; placeholder=&quot;Es. RAL7016&quot;>
+<div class=&quot;parametri&quot;><div><label for=&quot;nuovo-numero&quot;>N. pezzi</label><input id=&quot;nuovo-numero&quot; type=&quot;number&quot; min=&quot;1&quot; max=&quot;1000&quot; step=&quot;1&quot; inputmode=&quot;numeric&quot; value=&quot;1&quot; required></div><div><label for=&quot;nuovo-lunghezza&quot;>Lunghezza di ogni pezzo (mm)</label><input id=&quot;nuovo-lunghezza&quot; type=&quot;number&quot; min=&quot;1&quot; max=&quot;2147483647&quot; step=&quot;1&quot; inputmode=&quot;numeric&quot; required></div></div>
+<h3 class=&quot;sezione-form&quot;><span>3</span> Dove li conservi</h3><label for=&quot;nuovo-vassoio&quot;>Vassoio</label><input id=&quot;nuovo-vassoio&quot; maxlength=&quot;128&quot; required placeholder=&quot;Es. Vassoio 4&quot;>
+<details class=&quot;opzioni-form&quot;><summary>Posizione e scorta minima <span>Facoltative</span></summary><label for=&quot;nuovo-ubicazione&quot;>Ubicazione (facoltativa)</label><input id=&quot;nuovo-ubicazione&quot; maxlength=&quot;128&quot; placeholder=&quot;Es. Corsia A · Scaffale 2&quot;>
+<label for=&quot;nuovo-scorta&quot;>Scorta minima (facoltativa)</label><input id=&quot;nuovo-scorta&quot; type=&quot;number&quot; min=&quot;0&quot; max=&quot;2147483647&quot; step=&quot;1&quot; inputmode=&quot;numeric&quot;>
+</details><label for=&quot;nuovo-causale&quot;>Causale del carico iniziale</label><input id=&quot;nuovo-causale&quot; maxlength=&quot;512&quot; value=&quot;Carico iniziale da telefono&quot; required>
+<button id=&quot;btn-crea&quot; class=&quot;primario pieno&quot; type=&quot;submit&quot;>Crea pezzi e barcode</button>
+</form>
+<div id=&quot;zona-scanner&quot;>
+<div class=&quot;camera&quot;><div id=&quot;lettore-barcode&quot;></div><div id=&quot;camera-riposo&quot;><span class=&quot;mirino&quot; aria-hidden=&quot;true&quot;><span class=&quot;barcode-illustrazione&quot;></span></span><strong>Inquadra il barcode</strong><p>Allinea il codice al centro.<br>Una scansione, un pezzo alla volta.</p></div></div>
+<div class=&quot;comandi-camera&quot;><button id=&quot;btn-scansiona&quot; class=&quot;primario&quot; type=&quot;button&quot;>Apri fotocamera</button><button id=&quot;btn-ferma&quot; class=&quot;secondario-btn&quot; type=&quot;button&quot; hidden>Ferma</button><button id=&quot;btn-luce&quot; class=&quot;secondario-btn&quot; type=&quot;button&quot; hidden>Accendi luce</button></div>
+<p class=&quot;micro guida-camera&quot;>Inquadra tutte le barre e i margini bianchi. Se non mette a fuoco, allontana lentamente il telefono.</p>
+<label class=&quot;foto-barcode&quot; for=&quot;foto-barcode&quot;>Leggi una foto del barcode<input id=&quot;foto-barcode&quot; type=&quot;file&quot; accept=&quot;image/*&quot; capture=&quot;environment&quot;></label>
+<details id=&quot;manuale&quot; open><summary>Hai già il codice? Inseriscilo qui</summary><form id=&quot;form-manuale&quot; class=&quot;manuale&quot;><label class=&quot;sr-only&quot; for=&quot;campo-barcode&quot;>Barcode</label><input id=&quot;campo-barcode&quot; maxlength=&quot;255&quot; autocomplete=&quot;off&quot; autocapitalize=&quot;characters&quot; spellcheck=&quot;false&quot; placeholder=&quot;Scansiona o incolla il codice&quot; required><button id=&quot;btn-invia&quot; class=&quot;secondario-btn&quot; type=&quot;submit&quot;>Invia</button></form></details>
+</div>
+<div id=&quot;barcode-creati&quot; hidden><h2>Etichette dei pezzi creati</h2><p class=&quot;micro&quot;>Salva ogni PNG per stampare la sua etichetta. Non applicare la stessa etichetta a più pezzi.</p><div id=&quot;lista-barcode&quot;></div></div>
+<section id=&quot;scheda-pezzo&quot; class=&quot;scheda-pezzo&quot; hidden aria-label=&quot;Dettaglio del pezzo&quot;></section>
+<div id=&quot;esito&quot; class=&quot;esito&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;></div><button id=&quot;btn-riprova&quot; type=&quot;button&quot; class=&quot;secondario-btn pieno&quot; hidden>Riprendi la stessa richiesta</button>
+</section>
+<section class=&quot;pannello storico&quot;><div class=&quot;riga-titolo&quot;><h2>Ultime operazioni</h2><span class=&quot;etichetta&quot;><span id=&quot;conteggio-storico&quot;>0</span> IN SESSIONE</span></div><p id=&quot;storico-vuoto&quot; class=&quot;secondario&quot;>Nessuna operazione ancora.<br>Qui ritroverai le conferme di questa sessione.</p><ol id=&quot;lista-storico&quot;></ol></section>
+</div>
+<footer>Magazzino Profili <span>Connessione protetta · Dati sul PC</span></footer>
+<noscript>Attiva JavaScript nel browser per collegare il telefono.</noscript>
+</main>
+<script>&quot;use strict&quot;;
+// Accesso libero: nessun token e nessuna credenziale. La richiesta pendente
+// viene conservata nella sola scheda per poter riprendere dopo un reload.
+const STATO = {attivo:true, ruolo:&quot;AMMINISTRATORE&quot;, modalita:null, scanner:null,
+  in_corso:false, destinatario:null, pendente:null, storico:[], immagini:[], remoto:false};
+globalThis.STATO = STATO;
+const $ = id => document.getElementById(id);
+const TIMEOUT_RICHIESTA_MS = 15000;
+let timerPing = null, timerProfili = null, timerGuidaCamera = null;
+let avvioCamera = null, torciaAccesa = false;
+let altaDefinizione = null;
+function indirizzoAPI(percorso) {
+  if(!percorso.startsWith(&quot;/api/&quot;))throw new Error(&quot;Percorso del servizio non valido&quot;);
+  return percorso;
+}
+function stessaSessione(pendente){return (pendente.destinatario||null)===STATO.destinatario;}
+async function fetchPonte(percorso,opzioni={}){
+  indirizzoAPI(percorso);
+  if(!STATO.remoto)return fetch(percorso,opzioni);
+  if(!STATO.destinatario)throw new Error(&quot;Apri il QR del programma sul PC&quot;);
+  const id=identificativo();
+  const inviata=await fetch(&quot;/api/ponte&quot;,{method:&quot;POST&quot;,signal:opzioni.signal,headers:{&quot;Content-Type&quot;:&quot;application/json&quot;},cache:&quot;no-store&quot;,credentials:&quot;omit&quot;,
+    body:JSON.stringify({pc:STATO.destinatario,id,metodo:opzioni.method||&quot;GET&quot;,percorso,dati:opzioni.body?JSON.parse(opzioni.body):null})});
+  if(!inviata.ok)return inviata;
+  while(true){
+    await attendi(700);
+    const r=await fetch(&quot;/api/ponte?pc=&quot;+encodeURIComponent(STATO.destinatario)+&quot;&amp;id=&quot;+encodeURIComponent(id),{signal:opzioni.signal,cache:&quot;no-store&quot;,credentials:&quot;omit&quot;});
+    if(r.status===202)continue;
+    if(!r.ok)return r;
+    const corpo=await r.json();
+    return new Response(Uint8Array.from(atob(corpo.contenuto),c=>c.charCodeAt(0)),{status:corpo.stato,headers:{&quot;Content-Type&quot;:corpo.tipo}});
+  }
+}
+const attendi = ms => new Promise(resolve => setTimeout(resolve, ms));
+function identificativo() {
+  return globalThis.crypto?.randomUUID?.() || (Date.now().toString(36) + &quot;-&quot; + Math.random().toString(36).slice(2));
+}
+function visibile(id, valore) { const nodo=$(id); if(nodo) nodo.hidden=!valore; }
+function scrivi(id, testo) { const nodo=$(id); if(nodo) nodo.textContent=testo; }
+function statoRete(testo, ok) {
+  scrivi(&quot;stato-rete&quot;, testo);
+  if($(&quot;indicatore-rete&quot;)) $(&quot;indicatore-rete&quot;).className=&quot;pallino &quot; + (ok ? &quot;ok&quot;:&quot;no&quot;);
+}
+async function inviaRichiesta(url, opzioni, esitoIncerto) {
+  const controllo=new AbortController();
+  const timer=setTimeout(()=>controllo.abort(),TIMEOUT_RICHIESTA_MS);
+  try {
+    const risposta=await fetchPonte(indirizzoAPI(url),{...opzioni,signal:controllo.signal,cache:&quot;no-store&quot;,credentials:&quot;omit&quot;});
+    let corpo;
+    try { corpo=await risposta.json(); }
+    catch(e) { if(risposta.ok) throw new TypeError(&quot;Risposta incompleta&quot;); corpo={}; }
+    if(!risposta.ok) {
+      const errore=new Error(typeof corpo.detail === &quot;string&quot; ? corpo.detail : &quot;Richiesta non riuscita (&quot;+risposta.status+&quot;).&quot;);
+      errore.codice=risposta.status; throw errore;
+    }
+    return corpo;
+  } catch(originale) {
+    if(originale.codice) throw originale;
+    const errore=new Error(esitoIncerto
+      ? &quot;Connessione interrotta: esito incerto. Tocca «Riprendi la stessa richiesta»: il codice di richiesta evita un doppio movimento. Puoi verificare la giacenza con Consulta dopo aver risolto la richiesta.&quot;
+      : &quot;Connessione assente o interrotta: riprovare tra poco.&quot;);
+    errore.codice=0; errore.esitoIncerto=Boolean(esitoIncerto); throw errore;
+  } finally { clearTimeout(timer); }
+}
+async function chiedi(url,payload) {
+  const headers={&quot;Content-Type&quot;:&quot;application/json&quot;};
+
+  return inviaRichiesta(url,{method:&quot;POST&quot;,headers,body:JSON.stringify(payload)},
+    [&quot;/api/carico&quot;,&quot;/api/scarico&quot;,&quot;/api/scansione&quot;,&quot;/api/pezzi&quot;].includes(url));
+}
+async function chiediGet(url) {
+  const headers={};
+  return inviaRichiesta(url,{method:&quot;GET&quot;,headers},false);
+}
+async function ping() {
+  if(!STATO.attivo) return;
+  try {
+    if(STATO.ruolo===&quot;SOLA_LETTURA&quot;) { await chiediGet(&quot;/api/salute&quot;); statoRete(&quot;Servizio raggiungibile · sola lettura&quot;,true); return; }
+    const q=STATO.destinatario ? &quot;?destinatario=&quot;+encodeURIComponent(STATO.destinatario) : &quot;&quot;;
+    const risposta=await chiedi(&quot;/api/telefono/ping&quot;+q,{});
+    statoRete(STATO.destinatario ? (risposta.pc_collegato ? &quot;PC collegato · pronto a ricevere&quot; : &quot;Servizio online · PC non in ascolto&quot;) : &quot;Servizio online · operazioni dirette disponibili&quot;,true);
+  } catch(e) { statoRete(&quot;Collegamento interrotto&quot;,false);  }
+}
+function avviaPing(){fermaPing();ping();timerPing=setInterval(ping,10000);}
+function fermaPing(){if(timerPing){clearInterval(timerPing);timerPing=null;}}
+function pulisciImmagini(){for(const url of STATO.immagini) URL.revokeObjectURL(url);STATO.immagini=[];}
+function esci() {
+  STATO.attivo=!STATO.attivo;
+  if(!STATO.attivo){fermaPing();STATO.in_corso=false;fermiScanner();statoRete(&quot;Collegamento in pausa&quot;,false);}
+  else avviaPing();
+  scrivi(&quot;btn-esci&quot;,STATO.attivo?&quot;Pausa&quot;:&quot;Riprendi&quot;);
+}
+function conservaPendente(){
+  try {
+    if(STATO.pendente) globalThis.sessionStorage?.setItem(&quot;magazzino_richiesta_pendente&quot;,JSON.stringify({...STATO.pendente,destinatario:STATO.destinatario}));
+    else globalThis.sessionStorage?.removeItem(&quot;magazzino_richiesta_pendente&quot;);
+  }catch(e){/* memoria del browser non disponibile: la richiesta resta in memoria */}
+}
+function mostraMessaggio(testo,classe) { visibile(&quot;scheda-pezzo&quot;,false); const nodo=$(&quot;esito&quot;);nodo.textContent=testo;nodo.className=&quot;esito&quot;+(classe?&quot; &quot;+classe:&quot;&quot;); }
+function registraStorico(testo) {
+  STATO.storico.unshift({testo,ora:new Date().toLocaleTimeString(&quot;it-IT&quot;,{hour:&quot;2-digit&quot;,minute:&quot;2-digit&quot;})});
+  STATO.storico=STATO.storico.slice(0,20);
+  const lista=$(&quot;lista-storico&quot;);if(!lista?.replaceChildren) return;
+  lista.replaceChildren();visibile(&quot;storico-vuoto&quot;,false);scrivi(&quot;conteggio-storico&quot;,String(STATO.storico.length));
+  for(const voce of STATO.storico){const li=document.createElement(&quot;li&quot;),b=document.createElement(&quot;b&quot;),small=document.createElement(&quot;small&quot;);b.textContent=voce.testo;small.textContent=voce.ora;li.append(b,small);lista.append(li);}
+}
+function scegliModalita(modo) {
+  if(STATO.in_corso || STATO.pendente) {mostraMessaggio(&quot;Prima completa o riprendi la richiesta in corso.&quot;,&quot;errore&quot;);return;}
+  fermiScanner();STATO.modalita=modo;
+  for(const b of document.querySelectorAll(&quot;[data-modo]&quot;)) b.setAttribute(&quot;aria-pressed&quot;,String(b.dataset.modo===modo));
+  visibile(&quot;parametri-movimento&quot;,modo===&quot;carico&quot;||modo===&quot;scarico&quot;);
+  visibile(&quot;form-nuovo&quot;,modo===&quot;nuovo&quot;);visibile(&quot;zona-scanner&quot;,modo!==&quot;nuovo&quot;);visibile(&quot;barcode-creati&quot;,false);
+  const note={lettore:&quot;Lettore PC: in Carico compila il pezzo; in Scarico esegue l'uscita con quantità e causale impostate sul PC. Il telefono aspetta la conferma.&quot;,consulta:&quot;Leggi un barcode per vedere profilo, colore, lunghezza, vassoio e stato. Nessuna modifica.&quot;,scarico:&quot;Scansiona il singolo pezzo da scaricare. Vedrai il dettaglio prima della conferma. Un'etichetta unitaria scarica un solo pezzo.&quot;,carico:&quot;Rientro di un pezzo già etichettato: il suo barcode resta lo stesso. Per nuovi pezzi usa «Nuovi pezzi».&quot;,nuovo:&quot;Ogni pezzo fisico riceve un barcode seriale univoco. Puoi creare più pezzi uguali: le etichette saranno tutte diverse.&quot;};
+  scrivi(&quot;nota-modalita&quot;,note[modo]);mostraMessaggio(&quot;&quot;);
+  const titoli={lettore:&quot;Il telefono diventa lettore.&quot;,consulta:&quot;Consulta un pezzo.&quot;,scarico:&quot;Scarica un pezzo.&quot;,carico:&quot;Registra un rientro.&quot;,nuovo:&quot;Aggiungi nuovi pezzi.&quot;};
+  scrivi(&quot;titolo-operazione&quot;,titoli[modo]);
+  if(modo===&quot;nuovo&quot;) cercaProfili();
+  animaCambio();
+}
+function animaCambio(){
+  if(globalThis.matchMedia?.(&quot;(prefers-reduced-motion: reduce)&quot;).matches)return;
+  for(const id of [&quot;titolo-operazione&quot;,&quot;nota-modalita&quot;,STATO.modalita===&quot;nuovo&quot;?&quot;form-nuovo&quot;:&quot;zona-scanner&quot;]){
+    const nodo=$(id);nodo?.getAnimations?.().forEach(a=>a.cancel());
+    nodo?.animate?.([{opacity:0,transform:&quot;translateY(6px)&quot;},{opacity:1,transform:&quot;translateY(0)&quot;}],{duration:220,easing:&quot;ease-out&quot;});
+  }
+}
+async function fermiScanner() {
+  fermaAltaDefinizione();
+  const scanner=STATO.scanner;STATO.scanner=null;
+  clearTimeout(timerGuidaCamera);timerGuidaCamera=null;
+  if(scanner){
+    if(avvioCamera){try{await avvioCamera;}catch(e){/* avvio rifiutato */}}
+    try{await scanner.stop();}catch(e){/* può essere già fermo o un lettore da foto */}
+    try{await scanner.clear();}catch(e){/* contenitore già svuotato */}
+  }
+  torciaAccesa=false;visibile(&quot;btn-luce&quot;,false);scrivi(&quot;btn-luce&quot;,&quot;Accendi luce&quot;);
+  visibile(&quot;camera-riposo&quot;,true);visibile(&quot;btn-ferma&quot;,false);scrivi(&quot;btn-scansiona&quot;,&quot;Apri fotocamera&quot;);
+}
+function configurazioneLettore(){
+  // Le etichette del programma sono Code 128. Evita tentativi su tutti i formati
+  // e le differenze del BarcodeDetector nativo tra browser mobili.
+  return {formatsToSupport:[Html5QrcodeSupportedFormats.CODE_128],
+    useBarCodeDetectorIfSupported:false,verbose:false};
+}
+function configurazioneCamera(){
+  // Nessun qrbox: il vecchio ritaglio 280x130 troncava le etichette lunghe.
+  return {fps:8,disableFlip:true,videoConstraints:{facingMode:{ideal:&quot;environment&quot;},
+    width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:15}}};
+}
+function rimuoviDecoderAltaDefinizione(lavoro){
+  try{lavoro.decoder.clear();}catch(e){/* immagine gia rimossa */}
+  lavoro.nodo.remove();
+}
+function fermaAltaDefinizione(){
+  const lavoro=altaDefinizione;altaDefinizione=null;
+  if(!lavoro)return;lavoro.attivo=false;clearTimeout(lavoro.timer);
+  if(!lavoro.inCorso)rimuoviDecoderAltaDefinizione(lavoro);
+}
+function avviaAltaDefinizione(scanner){
+  // L'anteprima mobile viene ridotta a poche centinaia di pixel dalla libreria:
+  // un seriale Code128 lungo perde le barre sottili anche con una camera HD.
+  const video=$(&quot;lettore-barcode&quot;)?.querySelector?.(&quot;video&quot;);if(!video)return;
+  fermaAltaDefinizione();
+  const nodo=document.createElement(&quot;div&quot;);nodo.id=&quot;lettore-barcode-hd&quot;;
+  nodo.setAttribute(&quot;aria-hidden&quot;,&quot;true&quot;);
+  nodo.style.cssText=&quot;position:fixed;left:-10000px;top:0;width:1920px;pointer-events:none&quot;;
+  document.body.append(nodo);
+  const lavoro={nodo,decoder:new Html5Qrcode(nodo.id,configurazioneLettore()),
+    canvas:document.createElement(&quot;canvas&quot;),attivo:true,inCorso:false,timer:null};
+  altaDefinizione=lavoro;
+  async function leggiFotogramma(){
+    if(!lavoro.attivo||STATO.scanner!==scanner||!STATO.in_corso)return;
+    lavoro.inCorso=true;
+    try{
+      if(video.readyState>=2&amp;&amp;video.videoWidth>0){
+        const larghezza=Math.min(video.videoWidth,1920);
+        lavoro.canvas.width=larghezza;lavoro.canvas.height=Math.round(video.videoHeight*larghezza/video.videoWidth);
+        lavoro.canvas.getContext(&quot;2d&quot;).drawImage(video,0,0,lavoro.canvas.width,lavoro.canvas.height);
+        const blob=await new Promise(r=>lavoro.canvas.toBlob(r,&quot;image/png&quot;));
+        if(blob&amp;&amp;lavoro.attivo){
+          const testo=await lavoro.decoder.scanFile(new File([blob],&quot;fotogramma.png&quot;,{type:&quot;image/png&quot;}),false);
+          if(lavoro.attivo&amp;&amp;STATO.scanner===scanner&amp;&amp;STATO.in_corso)await onLettura(testo);
+        }
+      }
+    }catch(e){/* nessun barcode in questo fotogramma: riprova senza log per frame */}
+    finally{
+      lavoro.inCorso=false;
+      if(lavoro.attivo&amp;&amp;STATO.scanner===scanner&amp;&amp;STATO.in_corso)
+        lavoro.timer=setTimeout(leggiFotogramma,800);
+      else rimuoviDecoderAltaDefinizione(lavoro);
+    }
+  }
+  lavoro.timer=setTimeout(leggiFotogramma,300);
+}
+async function cambiaLuce(){
+  const scanner=STATO.scanner;if(!scanner)return;
+  try{await scanner.applyVideoConstraints({advanced:[{torch:!torciaAccesa}]});
+    torciaAccesa=!torciaAccesa;scrivi(&quot;btn-luce&quot;,torciaAccesa?&quot;Spegni luce&quot;:&quot;Accendi luce&quot;);
+  }catch(e){mostraMessaggio(&quot;Luce non disponibile su questa fotocamera. Illumina il pezzo senza riflessi.&quot;,&quot;errore&quot;);}
+}
+async function avviaScansione(modalita) {
+  if(!STATO.attivo||STATO.in_corso||STATO.pendente) return;
+  await fermiScanner();STATO.modalita=modalita;STATO.in_corso=true;
+  if(!globalThis.isSecureContext || !globalThis.navigator?.mediaDevices?.getUserMedia) {
+    STATO.in_corso=false;mostraMessaggio(&quot;Fotocamera non disponibile: apri l'indirizzo HTTPS con certificato riconosciuto in Safari o Chrome e consenti la fotocamera. Puoi inserire il barcode a mano.&quot;,&quot;errore&quot;);return;
+  }
+  try {
+    const scanner=new Html5Qrcode(&quot;lettore-barcode&quot;,configurazioneLettore());STATO.scanner=scanner;
+    visibile(&quot;camera-riposo&quot;,false);visibile(&quot;btn-ferma&quot;,true);scrivi(&quot;btn-scansiona&quot;,&quot;Fotocamera attiva…&quot;);
+    const promessa=scanner.start({facingMode:&quot;environment&quot;},configurazioneCamera(),testo=>onLettura(testo),()=>{});
+    avvioCamera=promessa;
+    try{await promessa;}finally{if(avvioCamera===promessa)avvioCamera=null;}
+    if(STATO.scanner!==scanner)return; // fermata o lettura durante l'avvio
+    let capacita={};try{capacita=scanner.getRunningTrackCapabilities?.()||{};}catch(e){}
+    visibile(&quot;btn-luce&quot;,capacita.torch===true);
+    if(capacita.focusMode?.includes(&quot;continuous&quot;)){
+      try{await scanner.applyVideoConstraints({advanced:[{focusMode:&quot;continuous&quot;}]});}catch(e){/* autofocus non applicabile */}
+    }
+    if(STATO.scanner!==scanner)return;
+    avviaAltaDefinizione(scanner);
+    mostraMessaggio(&quot;Inquadra tutto il barcode, inclusi i margini bianchi. Tieni il telefono fermo a circa 20–30 cm.&quot;);
+    timerGuidaCamera=setTimeout(()=>{if(STATO.scanner===scanner&amp;&amp;STATO.in_corso)
+      mostraMessaggio(&quot;Non ancora letto: allontana lentamente il telefono, evita riflessi e inquadra tutte le barre. Puoi anche usare «Leggi una foto».&quot;);},7000);
+  } catch(e) {STATO.in_corso=false;await fermiScanner();mostraMessaggio(&quot;Impossibile avviare la fotocamera. Consenti l'accesso nelle impostazioni del browser, controlla HTTPS o usa l'inserimento manuale. Dettaglio: &quot;+String(e),&quot;errore&quot;);}
+}
+async function leggiFoto(evento){
+  const file=evento.target.files?.[0];if(!file)return;
+  if(!STATO.attivo||STATO.pendente){evento.target.value=&quot;&quot;;return;}
+  if(STATO.in_corso&amp;&amp;!STATO.scanner){evento.target.value=&quot;&quot;;return;}
+  await fermiScanner();STATO.in_corso=true;
+  try{
+    const scanner=new Html5Qrcode(&quot;lettore-barcode&quot;,configurazioneLettore());STATO.scanner=scanner;
+    mostraMessaggio(&quot;Lettura della foto sul telefono…&quot;);
+    const testo=await scanner.scanFile(file,false);
+    if(STATO.scanner!==scanner)return;
+    await onLettura(testo);
+  }catch(e){STATO.in_corso=false;await fermiScanner();mostraMessaggio(&quot;Barcode non riconosciuto nella foto. Includi tutte le barre e i margini bianchi, evita sfocatura e riflessi. Puoi inserire il codice a mano.&quot;,&quot;errore&quot;);}
+  finally{evento.target.value=&quot;&quot;;}
+}
+async function onLettura(testo) {
+  if(!STATO.in_corso) return;STATO.in_corso=false;await fermiScanner();
+  if(STATO.modalita===&quot;consulta&quot;){try{await consultaBarcode(testo.trim());}catch(e){/* messaggio già mostrato */}}
+  else await inviaMovimento(testo.trim());
+}
+function mostraSchedaPezzo(corpo){
+  const card=$(&quot;scheda-pezzo&quot;);if(!card?.replaceChildren)return;
+  card.replaceChildren();
+  const titolo=document.createElement(&quot;h2&quot;),descrizione=document.createElement(&quot;p&quot;),griglia=document.createElement(&quot;dl&quot;);
+  titolo.textContent=corpo.codice_profilo||&quot;Pezzo&quot;;descrizione.textContent=corpo.descrizione||&quot;&quot;;
+  for(const [nome,valore] of [[&quot;Colore&quot;,corpo.colore],[&quot;Lunghezza&quot;,corpo.lunghezza_mm+&quot; mm&quot;],[&quot;Giacenza&quot;,corpo.quantita_giacenza],[&quot;Vassoio&quot;,corpo.numero_vassoio??&quot;—&quot;],[&quot;Stato&quot;,corpo.stato??&quot;—&quot;],[&quot;Barcode&quot;,corpo.barcode??&quot;—&quot;]]){
+    const gruppo=document.createElement(&quot;div&quot;),dt=document.createElement(&quot;dt&quot;),dd=document.createElement(&quot;dd&quot;);
+    dt.textContent=nome;dd.textContent=String(valore);gruppo.append(dt,dd);griglia.append(gruppo);
+  }
+  card.append(titolo,descrizione,griglia);card.hidden=false;
+}
+function descrivi(corpo){return corpo.codice_profilo+&quot; — &quot;+corpo.descrizione+&quot;\nColore: &quot;+corpo.colore+&quot; · &quot;+corpo.lunghezza_mm+&quot; mm\nGiacenza: &quot;+corpo.quantita_giacenza+&quot;\nVassoio: &quot;+(corpo.numero_vassoio??&quot;—&quot;)+&quot;\nStato: &quot;+(corpo.stato??&quot;—&quot;)+(corpo.unitario?&quot;\nBarcode del singolo pezzo&quot;:&quot;\nBarcode storico di giacenza aggregata&quot;);}
+async function consultaBarcode(barcode) {
+  if(!barcode){mostraMessaggio(&quot;Nessun barcode letto.&quot;,&quot;errore&quot;);return;}
+  mostraMessaggio(&quot;Consultazione in corso…&quot;);
+  try{const corpo=await chiediGet(&quot;/api/pezzi/&quot;+encodeURIComponent(barcode));mostraMessaggio(descrivi(corpo),&quot;successo&quot;);mostraSchedaPezzo(corpo);return corpo;}
+  catch(e){mostraMessaggio(e.message,&quot;errore&quot;);throw e;}
+}
+async function inviaMovimento(barcode) {
+  if(!STATO.attivo||STATO.in_corso) return;
+  if(STATO.pendente){mostraMessaggio(&quot;Richiesta ancora in corso: usa «Riprendi la stessa richiesta».&quot;,&quot;errore&quot;);return;}
+  barcode=(barcode||&quot;&quot;).trim().toUpperCase();if(!barcode){mostraMessaggio(&quot;Nessun barcode letto.&quot;,&quot;errore&quot;);return;}
+  const modo=STATO.modalita;
+  if(![&quot;lettore&quot;,&quot;carico&quot;,&quot;scarico&quot;].includes(modo)) return;
+  let payload={barcode};
+  if(modo===&quot;lettore&quot;) {
+    if(!STATO.destinatario){mostraMessaggio(&quot;Apri prima il QR del PC: manca il destinatario della scansione.&quot;,&quot;errore&quot;);return;}
+    payload.destinatario=STATO.destinatario;
+  } else {
+    const testo=$(&quot;campo-quantita&quot;).value.trim(),q=/^[0-9]+$/.test(testo)?Number(testo):NaN;
+    if(!Number.isSafeInteger(q)||q<=0||q>2147483647){mostraMessaggio(&quot;Inserire una quantità intera e maggiore di zero.&quot;,&quot;errore&quot;);return;}
+    payload.quantita=q;const causale=$(&quot;campo-causale&quot;).value.trim();if(causale)payload.causale=causale;
+    // Conferma sul dispositivo reale. La guardia blocca doppi tap anche durante il GET.
+    if(typeof globalThis.confirm===&quot;function&quot;) {
+      STATO.in_corso=true;
+      try {
+        const pezzo=await chiediGet(&quot;/api/pezzi/&quot;+encodeURIComponent(barcode));
+        if(pezzo.unitario &amp;&amp; q!==1) {mostraMessaggio(&quot;Questo barcode identifica un pezzo: la quantità deve essere 1.&quot;,&quot;errore&quot;);return;}
+        if(!globalThis.confirm((modo===&quot;scarico&quot;?&quot;SCARICO&quot;:&quot;RIENTRO&quot;)+&quot; di &quot;+q+&quot; pezzo/i\n\n&quot;+descrivi(pezzo)+&quot;\n\nConfermi l'operazione?&quot;)) return;
+      } catch(e){mostraMessaggio(e.message,&quot;errore&quot;);return;}
+      finally{STATO.in_corso=false;}
+    }
+  }
+  payload.richiesta_id=identificativo();STATO.pendente={url:modo===&quot;lettore&quot;?&quot;/api/scansione&quot;:&quot;/api/&quot;+modo,payload,modo};
+  conservaPendente();await riprendiRichiesta();
+}
+async function attendiConferma(richiesta,corpo) {
+  for(let i=0;i<15;i++) {
+    if(!STATO.attivo || STATO.pendente!==richiesta) return false;
+    const esito=await chiediGet(&quot;/api/scansioni/&quot;+corpo.id);
+    if(esito.esito!==&quot;in_attesa&quot;) {
+      const ok=[&quot;completata&quot;,&quot;compilata&quot;].includes(esito.esito);
+      mostraMessaggio(esito.dettaglio+&quot;\nBarcode: &quot;+esito.barcode,ok?&quot;successo&quot;:&quot;errore&quot;);
+      registraStorico(esito.barcode+&quot; · &quot;+esito.dettaglio);return true;
+    }
+    mostraMessaggio(&quot;Barcode ricevuto dal server. In attesa della conferma dal PC…&quot;);await attendi(1000);
+  }
+  mostraMessaggio(&quot;Il PC non ha ancora confermato. Apri Carico o Scarico sul PC e tocca «Riprendi la stessa richiesta». Il barcode non viene inviato due volte.&quot;,&quot;errore&quot;);return false;
+}
+async function riprendiRichiesta() {
+  if(!STATO.attivo||STATO.in_corso||!STATO.pendente) return;
+  const richiesta=STATO.pendente;STATO.in_corso=true;visibile(&quot;btn-riprova&quot;,false);
+  mostraMessaggio(&quot;Invio in corso…&quot;);
+  try {
+    const corpo=richiesta.risposta || await chiedi(richiesta.url,richiesta.payload);
+    if(STATO.pendente!==richiesta) return;
+    richiesta.risposta=corpo;conservaPendente();
+    if(richiesta.modo===&quot;lettore&quot;) {
+      if(!await attendiConferma(richiesta,corpo)) return;
+    } else if(richiesta.modo===&quot;nuovo&quot;) {
+      mostraMessaggio(corpo.dettaglio,&quot;successo&quot;);registraStorico(corpo.dettaglio);
+      await mostraBarcodeCreati(corpo.pezzi);
+    } else {mostraMessaggio((corpo.dettaglio||&quot;Movimento registrato.&quot;)+&quot;\n&quot;+descrivi(corpo),&quot;successo&quot;);registraStorico(corpo.barcode+&quot; · &quot;+richiesta.modo);}
+    STATO.pendente=null;
+  } catch(e) {
+    mostraMessaggio(e.message,&quot;errore&quot;);
+
+    // Un errore applicativo 4xx rifiuta la richiesta senza modifiche.
+    if(e.codice>=400 &amp;&amp; e.codice<500) STATO.pendente=null;
+  } finally {STATO.in_corso=false;visibile(&quot;btn-riprova&quot;,Boolean(STATO.pendente));conservaPendente();}
+}
+async function cercaProfili(){
+  if(!STATO.attivo || STATO.modalita!==&quot;nuovo&quot;) return;
+  const valore=$(&quot;nuovo-profilo&quot;).value.trim();
+  try{const righe=await chiediGet(&quot;/api/profili?cerca=&quot;+encodeURIComponent(valore));
+    if($(&quot;nuovo-profilo&quot;).value.trim()!==valore)return;
+    const lista=$(&quot;elenco-profili&quot;);lista.replaceChildren();
+    for(const riga of righe){const o=document.createElement(&quot;option&quot;);o.value=riga.codice;o.textContent=riga.descrizione;lista.append(o);}
+    const profilo=righe.find(r=>r.codice===valore.toUpperCase().replace(/\s/g,&quot;&quot;));
+    visibile(&quot;anteprima-sezione&quot;,Boolean(profilo?.url_immagine));
+    if(profilo?.url_immagine){
+      if(!STATO.remoto)$(&quot;immagine-profilo&quot;).src=profilo.url_immagine;
+      else {
+        const controllo=new AbortController(),timer=setTimeout(()=>controllo.abort(),15000);
+        try{const risposta=await fetchPonte(profilo.url_immagine,{method:&quot;GET&quot;,signal:controllo.signal});
+          if(risposta.ok &amp;&amp; $(&quot;nuovo-profilo&quot;).value.trim()===valore){const url=URL.createObjectURL(await risposta.blob());STATO.immagini.push(url);$(&quot;immagine-profilo&quot;).src=url;}
+        }finally{clearTimeout(timer);}
+      }
+    }
+    scrivi(&quot;dettaglio-profilo&quot;,profilo?profilo.descrizione:&quot;Seleziona un profilo esistente o apri «Crea l'anagrafica».&quot;);
+  }catch(e){scrivi(&quot;dettaglio-profilo&quot;,e.message);}
+}
+function interoCampo(id,min,max){const t=$(id).value.trim();if(!/^[0-9]+$/.test(t))throw new Error(&quot;Controlla i numeri: usare valori interi.&quot;);const n=Number(t);if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error(&quot;Valore numerico fuori intervallo.&quot;);return n;}
+async function creaPezzi(evento){
+  evento.preventDefault();if(!STATO.attivo||STATO.in_corso||STATO.pendente)return;
+  try {
+    const payload={richiesta_id:identificativo(),codice_profilo:$(&quot;nuovo-profilo&quot;).value.trim().toUpperCase(),colore:$(&quot;nuovo-colore&quot;).value.trim().toUpperCase(),lunghezza_mm:interoCampo(&quot;nuovo-lunghezza&quot;,1,2147483647),quantita:interoCampo(&quot;nuovo-numero&quot;,1,1000),numero_vassoio:$(&quot;nuovo-vassoio&quot;).value.trim(),ubicazione:$(&quot;nuovo-ubicazione&quot;).value.trim()||null,scorta_minima:$(&quot;nuovo-scorta&quot;).value.trim()?interoCampo(&quot;nuovo-scorta&quot;,0,2147483647):null,causale:$(&quot;nuovo-causale&quot;).value.trim()};
+    if(!payload.codice_profilo||!payload.colore||!payload.numero_vassoio||!payload.causale)throw new Error(&quot;Compila profilo, colore, vassoio e causale.&quot;);
+    if($(&quot;crea-anagrafica&quot;).checked){payload.nuovo_profilo={descrizione:$(&quot;nuovo-descrizione&quot;).value.trim(),lunghezza_standard_mm:interoCampo(&quot;nuovo-standard&quot;,1,2147483647)};if(!payload.nuovo_profilo.descrizione)throw new Error(&quot;Descrizione obbligatoria per il nuovo profilo.&quot;);}
+    if(!globalThis.confirm(&quot;Creare &quot;+payload.quantita+&quot; pezzi di &quot;+payload.codice_profilo+&quot;, &quot;+payload.colore+&quot;, &quot;+payload.lunghezza_mm+&quot; mm?\nOgni pezzo avrà un barcode diverso. Carico iniziale nel vassoio &quot;+payload.numero_vassoio+&quot;.&quot;))return;
+    STATO.pendente={url:&quot;/api/pezzi&quot;,payload,modo:&quot;nuovo&quot;};conservaPendente();await riprendiRichiesta();
+  }catch(e){mostraMessaggio(e.message,&quot;errore&quot;);}
+}
+async function mostraBarcodeCreati(pezzi){
+  pulisciImmagini();const lista=$(&quot;lista-barcode&quot;);lista.replaceChildren();visibile(&quot;barcode-creati&quot;,true);
+  for(const pezzo of pezzi){const card=document.createElement(&quot;div&quot;),titolo=document.createElement(&quot;strong&quot;),codice=document.createElement(&quot;code&quot;),b=document.createElement(&quot;button&quot;);card.className=&quot;etichetta-pezzo&quot;;titolo.textContent=pezzo.codice_profilo+&quot; · &quot;+pezzo.colore+&quot; · &quot;+pezzo.lunghezza_mm+&quot; mm&quot;;codice.textContent=pezzo.barcode;b.textContent=&quot;Visualizza e salva etichetta PNG&quot;;b.type=&quot;button&quot;;card.append(titolo,document.createElement(&quot;br&quot;),codice,b);lista.append(card);
+    b.addEventListener(&quot;click&quot;,async()=>{b.disabled=true;try{const controllo=new AbortController(),timer=setTimeout(()=>controllo.abort(),15000);let risposta;try{risposta=await fetchPonte(indirizzoAPI(&quot;/api/barcode/&quot;+encodeURIComponent(pezzo.barcode)+&quot;/immagine&quot;),{signal:controllo.signal,cache:&quot;no-store&quot;});}finally{clearTimeout(timer);}if(!risposta.ok)throw new Error(&quot;Etichetta non disponibile: riprova.&quot;);const url=URL.createObjectURL(await risposta.blob());STATO.immagini.push(url);const img=document.createElement(&quot;img&quot;),a=document.createElement(&quot;a&quot;);img.src=url;img.alt=&quot;Barcode &quot;+pezzo.barcode;a.href=url;a.download=pezzo.barcode+&quot;.png&quot;;a.textContent=&quot;Salva PNG ↓&quot;;card.append(img,a);b.remove();}catch(e){mostraMessaggio(e.message,&quot;errore&quot;);b.disabled=false;}});
+  }
+}
+function applicaTema(tema){
+  document.documentElement.dataset.tema=tema;
+  $(&quot;btn-tema&quot;).setAttribute(&quot;aria-label&quot;,tema===&quot;scuro&quot;?&quot;Attiva tema chiaro&quot;:&quot;Attiva tema scuro&quot;);
+  document.querySelector?.('meta[name=&quot;theme-color&quot;]')?.setAttribute(&quot;content&quot;,tema===&quot;scuro&quot;?&quot;#101923&quot;:&quot;#f4f6fa&quot;);
+}
+function cambiaTema(){
+  const radice=document.documentElement;
+  const scuro=radice.dataset.tema?radice.dataset.tema===&quot;scuro&quot;:globalThis.matchMedia(&quot;(prefers-color-scheme:dark)&quot;).matches;
+  const tema=scuro?&quot;chiaro&quot;:&quot;scuro&quot;;applicaTema(tema);
+  try{globalThis.localStorage?.setItem(&quot;magazzino_tema&quot;,tema);}catch(e){}
+}
+
+// Ogni accesso ai servizi è disabilitato nella demo.
+fetchPonte=async()=>{throw new Error('Servizi non disponibili nell’anteprima')};
+cercaProfili=()=>{};avviaPing=()=>{};
+const campione={barcode:'DEMO-00042',codice_profilo:'AB12',descrizione:'Profilo dimostrativo',colore:'RAL 7016',lunghezza_mm:6000,quantita_giacenza:1,numero_vassoio:'A · 04',stato:'Caricato',unitario:true};
+scegliModalita('consulta');statoRete('Anteprima locale · dati dimostrativi',true);
+visibile('anagrafica-nuova',true);
+$('btn-tema').onclick=cambiaTema;
+for(const b of document.querySelectorAll('[data-modo]'))b.onclick=()=>{scegliModalita(b.dataset.modo);$('titolo-operazione').scrollIntoView({block:'start',behavior:'instant'})};
+function esempio(){if(STATO.modalita==='consulta'){mostraMessaggio(descrivi(campione),'successo');mostraSchedaPezzo(campione)}else{mostraMessaggio('Simulazione completata. Nessun dato reale modificato.','successo');registraStorico('DEMO-00042 · '+STATO.modalita)}}
+$('btn-scansiona').onclick=esempio;
+$('form-manuale').onsubmit=e=>{e.preventDefault();esempio()};
+$('form-nuovo').onsubmit=e=>{e.preventDefault();esempio()};
+$('btn-esci').onclick=()=>mostraMessaggio('Questa è un’anteprima locale. Il collegamento al PC è disattivato.');
+$('btn-riprova').onclick=esempio;
+for(const [id,v] of Object.entries({'nuovo-profilo':'AB12','nuovo-colore':'RAL7016','nuovo-lunghezza':'6000','nuovo-vassoio':'A04'}))$(id).value=v;
+</script></body></html>
+"></iframe><script>document.getElementById('larghezza').onchange=e=>document.querySelector('iframe').style.width=e.target.value+'px'</script></html>

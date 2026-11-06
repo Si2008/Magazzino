@@ -6,7 +6,9 @@ const STATO = {attivo:true, ruolo:"AMMINISTRATORE", modalita:null, scanner:null,
 globalThis.STATO = STATO;
 const $ = id => document.getElementById(id);
 const TIMEOUT_RICHIESTA_MS = 15000;
-let timerPing = null, timerProfili = null;
+let timerPing = null, timerProfili = null, timerGuidaCamera = null;
+let avvioCamera = null, torciaAccesa = false;
+let altaDefinizione = null;
 function indirizzoAPI(percorso) {
   if(!percorso.startsWith("/api/"))throw new Error("Percorso del servizio non valido");
   return percorso;
@@ -123,9 +125,78 @@ function animaCambio(){
   }
 }
 async function fermiScanner() {
+  fermaAltaDefinizione();
   const scanner=STATO.scanner;STATO.scanner=null;
-  if(scanner){try{await scanner.stop();await scanner.clear();}catch(e){/* può essere già fermo */}}
+  clearTimeout(timerGuidaCamera);timerGuidaCamera=null;
+  if(scanner){
+    if(avvioCamera){try{await avvioCamera;}catch(e){/* avvio rifiutato */}}
+    try{await scanner.stop();}catch(e){/* può essere già fermo o un lettore da foto */}
+    try{await scanner.clear();}catch(e){/* contenitore già svuotato */}
+  }
+  torciaAccesa=false;visibile("btn-luce",false);scrivi("btn-luce","Accendi luce");
   visibile("camera-riposo",true);visibile("btn-ferma",false);scrivi("btn-scansiona","Apri fotocamera");
+}
+function configurazioneLettore(){
+  // Le etichette del programma sono Code 128. Evita tentativi su tutti i formati
+  // e le differenze del BarcodeDetector nativo tra browser mobili.
+  return {formatsToSupport:[Html5QrcodeSupportedFormats.CODE_128],
+    useBarCodeDetectorIfSupported:false,verbose:false};
+}
+function configurazioneCamera(){
+  // Nessun qrbox: il vecchio ritaglio 280x130 troncava le etichette lunghe.
+  return {fps:8,disableFlip:true,videoConstraints:{facingMode:{ideal:"environment"},
+    width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:15}}};
+}
+function rimuoviDecoderAltaDefinizione(lavoro){
+  try{lavoro.decoder.clear();}catch(e){/* immagine gia rimossa */}
+  lavoro.nodo.remove();
+}
+function fermaAltaDefinizione(){
+  const lavoro=altaDefinizione;altaDefinizione=null;
+  if(!lavoro)return;lavoro.attivo=false;clearTimeout(lavoro.timer);
+  if(!lavoro.inCorso)rimuoviDecoderAltaDefinizione(lavoro);
+}
+function avviaAltaDefinizione(scanner){
+  // L'anteprima mobile viene ridotta a poche centinaia di pixel dalla libreria:
+  // un seriale Code128 lungo perde le barre sottili anche con una camera HD.
+  const video=$("lettore-barcode")?.querySelector?.("video");if(!video)return;
+  fermaAltaDefinizione();
+  const nodo=document.createElement("div");nodo.id="lettore-barcode-hd";
+  nodo.setAttribute("aria-hidden","true");
+  nodo.style.cssText="position:fixed;left:-10000px;top:0;width:1920px;pointer-events:none";
+  document.body.append(nodo);
+  const lavoro={nodo,decoder:new Html5Qrcode(nodo.id,configurazioneLettore()),
+    canvas:document.createElement("canvas"),attivo:true,inCorso:false,timer:null};
+  altaDefinizione=lavoro;
+  async function leggiFotogramma(){
+    if(!lavoro.attivo||STATO.scanner!==scanner||!STATO.in_corso)return;
+    lavoro.inCorso=true;
+    try{
+      if(video.readyState>=2&&video.videoWidth>0){
+        const larghezza=Math.min(video.videoWidth,1920);
+        lavoro.canvas.width=larghezza;lavoro.canvas.height=Math.round(video.videoHeight*larghezza/video.videoWidth);
+        lavoro.canvas.getContext("2d").drawImage(video,0,0,lavoro.canvas.width,lavoro.canvas.height);
+        const blob=await new Promise(r=>lavoro.canvas.toBlob(r,"image/png"));
+        if(blob&&lavoro.attivo){
+          const testo=await lavoro.decoder.scanFile(new File([blob],"fotogramma.png",{type:"image/png"}),false);
+          if(lavoro.attivo&&STATO.scanner===scanner&&STATO.in_corso)await onLettura(testo);
+        }
+      }
+    }catch(e){/* nessun barcode in questo fotogramma: riprova senza log per frame */}
+    finally{
+      lavoro.inCorso=false;
+      if(lavoro.attivo&&STATO.scanner===scanner&&STATO.in_corso)
+        lavoro.timer=setTimeout(leggiFotogramma,800);
+      else rimuoviDecoderAltaDefinizione(lavoro);
+    }
+  }
+  lavoro.timer=setTimeout(leggiFotogramma,300);
+}
+async function cambiaLuce(){
+  const scanner=STATO.scanner;if(!scanner)return;
+  try{await scanner.applyVideoConstraints({advanced:[{torch:!torciaAccesa}]});
+    torciaAccesa=!torciaAccesa;scrivi("btn-luce",torciaAccesa?"Spegni luce":"Accendi luce");
+  }catch(e){mostraMessaggio("Luce non disponibile su questa fotocamera. Illumina il pezzo senza riflessi.","errore");}
 }
 async function avviaScansione(modalita) {
   if(!STATO.attivo||STATO.in_corso||STATO.pendente) return;
@@ -134,11 +205,37 @@ async function avviaScansione(modalita) {
     STATO.in_corso=false;mostraMessaggio("Fotocamera non disponibile: apri l'indirizzo HTTPS con certificato riconosciuto in Safari o Chrome e consenti la fotocamera. Puoi inserire il barcode a mano.","errore");return;
   }
   try {
-    const scanner=new Html5Qrcode("lettore-barcode");STATO.scanner=scanner;
+    const scanner=new Html5Qrcode("lettore-barcode",configurazioneLettore());STATO.scanner=scanner;
     visibile("camera-riposo",false);visibile("btn-ferma",true);scrivi("btn-scansiona","Fotocamera attiva…");
-    await scanner.start({facingMode:"environment"},{fps:8,qrbox:(w,h)=>({width:Math.min(w-24,280),height:Math.min(h-24,130)})},testo=>onLettura(testo),()=>{});
-    mostraMessaggio("Punta la fotocamera sul barcode del pezzo.");
+    const promessa=scanner.start({facingMode:"environment"},configurazioneCamera(),testo=>onLettura(testo),()=>{});
+    avvioCamera=promessa;
+    try{await promessa;}finally{if(avvioCamera===promessa)avvioCamera=null;}
+    if(STATO.scanner!==scanner)return; // fermata o lettura durante l'avvio
+    let capacita={};try{capacita=scanner.getRunningTrackCapabilities?.()||{};}catch(e){}
+    visibile("btn-luce",capacita.torch===true);
+    if(capacita.focusMode?.includes("continuous")){
+      try{await scanner.applyVideoConstraints({advanced:[{focusMode:"continuous"}]});}catch(e){/* autofocus non applicabile */}
+    }
+    if(STATO.scanner!==scanner)return;
+    avviaAltaDefinizione(scanner);
+    mostraMessaggio("Inquadra tutto il barcode, inclusi i margini bianchi. Tieni il telefono fermo a circa 20–30 cm.");
+    timerGuidaCamera=setTimeout(()=>{if(STATO.scanner===scanner&&STATO.in_corso)
+      mostraMessaggio("Non ancora letto: allontana lentamente il telefono, evita riflessi e inquadra tutte le barre. Puoi anche usare «Leggi una foto».");},7000);
   } catch(e) {STATO.in_corso=false;await fermiScanner();mostraMessaggio("Impossibile avviare la fotocamera. Consenti l'accesso nelle impostazioni del browser, controlla HTTPS o usa l'inserimento manuale. Dettaglio: "+String(e),"errore");}
+}
+async function leggiFoto(evento){
+  const file=evento.target.files?.[0];if(!file)return;
+  if(!STATO.attivo||STATO.pendente){evento.target.value="";return;}
+  if(STATO.in_corso&&!STATO.scanner){evento.target.value="";return;}
+  await fermiScanner();STATO.in_corso=true;
+  try{
+    const scanner=new Html5Qrcode("lettore-barcode",configurazioneLettore());STATO.scanner=scanner;
+    mostraMessaggio("Lettura della foto sul telefono…");
+    const testo=await scanner.scanFile(file,false);
+    if(STATO.scanner!==scanner)return;
+    await onLettura(testo);
+  }catch(e){STATO.in_corso=false;await fermiScanner();mostraMessaggio("Barcode non riconosciuto nella foto. Includi tutte le barre e i margini bianchi, evita sfocatura e riflessi. Puoi inserire il codice a mano.","errore");}
+  finally{evento.target.value="";}
 }
 async function onLettura(testo) {
   if(!STATO.in_corso) return;STATO.in_corso=false;await fermiScanner();
@@ -244,7 +341,7 @@ async function cercaProfili(){
         }finally{clearTimeout(timer);}
       }
     }
-    scrivi("dettaglio-profilo",profilo?profilo.descrizione+" · "+profilo.peso_kg_per_metro+" kg/m":"Seleziona un profilo esistente o apri «Crea l'anagrafica».");
+    scrivi("dettaglio-profilo",profilo?profilo.descrizione:"Seleziona un profilo esistente o apri «Crea l'anagrafica».");
   }catch(e){scrivi("dettaglio-profilo",e.message);}
 }
 function interoCampo(id,min,max){const t=$(id).value.trim();if(!/^[0-9]+$/.test(t))throw new Error("Controlla i numeri: usare valori interi.");const n=Number(t);if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error("Valore numerico fuori intervallo.");return n;}
@@ -253,7 +350,7 @@ async function creaPezzi(evento){
   try {
     const payload={richiesta_id:identificativo(),codice_profilo:$("nuovo-profilo").value.trim().toUpperCase(),colore:$("nuovo-colore").value.trim().toUpperCase(),lunghezza_mm:interoCampo("nuovo-lunghezza",1,2147483647),quantita:interoCampo("nuovo-numero",1,1000),numero_vassoio:$("nuovo-vassoio").value.trim(),ubicazione:$("nuovo-ubicazione").value.trim()||null,scorta_minima:$("nuovo-scorta").value.trim()?interoCampo("nuovo-scorta",0,2147483647):null,causale:$("nuovo-causale").value.trim()};
     if(!payload.codice_profilo||!payload.colore||!payload.numero_vassoio||!payload.causale)throw new Error("Compila profilo, colore, vassoio e causale.");
-    if($("crea-anagrafica").checked){const t=$("nuovo-peso").value.trim().replace(",",".");if(!/^[0-9]+(?:\.[0-9]+)?$/.test(t)||Number(t)<=0)throw new Error("Peso kg/m non valido.");payload.nuovo_profilo={descrizione:$("nuovo-descrizione").value.trim(),peso_kg_per_metro:Number(t),lunghezza_standard_mm:interoCampo("nuovo-standard",1,2147483647)};if(!payload.nuovo_profilo.descrizione)throw new Error("Descrizione obbligatoria per il nuovo profilo.");}
+    if($("crea-anagrafica").checked){payload.nuovo_profilo={descrizione:$("nuovo-descrizione").value.trim(),lunghezza_standard_mm:interoCampo("nuovo-standard",1,2147483647)};if(!payload.nuovo_profilo.descrizione)throw new Error("Descrizione obbligatoria per il nuovo profilo.");}
     if(!globalThis.confirm("Creare "+payload.quantita+" pezzi di "+payload.codice_profilo+", "+payload.colore+", "+payload.lunghezza_mm+" mm?\nOgni pezzo avrà un barcode diverso. Carico iniziale nel vassoio "+payload.numero_vassoio+"."))return;
     STATO.pendente={url:"/api/pezzi",payload,modo:"nuovo"};conservaPendente();await riprendiRichiesta();
   }catch(e){mostraMessaggio(e.message,"errore");}
@@ -300,6 +397,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   for(const b of document.querySelectorAll("[data-modo]"))b.addEventListener("click",()=>scegliModalita(b.dataset.modo));
   $("btn-scansiona").addEventListener("click",()=>avviaScansione(STATO.modalita));
   $("btn-ferma").addEventListener("click",()=>{STATO.in_corso=false;fermiScanner();});
+  $("btn-luce").addEventListener("click",cambiaLuce);
+  $("foto-barcode").addEventListener("change",leggiFoto);
   $("form-manuale").addEventListener("submit",async e=>{e.preventDefault();if(STATO.in_corso||STATO.pendente)return;const barcode=$("campo-barcode").value.trim();if(STATO.modalita==="consulta"){try{await consultaBarcode(barcode);}catch(e){}}else await inviaMovimento(barcode);});
   $("btn-esci").addEventListener("click",esci);$("btn-riprova").addEventListener("click",riprendiRichiesta);$("form-nuovo").addEventListener("submit",creaPezzi);
   $("nuovo-profilo").addEventListener("input",()=>{clearTimeout(timerProfili);timerProfili=setTimeout(cercaProfili,300);});

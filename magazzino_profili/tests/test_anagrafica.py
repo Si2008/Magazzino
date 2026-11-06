@@ -4,6 +4,7 @@ Uses an SQLite database in memory.
 """
 
 import hashlib
+from PIL import Image
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -58,7 +59,7 @@ def test_image_is_copied(factory, tmp_path) -> None:
     sessione.commit()
 
     original = tmp_path / "original.png"
-    original.write_bytes(b"\x89PNG\r\n\x1a\n" + b"payload" * 20)
+    Image.new("RGB", (8, 8), "red").save(original)
 
     destination = anagrafica.associa_immagine_sezione(
         factory(),
@@ -86,7 +87,7 @@ def test_rimuovi_immagine_sezione(factory, tmp_path) -> None:
     sessione.commit()
 
     original = tmp_path / "sezione.png"
-    original.write_bytes(b"\x89PNG\r\n\x1a\n" + b"payload" * 10)
+    Image.new("RGB", (8, 8), "blue").save(original)
     percorso = anagrafica.associa_immagine_sezione(
         factory(), prof.id, original, tmp_path / "images",
     )

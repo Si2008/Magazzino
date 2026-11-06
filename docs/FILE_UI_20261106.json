@@ -1,0 +1,271 @@
+{
+  "file": [
+    {
+      "file": "magazzino_profili/ui/finestra_principale.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/ui/tabella_pezzi.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/ui/scheda_profilo.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/ui/scheda_carico.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/ui/scheda_scarico.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/ui/ricerca_profili.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/ui/visualizzatore_immagine.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/ui/tema.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/ui/componenti.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/ui/messaggi.py",
+      "motivo": "Navigazione, anteprime, ricerca o contrasto UI desktop"
+    },
+    {
+      "file": "magazzino_profili/services/immagini.py",
+      "motivo": "Compatibilità anagrafica e immagini"
+    },
+    {
+      "file": "magazzino_profili/services/anagrafica.py",
+      "motivo": "Compatibilità anagrafica e immagini"
+    },
+    {
+      "file": "magazzino_profili/domain/profilo.py",
+      "motivo": "Compatibilità anagrafica e immagini"
+    },
+    {
+      "file": "magazzino_profili/reports/backup_excel.py",
+      "motivo": "Backup senza peso e compatibilità import storico"
+    },
+    {
+      "file": "magazzino_profili/reports/formato_v2.py",
+      "motivo": "Backup senza peso e compatibilità import storico"
+    },
+    {
+      "file": "magazzino_profili/reports/ods_v2.py",
+      "motivo": "Backup senza peso e compatibilità import storico"
+    },
+    {
+      "file": "magazzino_profili/reports/importa_ods.py",
+      "motivo": "Backup senza peso e compatibilità import storico"
+    },
+    {
+      "file": "magazzino_profili/web/routes_barcode.py",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "magazzino_profili/web/templates/scansione.html",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "anteprima-telefono.html",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "magazzino_profili/web/static/scansione.js",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "magazzino_profili/web/static/telefono.css",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "magazzino_profili/web/static/palette.css",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "public/static/scansione.js",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "public/static/telefono.css",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "public/static/palette.css",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "magazzino_profili/web/vercel/public/static/scansione.js",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "magazzino_profili/web/vercel/public/static/telefono.css",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "magazzino_profili/web/vercel/public/static/palette.css",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "public/index.html",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "magazzino_profili/web/vercel/public/index.html",
+      "motivo": "Telefono senza peso e palette condivisa"
+    },
+    {
+      "file": "README.md",
+      "motivo": "Mockup, documentazione, versione e avvio locale"
+    },
+    {
+      "file": "magazzino-mockup-grande.html",
+      "motivo": "Mockup, documentazione, versione e avvio locale"
+    },
+    {
+      "file": "magazzino_profili/__init__.py",
+      "motivo": "Mockup, documentazione, versione e avvio locale"
+    },
+    {
+      "file": "Avvia_Magazzino_2.4.3.cmd",
+      "motivo": "Mockup, documentazione, versione e avvio locale"
+    },
+    {
+      "file": "docs/palette-mockup.css",
+      "motivo": "Mockup, documentazione, versione e avvio locale"
+    },
+    {
+      "file": "docs/INTERVENTO_UI_20261106.md",
+      "motivo": "Mockup, documentazione, versione e avvio locale"
+    },
+    {
+      "file": "tools/genera_temi.py",
+      "motivo": "Generazione palette e verifiche riproducibili"
+    },
+    {
+      "file": "tools/verifica_contrasti.py",
+      "motivo": "Generazione palette e verifiche riproducibili"
+    },
+    {
+      "file": "tools/cattura_ui_novembre.py",
+      "motivo": "Generazione palette e verifiche riproducibili"
+    },
+    {
+      "file": "magazzino_profili/tests/test_ui_novembre.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/test_ui_smoke.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/test_ui_vassoio_stati.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/test_commesse_multiple.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/test_scheda_profilo_catalogo.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/test_backup_excel.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/test_correzioni_dati.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/test_sicurezza_fase14.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/test_input_numerici.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/test_correzioni_telefono.py",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "magazzino_profili/tests/js/scansione.test.mjs",
+      "motivo": "Regressioni nuove o contratti adeguati alle richieste"
+    },
+    {
+      "file": "docs/ESITI_UI_20261106.json",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/CONTRASTI_UI_20261106.json",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/VERIFICA_BUILD_UI_20261106.json",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/carico-chiaro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/carico-scuro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/gestione-profili-chiaro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/gestione-profili-scuro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/inventario-chiaro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/inventario-scuro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/inventario-senza-immagine-chiaro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/inventario-senza-immagine-scuro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/scarico-chiaro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/scarico-scuro.png",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/verifica-ui-20261106/schermate.json",
+      "motivo": "Evidenze generate"
+    },
+    {
+      "file": "docs/FILE_UI_20261106.json",
+      "motivo": "Manifesto dei file della fase UI"
+    }
+  ],
+  "eliminati": [],
+  "build_generata": "dist/UI-2.4.3-20261106-finale/",
+  "nota": "Il repository aveva modifiche preesistenti; questa lista descrive soltanto gli interventi della fase UI."
+}

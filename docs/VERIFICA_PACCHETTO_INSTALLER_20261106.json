@@ -1,0 +1,15 @@
+{
+  "versione": "2.4.4",
+  "tipo": "setup",
+  "sha256": "0c4f6a64f61474c6242fae6342efadff7ba54615d8a04af1d41803d41b32859c",
+  "dimensione": 81559015,
+  "manifest_firma": "superato",
+  "hash_setup": "superato",
+  "alias_identico": "superato",
+  "payload_senza_dati_segreti": "superato",
+  "pe_windows_x64": "superato",
+  "schema": 12,
+  "migrazioni": 12,
+  "png": 211,
+  "risorse": "superato"
+}

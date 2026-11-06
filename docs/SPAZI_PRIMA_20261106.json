@@ -1,0 +1,344 @@
+[
+  {
+    "pagina": "inventario",
+    "tema": "chiaro",
+    "risoluzione_richiesta": [
+      1024,
+      768
+    ],
+    "finestra": [
+      1024,
+      768
+    ],
+    "colonne": [
+      600,
+      360
+    ],
+    "immagine": "inventario-chiaro-1024.png"
+  },
+  {
+    "pagina": "carico",
+    "tema": "chiaro",
+    "risoluzione_richiesta": [
+      1024,
+      768
+    ],
+    "finestra": [
+      1024,
+      768
+    ],
+    "colonne": [
+      600,
+      360
+    ],
+    "immagine": "carico-chiaro-1024.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  },
+  {
+    "pagina": "scarico",
+    "tema": "chiaro",
+    "risoluzione_richiesta": [
+      1024,
+      768
+    ],
+    "finestra": [
+      1024,
+      768
+    ],
+    "colonne": [
+      600,
+      360
+    ],
+    "immagine": "scarico-chiaro-1024.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 116
+  },
+  {
+    "pagina": "inventario",
+    "tema": "chiaro",
+    "risoluzione_richiesta": [
+      1366,
+      768
+    ],
+    "finestra": [
+      1366,
+      768
+    ],
+    "colonne": [
+      942,
+      360
+    ],
+    "immagine": "inventario-chiaro-1366.png"
+  },
+  {
+    "pagina": "carico",
+    "tema": "chiaro",
+    "risoluzione_richiesta": [
+      1366,
+      768
+    ],
+    "finestra": [
+      1366,
+      768
+    ],
+    "colonne": [
+      600,
+      702
+    ],
+    "immagine": "carico-chiaro-1366.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  },
+  {
+    "pagina": "scarico",
+    "tema": "chiaro",
+    "risoluzione_richiesta": [
+      1366,
+      768
+    ],
+    "finestra": [
+      1366,
+      768
+    ],
+    "colonne": [
+      600,
+      702
+    ],
+    "immagine": "scarico-chiaro-1366.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  },
+  {
+    "pagina": "inventario",
+    "tema": "chiaro",
+    "risoluzione_richiesta": [
+      1920,
+      1080
+    ],
+    "finestra": [
+      1920,
+      1080
+    ],
+    "colonne": [
+      1496,
+      360
+    ],
+    "immagine": "inventario-chiaro-1920.png"
+  },
+  {
+    "pagina": "carico",
+    "tema": "chiaro",
+    "risoluzione_richiesta": [
+      1920,
+      1080
+    ],
+    "finestra": [
+      1920,
+      1080
+    ],
+    "colonne": [
+      600,
+      1256
+    ],
+    "immagine": "carico-chiaro-1920.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  },
+  {
+    "pagina": "scarico",
+    "tema": "chiaro",
+    "risoluzione_richiesta": [
+      1920,
+      1080
+    ],
+    "finestra": [
+      1920,
+      1080
+    ],
+    "colonne": [
+      600,
+      1256
+    ],
+    "immagine": "scarico-chiaro-1920.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  },
+  {
+    "pagina": "inventario",
+    "tema": "scuro",
+    "risoluzione_richiesta": [
+      1024,
+      768
+    ],
+    "finestra": [
+      1024,
+      768
+    ],
+    "colonne": [
+      600,
+      360
+    ],
+    "immagine": "inventario-scuro-1024.png"
+  },
+  {
+    "pagina": "carico",
+    "tema": "scuro",
+    "risoluzione_richiesta": [
+      1024,
+      768
+    ],
+    "finestra": [
+      1024,
+      768
+    ],
+    "colonne": [
+      600,
+      360
+    ],
+    "immagine": "carico-scuro-1024.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  },
+  {
+    "pagina": "scarico",
+    "tema": "scuro",
+    "risoluzione_richiesta": [
+      1024,
+      768
+    ],
+    "finestra": [
+      1024,
+      768
+    ],
+    "colonne": [
+      600,
+      360
+    ],
+    "immagine": "scarico-scuro-1024.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 116
+  },
+  {
+    "pagina": "inventario",
+    "tema": "scuro",
+    "risoluzione_richiesta": [
+      1366,
+      768
+    ],
+    "finestra": [
+      1366,
+      768
+    ],
+    "colonne": [
+      942,
+      360
+    ],
+    "immagine": "inventario-scuro-1366.png"
+  },
+  {
+    "pagina": "carico",
+    "tema": "scuro",
+    "risoluzione_richiesta": [
+      1366,
+      768
+    ],
+    "finestra": [
+      1366,
+      768
+    ],
+    "colonne": [
+      600,
+      702
+    ],
+    "immagine": "carico-scuro-1366.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  },
+  {
+    "pagina": "scarico",
+    "tema": "scuro",
+    "risoluzione_richiesta": [
+      1366,
+      768
+    ],
+    "finestra": [
+      1366,
+      768
+    ],
+    "colonne": [
+      600,
+      702
+    ],
+    "immagine": "scarico-scuro-1366.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  },
+  {
+    "pagina": "inventario",
+    "tema": "scuro",
+    "risoluzione_richiesta": [
+      1920,
+      1080
+    ],
+    "finestra": [
+      1920,
+      1080
+    ],
+    "colonne": [
+      1496,
+      360
+    ],
+    "immagine": "inventario-scuro-1920.png"
+  },
+  {
+    "pagina": "carico",
+    "tema": "scuro",
+    "risoluzione_richiesta": [
+      1920,
+      1080
+    ],
+    "finestra": [
+      1920,
+      1080
+    ],
+    "colonne": [
+      600,
+      1256
+    ],
+    "immagine": "carico-scuro-1920.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  },
+  {
+    "pagina": "scarico",
+    "tema": "scuro",
+    "risoluzione_richiesta": [
+      1920,
+      1080
+    ],
+    "finestra": [
+      1920,
+      1080
+    ],
+    "colonne": [
+      600,
+      1256
+    ],
+    "immagine": "scarico-scuro-1920.png",
+    "altezza_tabella": 192,
+    "altezza_riga": 60,
+    "altezza_viewport": 128
+  }
+]

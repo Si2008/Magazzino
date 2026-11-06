@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f4f6fa">
+<title>Magazzino Profili · Telefono</title>
+<link rel="stylesheet" href="/static/telefono.css">
+<script defer src="/static/html5-qrcode.min.js"></script><script defer src="/static/scansione.js"></script>
+</head>
+<body>
+<main>
+<header class="testata"><a class="marca" href="#" aria-label="Magazzino Profili"><span class="simbolo" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-6 9 6v12H3Z"/><path d="M8 21V11h8v10M8 16h8"/></svg></span><span>Magazzino<small>PROFILI · MOBILE</small></span></a><button id="btn-tema" class="icona" type="button" aria-label="Cambia tema"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14A9 9 0 0 1 10 4a9 9 0 1 0 10 10Z"/></svg></button></header>
+<div class="collegamento" role="status"><span class="pallino" id="indicatore-rete"></span><span id="stato-rete">Controllo del servizio…</span><span class="etichetta">HTTPS</span></div>
+<div id="zona-operazione">
+<div class="utente"><span><b id="nome-utente">Accesso libero</b><small id="ruolo-utente">Operazioni di magazzino</small></span><button id="btn-esci" class="testo" type="button">Pausa</button></div>
+<section class="pannello operazioni">
+<p class="sopratitolo">OPERAZIONI DI MAGAZZINO</p><h1 id="titolo-operazione" tabindex="-1">Scansiona un pezzo.</h1>
+<div class="modalita" role="group" aria-label="Operazioni del magazzino">
+<button id="btn-lettore" data-modo="lettore" type="button"><span class="segno" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4M7 8v5m3-5v5m4-5v5m3-5v5"/></svg></span><strong>Al PC</strong><small>Invia alla scheda attiva</small></button>
+<button id="btn-consulta" data-modo="consulta" type="button"><span class="segno" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg></span><strong>Consulta</strong><small>Giacenza e vassoio</small></button>
+<button id="btn-carico" data-modo="carico" type="button"><span class="segno" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5M12 3v12m-4-4 4 4 4-4"/></svg></span><strong>Rientro</strong><small>Aggiungi al magazzino</small></button>
+
+<button id="btn-scarico" data-modo="scarico" type="button"><span class="segno" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5M12 15V3m-4 4 4-4 4 4"/></svg></span><strong>Scarico</strong><small>Registra un'uscita</small></button>
+<button id="btn-nuovo" data-modo="nuovo" type="button"><span class="segno" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 7 7-4 7 4-7 4ZM3 7v9l7 4 3-1.7M10 11v9M17 7v5M18 15v6m-3-3h6"/></svg></span><strong>Nuovi</strong><small>Un barcode per pezzo</small></button>
+</div>
+<div class="nota" id="nota-modalita">Lettore PC: in Carico compila il pezzo; in Scarico esegue l'uscita con quantità e causale impostate sul PC.</div>
+<div id="parametri-movimento" hidden class="parametri"><div><label for="campo-quantita">Quantità</label><input id="campo-quantita" type="number" min="1" max="2147483647" step="1" value="1" inputmode="numeric"></div><div><label for="campo-causale">Causale</label><input id="campo-causale" type="text" maxlength="512" placeholder="Es. ordine 42"></div></div>
+<form id="form-nuovo" hidden>
+<h2>Nuovi pezzi, barcode distinti</h2><p class="micro">Ogni pezzo riceve un codice seriale: inserendone 5 otterrai 5 etichette diverse. La quantità non fa parte del barcode.</p>
+<h3 class="sezione-form"><span>1</span> Scegli il profilo</h3><label for="nuovo-profilo">Codice profilo</label><input id="nuovo-profilo" list="elenco-profili" maxlength="64" autocomplete="off" autocapitalize="characters" required placeholder="Cerca un profilo esistente"><datalist id="elenco-profili"></datalist><p id="dettaglio-profilo" class="micro"></p><figure id="anteprima-sezione" hidden><img id="immagine-profilo" alt="Sezione del profilo selezionato" loading="lazy"><figcaption>Sezione associata automaticamente al profilo</figcaption></figure>
+<details id="anagrafica-nuova" hidden><summary>Il profilo non esiste? Crea l'anagrafica</summary><label><input id="crea-anagrafica" type="checkbox"> Crea anche un nuovo profilo</label><label for="nuovo-descrizione">Descrizione del profilo</label><input id="nuovo-descrizione" maxlength="2000"><div class="parametri"><div><label for="nuovo-standard">Lunghezza standard mm</label><input id="nuovo-standard" type="number" min="1" step="1" inputmode="numeric"></div></div></details>
+<h3 class="sezione-form"><span>2</span> Descrivi i pezzi</h3><label for="nuovo-colore">Codice colore</label><input id="nuovo-colore" maxlength="64" required autocapitalize="characters" placeholder="Es. RAL7016">
+<div class="parametri"><div><label for="nuovo-numero">N. pezzi</label><input id="nuovo-numero" type="number" min="1" max="1000" step="1" inputmode="numeric" value="1" required></div><div><label for="nuovo-lunghezza">Lunghezza di ogni pezzo (mm)</label><input id="nuovo-lunghezza" type="number" min="1" max="2147483647" step="1" inputmode="numeric" required></div></div>
+<h3 class="sezione-form"><span>3</span> Dove li conservi</h3><label for="nuovo-vassoio">Vassoio</label><input id="nuovo-vassoio" maxlength="128" required placeholder="Es. Vassoio 4">
+<details class="opzioni-form"><summary>Posizione e scorta minima <span>Facoltative</span></summary><label for="nuovo-ubicazione">Ubicazione (facoltativa)</label><input id="nuovo-ubicazione" maxlength="128" placeholder="Es. Corsia A · Scaffale 2">
+<label for="nuovo-scorta">Scorta minima (facoltativa)</label><input id="nuovo-scorta" type="number" min="0" max="2147483647" step="1" inputmode="numeric">
+</details><label for="nuovo-causale">Causale del carico iniziale</label><input id="nuovo-causale" maxlength="512" value="Carico iniziale da telefono" required>
+<button id="btn-crea" class="primario pieno" type="submit">Crea pezzi e barcode</button>
+</form>
+<div id="zona-scanner">
+<div class="camera"><div id="lettore-barcode"></div><div id="camera-riposo"><span class="mirino" aria-hidden="true"><span class="barcode-illustrazione"></span></span><strong>Inquadra il barcode</strong><p>Allinea il codice al centro.<br>Una scansione, un pezzo alla volta.</p></div></div>
+<div class="comandi-camera"><button id="btn-scansiona" class="primario" type="button">Apri fotocamera</button><button id="btn-ferma" class="secondario-btn" type="button" hidden>Ferma</button><button id="btn-luce" class="secondario-btn" type="button" hidden>Accendi luce</button></div>
+<p class="micro guida-camera">Inquadra tutte le barre e i margini bianchi. Se non mette a fuoco, allontana lentamente il telefono.</p>
+<label class="foto-barcode" for="foto-barcode">Leggi una foto del barcode<input id="foto-barcode" type="file" accept="image/*" capture="environment"></label>
+<details id="manuale" open><summary>Hai già il codice? Inseriscilo qui</summary><form id="form-manuale" class="manuale"><label class="sr-only" for="campo-barcode">Barcode</label><input id="campo-barcode" maxlength="255" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Scansiona o incolla il codice" required><button id="btn-invia" class="secondario-btn" type="submit">Invia</button></form></details>
+</div>
+<div id="barcode-creati" hidden><h2>Etichette dei pezzi creati</h2><p class="micro">Salva ogni PNG per stampare la sua etichetta. Non applicare la stessa etichetta a più pezzi.</p><div id="lista-barcode"></div></div>
+<section id="scheda-pezzo" class="scheda-pezzo" hidden aria-label="Dettaglio del pezzo"></section>
+<div id="esito" class="esito" role="status" aria-live="polite"></div><button id="btn-riprova" type="button" class="secondario-btn pieno" hidden>Riprendi la stessa richiesta</button>
+</section>
+<section class="pannello storico"><div class="riga-titolo"><h2>Ultime operazioni</h2><span class="etichetta"><span id="conteggio-storico">0</span> IN SESSIONE</span></div><p id="storico-vuoto" class="secondario">Nessuna operazione ancora.<br>Qui ritroverai le conferme di questa sessione.</p><ol id="lista-storico"></ol></section>
+</div>
+<footer>Magazzino Profili <span>Connessione protetta · Dati sul PC</span></footer>
+<noscript>Attiva JavaScript nel browser per collegare il telefono.</noscript>
+</main>
+</body></html>

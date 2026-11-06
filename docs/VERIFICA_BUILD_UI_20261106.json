@@ -1,0 +1,19 @@
+{
+  "versione": "2.4.3",
+  "eseguibile": "C:\\Users\\Simone\\Desktop\\magazzino\\dist\\UI-2.4.3-20261106-finale\\MagazzinoProfili-2.4.3\\MagazzinoProfili.exe",
+  "sha256": "970ce1397be125a21d585bd90af5c17bd03fa38e4fe5c38f2a5e3cd9f1a4b856",
+  "controlli": {
+    "magazzino_profili.ui.ricerca_profili": true,
+    "magazzino_profili.ui.visualizzatore_immagine": true,
+    "magazzino_profili.reports.backup_excel": true,
+    "_internal/PySide6/Qt6Widgets.dll": true,
+    "_internal/magazzino_profili/web/static/palette.css": true,
+    "catalogo_immagini/Indice_profili_aggiornato.csv": true,
+    "catalogo_immagini/AZ2001.png": true,
+    "risorsa_corrente_telefono.css": true,
+    "risorsa_corrente_scansione.js": true,
+    "risorsa_corrente_palette.css": true,
+    "config_operativo_non_incluso": true
+  },
+  "avvio_secondario": "superato: osservata la finestra Windows Magazzino Profili 2.4.3 · PC secondario dalla cartella finale; nessun DB operativo"
+}
