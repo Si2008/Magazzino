@@ -8,7 +8,7 @@ import shutil
 import subprocess
 
 RADICE=Path(__file__).resolve().parents[1]
-ROOT_FILES={'.gitignore','MagazzinoApp.py','MagazzinoProfili.spec','icona.ico','config.example.toml',
+ROOT_FILES={'.gitignore','.gitattributes','MagazzinoApp.py','MagazzinoProfili.spec','icona.ico','config.example.toml',
  'conftest.py','setup_database.py','importa_ods.py','README.md','requirements.txt','requirements.lock.txt',
  'package.json','vercel.json','magazzino-mockup-grande.html','anteprima-telefono.html'}
 SUFFISSI={'.py','.mjs','.cjs','.js','.html','.css','.txt','.sql','.ps1','.md','.json','.cs','.bat','.iss'}

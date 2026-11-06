@@ -1,6 +1,7 @@
 {
   "repository": "https://github.com/Si2008/Magazzino.git",
   "file": {
+    ".gitattributes": "4ea872b8b0e56e9f0c8a1e5ac1cacecaf2049bbf7cc6b6bc9edd345420ef1820",
     ".gitignore": "1cb397fc27098469cfc62fc7f4be6a0e0da919cc3d5b575289c8334fc320bf84",
     "anteprima-telefono.html": "48bd3b91bba451e58bbcfcac2361ae37cac26784ac5d43603e4c6f21d277fa0c",
     "api/ponte.mjs": "34c379f1de2f0ba01294cdd1d6c56b870b5cf9d088bfe64bce824bc03189e37b",
@@ -522,7 +523,7 @@
     "tools/crea_installer.py": "7d1b5dbceb8487143c61d4a84f36edcc6d8928c436c23830f6dda7586f7a7d3a",
     "tools/genera_temi.py": "6c9923dd4f8487005492184f2ccb9c89f1c6a38212bbb63e5fb5f8bbad1f2910",
     "tools/launcher_windows.cs": "1ebee9f63e791ef902fc39788f1098713707e39910667031ed3c13b3cc992654",
-    "tools/prepara_pubblicazione.py": "95cd739bd7bb960f9cffd68cb02948ffe57f6ee535eae359ff7db889937b30b7",
+    "tools/prepara_pubblicazione.py": "e666647b8abd8ad552cf3f70c288e958ae2f656be7c42131752e7d7823c0c488",
     "tools/prepara_release.py": "c6854719c53f0ca1d591045749438214aeb2cab17fdd4e7ed576471df496e0f6",
     "tools/prepara_telefono_vercel.py": "2f2a90f63cab08bdd13e1bc1ebb92e0a8b365a2d3849989d95a5d14b9ee0ff19",
     "tools/verifica_barcode_browser.cjs": "9dd99ac61f2f5ebf2337b74f7bfd6a9133813ff3dd22cc909b31f993b6722eb5",

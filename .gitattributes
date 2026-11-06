@@ -1,0 +1,3 @@
+# Le migrazioni vengono verificate con SHA-256 sui byte originali.
+# Non convertire LF/CRLF durante clone, checkout o pubblicazione.
+migrations/*.sql -text
