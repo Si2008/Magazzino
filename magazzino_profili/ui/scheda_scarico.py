@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..services import consultazione, scarica
+from ..services.richiamo_vassoi import numero_vassoio
 from . import registro_colori
 from .collega_telefono import crea_pulsante_telefono
 from .componenti import (
@@ -26,6 +27,7 @@ from .componenti import (
     chip,
 )
 from .messaggi import chiedi_conferma, mostra_errore
+from .richiamo_vassoi import conferma_simulazione
 from .tema import M, rem, tema_attivo, inchiostro_contrasto
 
 
@@ -99,8 +101,13 @@ class SchedaScarico(QWidget):
         self.barcode.setPlaceholderText("Scansiona o digita il barcode del pezzo da scaricare…")
         self.barcode.setMinimumHeight(rem(3.0))
         self.barcode.returnPressed.connect(self._su_invio)
-        self.barcode.textChanged.connect(self._aggiorna_anteprima)
         v.addWidget(campo_con_etichetta("Barcode", self.barcode, card))
+        self.simula_vassoio = bottone("Simula richiamo vassoio", parent=card)
+        self.simula_vassoio.setAutoDefault(False)
+        self.simula_vassoio.setEnabled(False)
+        self.simula_vassoio.clicked.connect(self._simula_vassoio)
+        v.addWidget(self.simula_vassoio)
+        self.barcode.textChanged.connect(self._aggiorna_anteprima)
 
         stepper = Stepper(valore=1, minimo=1, parent=card)
         self.quantita = stepper.campo  # quantita.text()/setText continuano a funzionare
@@ -196,7 +203,8 @@ class SchedaScarico(QWidget):
     # ------------------------------------------------------------------ anteprima
     def _aggiorna_anteprima(self, _testo: str) -> None:
         """Mostra il pezzo riconosciuto e la giacenza disponibile prima dello scarico."""
-        valore = (self.barcode.text() or "").strip().upper()
+        self.simula_vassoio.setEnabled(False)
+        valore = self.barcode.text().strip().upper()
         if not valore:
             self.anteprima.clear()
             return
@@ -208,6 +216,8 @@ class SchedaScarico(QWidget):
         if pezzo is None:
             self.anteprima.setText("Nessun pezzo con questo barcode.")
             return
+
+        self.simula_vassoio.setEnabled(pezzo.quantita > 0 and numero_vassoio(pezzo.numero_vassoio) is not None)
 
         try:
             quantita = int(self.quantita.text())
@@ -260,6 +270,22 @@ class SchedaScarico(QWidget):
             f"{self._numero_it(dopo)} pezzi</span></div>"
         )
         self.anteprima.setText("<br>".join(righe))
+
+    def _simula_vassoio(self) -> None:
+        barcode = self.barcode.text().strip().upper()
+        with self._factory() as sessione:
+            pezzo = consultazione.pezzo_per_barcode(sessione, barcode)
+        vassoio = numero_vassoio(pezzo.numero_vassoio) if pezzo is not None and pezzo.quantita > 0 else None
+        if vassoio is None:
+            self.simula_vassoio.setEnabled(False)
+            self.messaggio.mostra("Il pezzo non è più disponibile o non ha un vassoio valido.")
+            return
+
+        conferma_simulazione(
+            self, codice=pezzo.profilo.codice, descrizione=pezzo.profilo.descrizione,
+            barcode=barcode, vassoio=vassoio, origine="scarico",
+            selezione_attiva=lambda: self.barcode.text().strip().upper() == barcode,
+        )
 
     def _seleziona_profilo(self, scelta):
         precedente = self._profilo_da_elenco

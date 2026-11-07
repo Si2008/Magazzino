@@ -10,6 +10,9 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFileD
     QCheckBox, QTabWidget, QMessageBox)
 
 from .componenti import bottone
+from .richiamo_vassoi import conferma_simulazione
+from ..services.consultazione import pezzo_per_barcode
+from ..services.richiamo_vassoi import numero_vassoio
 from ..services.commesse import RichiestaTaglio, decimi, misura, calcola_prelievo
 from ..services.lettura_commessa import leggi_commessa_pdf
 from ..services import archivio_commesse as archivio
@@ -84,8 +87,16 @@ class SchedaCommesse(QWidget):
         for w in (self.vista,self.riepilogo,self.precedente,self.successiva,self.esporta):azioni.addWidget(w)
         basso.addLayout(azioni)
         basso.addWidget(self.associa)
+        self.simula_vassoio = bottone("Simula richiamo vassoio", parent=self)
+        self.simula_vassoio.setAutoDefault(False)
+        self.simula_vassoio.setEnabled(False)
+        self.simula_vassoio.clicked.connect(self._simula_vassoio)
+        basso.addWidget(self.simula_vassoio)
         self.risultati = QTableWidget(0,6,self);self.risultati.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.risultati.setStyleSheet('QTableWidget::item { padding:4px 8px; } QHeaderView::section { padding:10px 8px; }')
+        self.risultati.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.risultati.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.risultati.itemSelectionChanged.connect(self._aggiorna_simulazione)
         self.risultati.verticalHeader().setDefaultSectionSize(52)
         self.risultati.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.risultati.horizontalHeader().setStretchLastSection(True)
@@ -99,6 +110,7 @@ class SchedaCommesse(QWidget):
         self._aggiorna_elenco()
         if self._locale:
             self.calcola.hide();self.verifica.hide();self.pezzi_lunghi.hide();self.spezzoni.hide();self.associa.hide()
+            self.simula_vassoio.hide()
         self._mostra_risultati()
 
     def _aggiorna_elenco(self):
@@ -267,7 +279,10 @@ class SchedaCommesse(QWidget):
         for i in range(6):self.risultati.setColumnHidden(i,mancanti and i>=5)
         righe=(self._piano.mancanti if mancanti else self._piano.prelievi) if self._piano else []
         self._pagina=max(0,min(self._pagina,max(0,(len(righe)-1)//100)))
-        selezione=righe[self._pagina*100:(self._pagina+1)*100];self.risultati.setRowCount(len(selezione))
+        selezione=righe[self._pagina*100:(self._pagina+1)*100]
+        self.risultati.clearSelection()
+        self.simula_vassoio.setEnabled(False)
+        self.risultati.setRowCount(len(selezione))
         for n,r in enumerate(selezione):
             if mancanti:valori=(r.profilo,r.colore,misura(r.lunghezza),r.quantita,r.riferimento)
             else:
@@ -280,6 +295,41 @@ class SchedaCommesse(QWidget):
         if self._piano:
             self.riepilogo.setText(f'{len(self._piano.prelievi)} pezzi da prendere · {sum(r.quantita for r in self._piano.mancanti)} misure mancanti · pagina {self._pagina+1}')
         else:self.riepilogo.setText('Nessun piano aggiornato')
+
+    def _materiale_per_simulazione(self):
+        if self._factory is None or self._piano is None or self.vista.currentIndex() != 0:
+            return None
+        righe = self.risultati.selectionModel().selectedRows()
+        if not righe:
+            return None
+        indice = self._pagina * 100 + righe[0].row()
+        if indice >= len(self._piano.prelievi):
+            return None
+        materiale = self._piano.prelievi[indice].materiale
+        if materiale.chiave.startswith("pezzo:") and materiale.barcode and numero_vassoio(materiale.vassoio):
+            return materiale
+        return None
+
+    def _aggiorna_simulazione(self):
+        self.simula_vassoio.setEnabled(self._materiale_per_simulazione() is not None)
+
+    def _simula_vassoio(self):
+        materiale = self._materiale_per_simulazione()
+        if materiale is None:
+            return
+        vassoio = numero_vassoio(materiale.vassoio)
+        with self._factory() as sessione:
+            pezzo = pezzo_per_barcode(sessione, materiale.barcode)
+        if (pezzo is None or materiale.chiave != f"pezzo:{pezzo.id}" or pezzo.quantita <= 0
+                or numero_vassoio(pezzo.numero_vassoio) != vassoio):
+            self.segnala_giacenza_cambiata()
+            return
+
+        conferma_simulazione(
+            self, codice=pezzo.profilo.codice, descrizione=pezzo.profilo.descrizione,
+            barcode=materiale.barcode, vassoio=vassoio, origine="commessa",
+            selezione_attiva=lambda: self._materiale_per_simulazione() is materiale,
+        )
 
     def _esporta(self):
         if not self._piano:return

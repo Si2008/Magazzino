@@ -143,6 +143,23 @@ I backup precedenti restano leggibili, con archivio commesse inizialmente vuoto.
 Nella versione 2.3 le commesse erano soltanto in memoria: i PDF originali vanno
 reimportati; non esisteva un archivio persistente da convertire.
 
+## Richiamo vassoi ICON in simulazione
+
+Sul PC principale, in **Scarico** compila il barcode di un pezzo disponibile.
+In **Commesse → Pezzi e vassoi** seleziona una riga di **Da prelevare**.
+Premi **Simula richiamo vassoio**, controlla profilo, descrizione, barcode e
+numero di vassoio, poi conferma. Sono ammessi numeri positivi, anche scritti
+come `Vassoio 4`. Gli spezzoni storici senza barcode proprio sono esclusi.
+
+La simulazione funziona senza configurazione ICON. Mostra l'esito simulato,
+non invia comandi alla macchina e non modifica giacenze o commesse. I tentativi
+confermati sono registrati in `log/richiami-vassoi.jsonl` nella cartella dati
+di Magazzino Profili, con data, vassoio, origine, modalità ed esito.
+
+Per il richiamo reale serve la specifica ufficiale dell'interfaccia ICAM
+abilitata per l'installazione. La disponibilità di integrazioni ICON per
+altri impianti non identifica il protocollo da usare per ICON Zero 1.1.38.0.
+
 ## Aggiornamenti online
 
 Per passare dalla 2.3 alla 2.4 estrarre manualmente il nuovo ZIP completo, oppure
