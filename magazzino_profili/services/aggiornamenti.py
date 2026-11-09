@@ -39,13 +39,14 @@ import subprocess
 import sys
 import threading
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import BinaryIO, Callable, ContextManager, Iterator
 
 _VERSIONE = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)")
 _SHA256 = re.compile(r"[0-9a-f]{64}")
 DIMENSIONE_BLOCCO = 64 * 1024
+GITHUB_FEED = 'https://github.com/Si2008/Magazzino/releases/latest/download/manifest.json'
 
 
 class ErroreAggiornamento(Exception):
@@ -61,6 +62,7 @@ class Manifest:
     sha256: str  # esadecimale minuscolo
     dimensione: int  # byte
     note: str | None = None  # testo facoltativo mostrato all'utente
+    firmato: dict | None = field(default=None, compare=False, repr=False)
 
     def __post_init__(self) -> None:
         parse_versione(self.versione)
@@ -167,6 +169,7 @@ def valida_manifest(
         sha256=str(dati["sha256"]),
         dimensione=dati["dimensione"],
         note=dati.get("note"),
+        firmato=dict(dati),
     )
 
 
@@ -193,12 +196,15 @@ def leggi_config_aggiornamento(percorso: str | Path | None = None) -> ConfigAggi
         None,
     )
     if file is None:
-        return ConfigAggiornamento()
+        return ConfigAggiornamento(True,GITHUB_FEED)
     try:
         with open(file, "rb") as fonte:
             sezione = tomllib.load(fonte).get("update", {})
     except (OSError, tomllib.TOMLDecodeError):
         return ConfigAggiornamento()
+    from urllib.parse import urlsplit
+    if sezione.get('sorgente')!='personalizzata' and (not sezione.get('feed_url') or urlsplit(sezione.get('feed_url','')).hostname in ('localhost','127.0.0.1')):
+        return ConfigAggiornamento(bool(sezione.get('abilitato',True)),GITHUB_FEED)
     return ConfigAggiornamento(
         abilitato=bool(sezione.get("abilitato", False)),
         feed_url=sezione.get("feed_url"),
@@ -291,6 +297,9 @@ def _apri_urllib(url: str, timeout: int):
 
 def cartella_cache() -> Path:
     """Cartella (scrivibile, per utente) in cui si scarica l'installer."""
+    from ..percorsi_installazione import installata, cartella_dati
+    if installata():
+        return cartella_dati() / "aggiornamenti"
     if sys.platform == "win32":
         base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
     else:
@@ -309,7 +318,9 @@ def comando_riavvio(percorso_exe: str, attesa_secondi: int = 2) -> list[str]:
     if isinstance(attesa_secondi, bool) or not isinstance(attesa_secondi, int) or attesa_secondi < 0:
         raise ErroreAggiornamento("Attesa di riavvio non valida.")
     if sys.platform == "win32":
-        return ["cmd", "/c", f'timeout /t {attesa_secondi} /nobreak >nul && start "" "{percorso_exe}"']
+        letterale = percorso_exe.replace("'", "''")
+        return ["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command",
+                f"Start-Sleep -Seconds {attesa_secondi}; Start-Process -FilePath '{letterale}' -WindowStyle Normal"]
     return ["sh", "-c", f"sleep {attesa_secondi}; exec {shlex.quote(percorso_exe)}"]
 
 
@@ -317,29 +328,145 @@ def lancia_aggiornamento(
     percorso_exe: str,
     attesa_secondi: int = 2,
     esegui: Callable[[list[str]], object] | None = None,
+    *, setup: bool = False,
 ) -> list[str]:
     """Avvia il comando di riavvio in un processo staccato e restituisce il comando.
 
     ``esegui`` è iniettato nei test (default: ``subprocess.Popen`` staccato).
     """
-    comando = comando_riavvio(percorso_exe, attesa_secondi)
+    if setup:
+        if sys.platform != "win32":
+            raise ErroreAggiornamento("Il setup richiede Windows")
+        # Il setup aspetta il mutex dell'applicazione prima di sostituire i file.
+        # Nessuna shell, nessuna terminazione forzata, destinazione registrata invariata.
+        comando = [str(Path(percorso_exe).resolve()), "/VERYSILENT", "/SUPPRESSMSGBOXES",
+                   "/NORESTART", "/SP-", "/RIAVVIA=1"]
+        from ..percorsi_installazione import installata
+        if installata():
+            comando.append("/DIR=" + str(Path(sys.executable).resolve().parent))
+    else:
+        comando = comando_riavvio(percorso_exe, attesa_secondi)
     if esegui is not None:
         esegui(comando)
         return comando
+    from ..db.config import trova_config
+    configurazione = trova_config()
+    ambiente = os.environ.copy()
+    if configurazione is not None:
+        ambiente["MAGAZZINO_CONFIG"] = str(configurazione)
     if sys.platform == "win32":
         Popen = subprocess.Popen  # type: ignore[misc]
         Popen(
             comando,
             close_fds=True,
+            env=ambiente,
+            cwd=str(configurazione.parent) if configurazione else None,
             creationflags=0x00000008 | 0x00000200,  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
         )
     else:
-        subprocess.Popen(comando, close_fds=True, start_new_session=True)
+        subprocess.Popen(comando, close_fds=True, start_new_session=True, env=ambiente,
+                         cwd=str(configurazione.parent) if configurazione else None)
     return comando
+
+
+def _cartella_versioni():
+    return cartella_cache().parent / "versioni"
+
+
+def prepara_versione(manifest, eseguibile):
+    """Versione stabile verificata; non sostituisce né cancella quella in uso."""
+    from ..file_sicuri import destinazione_atomica
+    import shutil
+    if manifest.firmato is None:
+        raise ErroreAggiornamento("Manifest firmato assente: installazione automatica rifiutata")
+    verificato = valida_manifest(manifest.firmato)
+    origine = Path(eseguibile)
+    with origine.open("rb") as file:
+        digest = hashlib.file_digest(file, "sha256").hexdigest()
+    if origine.stat().st_size != verificato.dimensione or digest != verificato.sha256:
+        raise ErroreAggiornamento("Eseguibile modificato dopo il download")
+    from ..percorsi_installazione import installata
+    tipo = (verificato.firmato or {}).get("tipo")
+    if tipo == "setup":
+        if not verificato.url_installer.lower().endswith(".exe"):
+            raise ErroreAggiornamento("Formato setup non valido")
+        return origine
+    if tipo is not None:
+        raise ErroreAggiornamento("Tipo aggiornamento sconosciuto")
+    if installata():
+        raise ErroreAggiornamento("Questa installazione richiede un aggiornamento setup; pacchetto portabile rifiutato")
+    from urllib.parse import urlsplit
+    if urlsplit(verificato.url_installer).path.lower().endswith('.zip'):
+        from .pacchetto_aggiornamento import installa_zip
+        return installa_zip(verificato,origine,_cartella_versioni())
+    cartella = _cartella_versioni() / verificato.versione
+    cartella.mkdir(parents=True, exist_ok=True)
+    finale = cartella / "MagazzinoProfili.exe"
+    if origine.resolve() != finale.resolve():
+        with destinazione_atomica(finale) as temporaneo:
+            shutil.copy2(origine, temporaneo)
+    with destinazione_atomica(cartella / "manifest.json") as temporaneo:
+        temporaneo.write_text(json.dumps(manifest.firmato, ensure_ascii=False), encoding="utf-8")
+    return finale
+
+
+def conferma_versione_avviata():
+    """Attiva il launcher solo dopo l'apertura riuscita della nuova UI."""
+    from ..percorsi_installazione import installata
+    if installata():
+        return
+    if not getattr(sys, "frozen", False):
+        return
+    from .. import __version__
+    from ..file_sicuri import destinazione_atomica
+    propria = Path(sys.executable).resolve()
+    attesa = (_cartella_versioni() / __version__ / "MagazzinoProfili.exe").resolve()
+    if propria != attesa:
+        return
+    dati = json.loads(propria.with_name("manifest.json").read_text(encoding="utf-8"))
+    manifest = valida_manifest(dati)
+    if manifest.versione != __version__:
+        raise ErroreAggiornamento("La versione avviata non corrisponde al manifest firmato")
+    with destinazione_atomica(_cartella_versioni() / "attiva.json") as temporaneo:
+        temporaneo.write_text(json.dumps(dati, ensure_ascii=False), encoding="utf-8")
+
+
+def avvia_versione_attiva():
+    """Il collegamento originale resta valido. --versione-originale consente il recupero."""
+    from ..percorsi_installazione import installata
+    if installata():
+        return False
+    if not getattr(sys, "frozen", False) or "--versione-originale" in sys.argv or "--server-telefono" in sys.argv:
+        return False
+    from .. import __version__
+    file = _cartella_versioni() / "attiva.json"
+    if not file.is_file():
+        return False
+    try:
+        dati = json.loads(file.read_text(encoding="utf-8"))
+        manifest = valida_manifest(dati)
+        if not esiste_aggiornamento(manifest.versione, __version__):
+            return False
+        exe = _cartella_versioni() / manifest.versione / "MagazzinoProfili.exe"
+        with exe.open("rb") as contenuto:
+            digest = hashlib.file_digest(contenuto, "sha256").hexdigest()
+        atteso = (manifest.firmato or {}).get('sha256_eseguibile',manifest.sha256)
+        if digest != atteso or ('sha256_eseguibile' not in (manifest.firmato or {}) and exe.stat().st_size != manifest.dimensione):
+            return False
+        lancia_aggiornamento(str(exe), 0)
+        return True
+    except (OSError, ValueError, ErroreAggiornamento):
+        import logging
+        logging.getLogger(__name__).exception("Versione attiva non disponibile: avvio la versione originale")
+        return False
 
 
 def testo_recupero() -> str:
     """Procedura di recovery (mostrata all'utente a ogni errore)."""
+    from ..percorsi_installazione import installata
+    if installata():
+        return ("Scarica il setup dalla release ufficiale GitHub Si2008/Magazzino e avvialo dopo aver chiuso il programma. "
+                "La cartella dati viene conservata. Il download verificato si trova in " + str(cartella_cache()))
     return (
         "Recupero: l'applicazione in uso non è stata modificata e continua a funzionare.\n"
         "1) Chiudere e riaprire l'applicazione: la verifica verrà ripetuta.\n"
@@ -369,20 +496,13 @@ def _un_solo_download(cartella: Path) -> Iterator[None]:
     """Blocca download concorrenti: stesso processo (lock) e tra processi (file esclusivo)."""
     if not _blocco_processo.acquire(blocking=False):
         raise ErroreAggiornamento("Un download è già in corso.")
-    percorso = cartella / ".aggiornamento.lock"
     try:
+        from ..file_sicuri import blocco_cartella
         try:
-            fd = os.open(percorso, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
-            raise ErroreAggiornamento(
-                "Un altro processo sta già scaricando un aggiornamento."
-            ) from None
-        try:
-            os.write(fd, str(os.getpid()).encode())
-            os.close(fd)
-            yield
-        finally:
-            percorso.unlink(missing_ok=True)
+            with blocco_cartella(cartella, attendi=False):
+                yield
+        except (BlockingIOError, PermissionError) as errore:
+            raise ErroreAggiornamento("Un altro processo sta già scaricando un aggiornamento") from errore
     finally:
         _blocco_processo.release()
 
@@ -403,7 +523,9 @@ def scarica_e_verifica(
     Path(cartella).mkdir(parents=True, exist_ok=True)
     cartella = Path(cartella)
     cartella.mkdir(parents=True, exist_ok=True)
-    nome = f"Installer-{manifest.versione}.exe"
+    from urllib.parse import urlsplit
+    estensione='.zip' if urlsplit(manifest.url_installer).path.lower().endswith('.zip') else '.exe'
+    nome = f"Installer-{manifest.versione}{estensione}"
     finale, parziale = cartella / nome, cartella / (nome + ".part")
     with _un_solo_download(cartella):
         try:

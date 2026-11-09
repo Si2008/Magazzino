@@ -70,6 +70,7 @@ def lista_scaduti_per_eliminazione(
             .where(
                 Pezzo.eliminato_il.is_(None),
                 Pezzo.stato == "Scaricato",
+                Pezzo.quantita == 0,
                 Pezzo.data_ultimo_cambio_stato.is_not(None),
                 Pezzo.data_ultimo_cambio_stato <= soglia,
             )
@@ -99,6 +100,7 @@ def elimina_scaduto(
                 Pezzo.id == pezzo_id,
                 Pezzo.eliminato_il.is_(None),
                 Pezzo.stato == "Scaricato",
+                Pezzo.quantita == 0,
                 Pezzo.data_ultimo_cambio_stato.is_not(None),
                 Pezzo.data_ultimo_cambio_stato <= soglia,
             )

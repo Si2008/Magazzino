@@ -1,0 +1,346 @@
+{
+  "versione": "2.2.0",
+  "data": "2026-11-05",
+  "superati": 688,
+  "falliti": 0,
+  "errori": 0,
+  "saltati": 1,
+  "totale": 689,
+  "non_superati": [
+    {
+      "test": "magazzino_profili.tests.test_backup_excel.test_sequenze_senza_riallineamento_falliscono_su_postgres[sqlite]",
+      "stato": "saltati",
+      "motivo": "solo PostgreSQL"
+    }
+  ],
+  "evidenze_xml": [
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_aggiornamenti.xml",
+      "sha256": "ebb44bbaf753cb1c82f153322c052974e9f5949682662bcc5be44c16305a6799"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_anagrafica.xml",
+      "sha256": "59c99ac92f898b78e60d46ec3edce8d992a1d8e740875ef2134ef011c9f653b3"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_anagrafica_fase7.xml",
+      "sha256": "070eac5af64e585390523200cba0e6ea129eda4c78784c1ddc47afc4c3d85af0"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_animazioni.xml",
+      "sha256": "9f739fd4b141bd5a34e12faac5e42997f4eef456e2e2d92fa21919a4afa17c79"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_backup.xml",
+      "sha256": "ed9d445763007ea899fdc68860c1602fce4db7f8670521fb56cfafa0b11e8311"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_backup_excel.xml",
+      "sha256": "bf20b1c9eb4f79f5c81d02da19d43d8935a6021094c7d681b69af224f0ce5afd"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_backup_excel_colori.xml",
+      "sha256": "9ea927e1e3322088fc2a5ba3c2c7ba06c19c40d08f67fd6fcf321accecfad2ee"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_barcode.xml",
+      "sha256": "5c554297c3d6452e5b91e5c673487989737a75bc46effe610dc74d9a74411404"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_barcode_etichette.xml",
+      "sha256": "446cae55fef116f147263d4bc0a0d324c835a576c8ac34311e61520d2455e62f"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_barcode_generazione.xml",
+      "sha256": "69c8f6e1cf4b7043ec20708cf5c9229a6a6f9d681551c7ad871587cdbc41b7e0"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_barcode_postgres.xml",
+      "sha256": "fc561a6d3f20b56b69934d23c3aa57c57d2656e0b044ea5f85a180a7384bc516"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_barcode_validita.xml",
+      "sha256": "3571ad42db81b87218b837e914099825424d2af2b4c620d338b58eaffaf10675"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_barcode_vassoio.xml",
+      "sha256": "41ff50dd99eaad3561b285ba83494e42de3535529110a7d6957dad73d92ea58f"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_carico.xml",
+      "sha256": "4409457b8c85e823cd6a8d0168baf9f466570f08d5dcf916ec8371d3576bf3eb"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_catalogo_immagini.xml",
+      "sha256": "6f7a7676dc085cb2705d0b43a83fa22adc6a0faaff797825d1f82b5a161b8e15"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_ciclo_vita_fase12.xml",
+      "sha256": "9aab3e3f9ac56c7c3473405a9de6604c52e494570a59c827ed91a9a99d8bdf49"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_colori_base.xml",
+      "sha256": "292b1c06b2d8dcc030b736a597b95438edc0dccdba18aba57b660c335492f653"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_consultazione.xml",
+      "sha256": "122f973b069971884f139a047467484437865a47383a8ed1ca2b1a96213ec598"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_correzioni_aggiornamento.xml",
+      "sha256": "a1871f2fa857d8611b5aa23890327019aab1c68f042ecec55ee2e7874094dec2"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_correzioni_dati.xml",
+      "sha256": "0039a7ceb56fe5a6b7e0ac0210f7621bf2cbad1f9a90cedb4c30eea141451514"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_correzioni_postgres.xml",
+      "sha256": "808a7c70982e4f86fa51ac979b374e056d636f66be18c3f49cbeb33b9b5d0539"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_correzioni_telefono.xml",
+      "sha256": "b6b2c47aac603a5f598f5d5ba620a1607778197983e8b93feaba51b48b904c15"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_csv.xml",
+      "sha256": "508e424f0b11ae6b7d08597b77014f2b89ff737480f50e6c419a8da06ca26729"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_csv_legacy_fase10.xml",
+      "sha256": "3853b6383a88a5de335f34247ec0ea8b280b8bb05c501b016217e4068b0bf5db"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_db_config_frozen.xml",
+      "sha256": "e31012b1374cdce86a3bf5d9781434ebbd627fed250f22d586dd74a626e4441d"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_dialogo_aggiornamento.xml",
+      "sha256": "216eb5a80941b2ff64884a6ff8e3e282c20af5ad9849d79ab98e3c61ecb7adf5"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_etichette.xml",
+      "sha256": "c947759835ea2ba2e59e7747d847c44b0791e04738f9fa3132b1423e961f495f"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_export.xml",
+      "sha256": "ea352221b98a2260039c5862950c5f856d76abc5454ed59e9b3aaa5f89f58600"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_export_colori.xml",
+      "sha256": "afe4c53c8e8ed17aeacf480dc38aaf4673e24abc98ccd44c3b7afaee867fde3e"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_fase8_colori.xml",
+      "sha256": "6bbdd16627254cf5cd99c418d2ddff289a4fa7cce300cc27197bb1a6914791e5"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_formato_v2_fase10.xml",
+      "sha256": "c67d5a610847a12a4f3b1e136b9b0bc01b4672964a3caac684062951f07f4ace"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_immagini_visibili.xml",
+      "sha256": "bc429fb73aa91227be9e64ffa5415d80ff80bde82c2f7b4d886152d137febcb7"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_importa_ods_fase7.xml",
+      "sha256": "a3e2755122255cc6b7e081373707c3661129056940a52fe6fdb943f884273b85"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_impostazioni.xml",
+      "sha256": "b819dc6ce5338a162e9538f123662f9d28ab3cc0e93d8f1b0b099b0c72ec4d1b"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_input_numerici.xml",
+      "sha256": "95510a9314661e8d70a8d84f38ae255027ac6b91c1ea58a69d0b0ee941d7cf87"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_integrazione_postgres.xml",
+      "sha256": "cbf2ca2032595443a36b40c31070d998c30ccac383300d79ae7218346411393d"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_integrita_archivio.xml",
+      "sha256": "986c88fe2a5a35e29bac7ebe637f6c3cb957c865e7b654be21cdb4830263a9d9"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_inventario_colori.xml",
+      "sha256": "abf48ec3fdf273541feb24aabae7517cf31b5ea0563a4f18942af8d1fab4e211"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_migrazioni_postgres.xml",
+      "sha256": "a225fe481a27e44a1d0511bcbca4eb76982a14d37fed37d779a1a161c41a3aed"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_normalizzazione.xml",
+      "sha256": "2f7fdad59186e32d6fe4af9f1371419be40ad55f1b345616072910ac3b98baea"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_pezzi.xml",
+      "sha256": "afac47408a1efb95f11eb43a7846d89b2413945ec9f534e74c7e78cc1654ed79"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_pezzo_campi_giacenza.xml",
+      "sha256": "f1c884e398e9a55e000f8e81a5b9ac80f7cd027662d1fd36420b198bf51a59f3"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_proposta_immagine.xml",
+      "sha256": "f204d87af5ee5021cb52b7cc84a2bfc52cd2ea42bf9528665b09766a19bb2b93"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_registro_colori.xml",
+      "sha256": "2a7c39f9d6c60454f07fe7b922e72459e74e45390279992d0f0e8636532fec79"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_regressione_fase3.xml",
+      "sha256": "50f4186959698604e5f5290e9585c9d6bfa1a6f9d4ceaf74019b9dc26aabaa75"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_regressione_fase3b.xml",
+      "sha256": "41c85be9343481e0bfeda26af7814481cd3ccdf6d54f09898c12e5b68e7df2fe"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_regressione_fase3b_ui.xml",
+      "sha256": "37fdc92b1156d457bf075dc2a0a729df173ee8d1ba8367673f5f35907578195e"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_report_pdf.xml",
+      "sha256": "9a2755a39d5192c11cf0531d08f4834eb01f6c29bdfa20f7a16bae2372dcefdc"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_riepilogo_equivalenza.xml",
+      "sha256": "05d5cde33fbe4a0b6defc41c22fb9ed526a79ad7fc1742eb65a4417659942c9f"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_routes_update.xml",
+      "sha256": "f128b6e8501522319f2ab36e45f8fd98dbe4e554243cafcf333fce0df14997c7"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_scarico.xml",
+      "sha256": "c1b0c1b3d16074234a2c710673c08e6dec7fd738878dc806aa309ae457a868ac"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_scheda_profilo_catalogo.xml",
+      "sha256": "b9b5e5d3fb1a0af4ae28ca155ab1e160a9b71712f0d95585bffe494837f519d5"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_servizio_colori.xml",
+      "sha256": "ba68bfb87de8d2da321ec064779b544fc4b0539f92bfe4f58d9192fa60f5c166"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_sicurezza_fase14.xml",
+      "sha256": "49f43f299c7cf022cfef2cc91319df29e79a2a4e86d601cad0fadc46a0471cc3"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_spezzoni.xml",
+      "sha256": "106b15458e35f9a63526e5d497da77cf2bfbd2e2a7cfcccca99be24c67b36b3c"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_stati_postgres.xml",
+      "sha256": "c1467240a4cc38b80fd86d118bd94ee61caf0d9cfd2a1ffb74ec4db82d2b57d6"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_stati_scadenze.xml",
+      "sha256": "12028fe0bd1b06ef78d9a0f4a621330f98594dd4becbfa1edf0a462530d6d631"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_telefono.xml",
+      "sha256": "a043d7e87299ff7f06786984a301dcdaa607179e4900b4cf7cf0d423b5fbdffe"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_tonalita_remoto.xml",
+      "sha256": "51ad0b632f1b2a6afadc19509ed931afecdf86def6c30554c65753be7cf28778"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_ui_fase4.xml",
+      "sha256": "29ed9d3e2eb28c370b702521ed243ec6ce22dccd6eda93b5dccd1b573f07225e"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_ui_fase7a.xml",
+      "sha256": "3e3408f5e8c47290fed72f6d250c84b84944b898157104e22e0446e4133df785"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_ui_fase7b.xml",
+      "sha256": "dc37238d416d6c32cbee696171b1d73b6ea818f25bf12014bb6ce302c4c2e857"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_ui_smoke.xml",
+      "sha256": "8a8073954a8578845b50935f0620a32ead7def28cd9fdaa58800b90b8e4d202a"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_ui_vassoio_stati.xml",
+      "sha256": "270c0f679d78525d84acdd96841d96dbbcd58a840854f1e810bf55bf9359ca21"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_validatore_maiuscolo.xml",
+      "sha256": "926328e73ab283257c9370bc883882d87185d6230b9d98265f94a12c3524e946"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_web_auth.xml",
+      "sha256": "f5348a79a6b74f0c779073d29e2afb868a9cedc892cf30b28744f70a0d32ef19"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_web_client_javascript.xml",
+      "sha256": "7c6660a8bc2fe7888dfb7e1eb0920c661f3b9192018009501b0d19f7809b5f4b"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_web_https_reale.xml",
+      "sha256": "e3e0c7294b2950c353f695acdb27e2afce36ef1c68c2d5df30d5bd8f791ccc77"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_web_routes_barcode.xml",
+      "sha256": "bb32257fcdabebd950a7e48a3d65fdb80fd5fab16878775ee2ae3ff0daeda4cc"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\test_web_telefono.xml",
+      "sha256": "714be47d7a70ead5de364f67bdcb92710782ef575dc78722a985f9cd6c0b333d"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_backup_excel.xml",
+      "sha256": "40b297924d70c60b82e89160549e837d7f7c616bcd8914fb20db59e2c716d643"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_barcode_postgres.xml",
+      "sha256": "7755a0ffeca357d44acb623b234407c15de771335dbf9fd274cf19b096ff96ff"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_correzioni_postgres.xml",
+      "sha256": "939f95cbb2e9ccbdc1977ee39234feacfd4d6fdd6ed48bfb46aa1a2b490fd859"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_integrazione_postgres.xml",
+      "sha256": "50d6628aa0bb16c56afe752d6613228d05567cb27737e0e94686cfafd5a8d1b6"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_migrazioni_postgres.xml",
+      "sha256": "9d49575582d4a855b467ad8139254a3869897a417dd1f53501b6f9e04fa8239e"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_pezzo_campi_giacenza.xml",
+      "sha256": "83067904e239ea16518b57782cf0c1432145acbcaf76cf203a73ae0ff31e53a9"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_regressione_fase3.xml",
+      "sha256": "7751a8306f33db0e260282a563c2953948b66897f50c00840257bf0d56c639bc"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_sicurezza_fase14.xml",
+      "sha256": "aa02e6ddfcfa31fae5b4d3a9f26ec675a9e06dacba7b4781e5f7a18c5902fe20"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_stati_postgres.xml",
+      "sha256": "05de2be736d8b9f080ddc01da2fd7f340ca1e94441bc4ec05fc26d33a99c49f9"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti_pg\\test_web_telefono.xml",
+      "sha256": "11dc42cd33aacb8e90a039ae2773eee0f7c8b6e4ebc23e1fbaf6fa766879c3af"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\immagini_220_finale.xml",
+      "sha256": "a9c412e123c32b4aae4b905b55fc59a322f899777e1283c17a3de5bbe66076c4"
+    },
+    {
+      "file": "C:\\Users\\Simone\\.codex\\visualizations\\2026\\11\\04\\01a1a805-2281-70a3-b843-3ab704fdf9a3\\copia_temporanea_correzioni\\esiti\\ponte_220_finale.xml",
+      "sha256": "79afc03ccb8ce3ab2510b6a6ee51ec3626d070c2837a3b8dbc8f9271bea69acf"
+    }
+  ]
+}

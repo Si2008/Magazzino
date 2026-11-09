@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import enum
 import os
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
@@ -30,42 +31,60 @@ from sqlalchemy import Boolean, DateTime, Enum, Integer, Numeric, func, insert, 
 from sqlalchemy.orm import Session
 
 from ..domain import Colore, Movimento, Pezzo, Profilo, Spezzone, TipoMovimento
+from ..domain import Commessa,RigaCommessa,AssegnazioneCommessa
 from ..services.stati import STATI_BARCODE
-from .export_excel import INTESTAZIONI as INTESTAZIONI_REPORT_STORICO
+INTESTAZIONI_REPORT_STORICO = ("Codice profilo", "Descrizione", "Colore", "Lunghezza (mm)",
+                              "Quantità", "Ubicazione", "Barcode")
 
-VERSIONE_FORMATO = 1
+VERSIONE_FORMATO = 5
 APPLICAZIONE = "Magazzino Profili"
 MAX_CARATTERI_CELLA = 32767  # limite Excel: oltre, openpyxl tronca in silenzio
 MAX_RIGHE = 1_048_575        # righe dati per foglio (1.048.576 meno l'intestazione)
 
 # Foglio -> modello. L'ordine è quello dei fogli E dell'inserimento nel restore.
 FOGLI: dict[str, type] = {
+    "Commesse": Commessa,
     "Profili": Profilo, "Colori": Colore, "Pezzi": Pezzo,
     "Movimenti": Movimento, "Spezzoni": Spezzone,
+    "RigheCommesse": RigaCommessa, "AssegnazioniCommesse": AssegnazioneCommessa,
 }
-NOMI_FOGLI = ("Metadati", *FOGLI)
+FOGLI_STORICI = ("Profili","Colori","Pezzi","Movimenti","Spezzoni")
+FOGLI_LEGGIBILI = ("Inventario", "Carico", "Scarico", "Avvisi")
+NOMI_FOGLI = ("Metadati", *FOGLI, *FOGLI_LEGGIBILI)
 
 # Contratto del formato: intestazioni ESPLICITE (nome colonna DB, nell'ordine).
 # Se aggiungi una colonna a un modello devi aggiornare questa tupla E
 # VERSIONE_FORMATO: lo impone test_intestazioni_coprono_lo_schema.
 INTESTAZIONI: dict[str, tuple[str, ...]] = {
-    "Profili": ("id", "codice", "descrizione", "immagine_sezione",
-                "peso_kg_per_metro", "lunghezza_standard_mm"),
-    "Colori": ("id", "codice_normalizzato", "nome_visualizzato"),
+    "Commesse": ("id","identita","cognome","cognome_chiave","nome","creata_il"),
+    "RigheCommesse": ("id","commessa_id","profilo","colore","lunghezza","quantita","riferimento","barra_intera"),
+    "AssegnazioniCommesse": ("id","commessa_id","pezzo_id"),
+    "Profili": ("id", "codice", "descrizione", "immagine_sezione", "lunghezza_standard_mm"),
+    "Colori": ("id", "codice_normalizzato", "nome_visualizzato", "colore_hex"),
     "Pezzi": ("id", "profilo_id", "colore_id", "lunghezza_mm", "quantita",
               "ubicazione", "scorta_minima", "barcode",
               "numero_vassoio", "stato", "data_ultimo_cambio_stato",
-              "eliminato_il"),
+              "eliminato_il", "unitario"),
     "Movimenti": ("id", "pezzo_id", "tipo", "quantita", "data_ora", "causale", "utente"),
     "Spezzoni": ("id", "pezzo_origine_id", "utente", "lunghezza_mm",
                  "data_creazione", "utilizzato"),
 }
+# Fase 8: colonne in CODO facoltative per i file vecchi (restano validi; colonna -> NULL).
+COLONNE_FACOLTATIVE: dict[str, tuple[str, ...]] = {"Colori": ("colore_hex",), "Pezzi": ("unitario",)}
+INTESTAZIONE_PROFILI_STORICA = ("id", "codice", "descrizione", "immagine_sezione",
+                               "peso_kg_per_metro", "lunghezza_standard_mm")
+_HEX_VALIDO = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
 # (FK) foglio.colonna -> foglio referenziato
 FK = {
+    ("RigheCommesse","commessa_id"): "Commesse",
+    ("AssegnazioniCommesse","commessa_id"): "Commesse",
+    ("AssegnazioniCommesse","pezzo_id"): "Pezzi",
     ("Pezzi", "profilo_id"): "Profili", ("Pezzi", "colore_id"): "Colori",
     ("Movimenti", "pezzo_id"): "Pezzi", ("Spezzoni", "pezzo_origine_id"): "Pezzi",
 }
 UNIVOCHE = {
+    "Commesse": (("identita",),), "AssegnazioniCommesse": (("pezzo_id",),),
     "Profili": (("codice",),), "Colori": (("codice_normalizzato",),),
     "Pezzi": (("barcode",), ("profilo_id", "colore_id", "lunghezza_mm")),
 }
@@ -108,6 +127,7 @@ class BackupValidato:
     versione: int
     esportato_il: datetime
     tabelle: Mapping[str, tuple[Mapping[str, Any], ...]]   # righe già tipizzate, per foglio
+    soglia_scorta: int | None = None
 
 
 # ------------------------------------------------------------------ conversioni
@@ -143,6 +163,15 @@ def _scrivi(ws, valori: list[Any]) -> None:
 
 
 def esporta_backup_logico_excel(session: Session, percorso_output: str | Path) -> Path:
+    from ..file_sicuri import destinazione_atomica
+    from .snapshot import sessione_snapshot
+    percorso = Path(percorso_output)
+    with sessione_snapshot(session) as lettura, destinazione_atomica(percorso) as provvisorio:
+        _esporta_backup_logico_excel(lettura, provvisorio)
+    return percorso
+
+
+def _esporta_backup_logico_excel(session: Session, percorso_output: str | Path) -> Path:
     """Crea il backup multi-foglio (scrittura atomica: ``.tmp`` + ``os.replace``)."""
     percorso = Path(percorso_output)
     percorso.parent.mkdir(parents=True, exist_ok=True)
@@ -168,7 +197,7 @@ def esporta_backup_logico_excel(session: Session, percorso_output: str | Path) -
             colonne = INTESTAZIONI[nome]
             intestazione(ws, colonne)
             n = 0
-            for oggetto in session.scalars(select(modello).order_by(modello.id)):
+            for oggetto in session.scalars(select(modello).order_by(modello.id).execution_options(yield_per=500)):
                 n += 1
                 if n > MAX_RIGHE:
                     raise BackupNonValidoError((ErroreBackup(
@@ -176,10 +205,17 @@ def esporta_backup_logico_excel(session: Session, percorso_output: str | Path) -
                 _scrivi(ws, [_in_cella(getattr(oggetto, c), nome, n + 1, c) for c in colonne])
             conteggi[nome] = n
 
+        from ..services.impostazioni import leggi_soglia
+        soglia = leggi_soglia(session)
+        _scrivi_fogli_programma(session, wb, intestazione, soglia)
+
         intestazione(meta, ("chiave", "valore"))
         _scrivi(meta, ["versione_formato", VERSIONE_FORMATO])
         _scrivi(meta, ["esportato_il_utc", datetime.now(timezone.utc).isoformat()])
         _scrivi(meta, ["applicazione", APPLICAZIONE])
+        _scrivi(meta, ["soglia_sotto_scorta", soglia])
+        _scrivi(meta, ["fogli_per_ripristino", ", ".join(FOGLI)])
+        _scrivi(meta, ["note", "Inventario, Carico, Scarico e Avvisi sono viste di consultazione; il ripristino usa i fogli tecnici."])
         for nome, n in conteggi.items():
             _scrivi(meta, [f"righe_{nome}", n])
 
@@ -194,6 +230,43 @@ def esporta_backup_logico_excel(session: Session, percorso_output: str | Path) -
         _chiudi_fogli(wb)                     # chiude i generatori in sospeso: a GC non resta
     os.replace(temporaneo, percorso)          # mai un file a metà
     return percorso
+
+
+def _scrivi_fogli_programma(session, wb, intestazione, soglia):
+    """Viste leggibili come le schede; i fogli tecnici restano la fonte del restore."""
+    from ..services import consultazione as c
+    from sqlalchemy.orm import selectinload
+    inventario = wb.create_sheet("Inventario")
+    intestazione(inventario, ("Profilo", "Descrizione", "Colore", "Lunghezza mm", "Quantità",
+        "Vassoio", "Ubicazione", "Barcode", "Stato", "Cambio stato UTC", "Pezzo singolo"))
+    query = select(Pezzo).options(selectinload(Pezzo.profilo), selectinload(Pezzo.colore))
+    for p in session.scalars(query.where(Pezzo.eliminato_il.is_(None)).order_by(Pezzo.id)
+                             .execution_options(yield_per=500)):
+        _scrivi(inventario, [p.profilo.codice, p.profilo.descrizione, p.colore.nome_visualizzato,
+            p.lunghezza_mm, p.quantita, p.numero_vassoio, p.ubicazione, p.barcode, p.stato,
+            _iso_utc(p.data_ultimo_cambio_stato) if p.data_ultimo_cambio_stato else None, p.unitario])
+    for nome, tipi in (("Carico", (TipoMovimento.CARICO,)),
+                       ("Scarico", (TipoMovimento.SCARICO, TipoMovimento.RETTIFICA))):
+        ws = wb.create_sheet(nome)
+        intestazione(ws, ("Data e ora UTC", "Profilo", "Colore", "Barcode", "Quantità", "Tipo", "Causale", "Operatore"))
+        query = select(Movimento, Pezzo.barcode, Profilo.codice, Colore.nome_visualizzato).join(
+            Pezzo, Movimento.pezzo_id == Pezzo.id).join(Profilo, Pezzo.profilo_id == Profilo.id).join(
+            Colore, Pezzo.colore_id == Colore.id).where(Movimento.tipo.in_(tipi)).order_by(Movimento.id)
+        for m, barcode, codice, colore in session.execute(query.execution_options(yield_per=500)):
+            _scrivi(ws, [_iso_utc(m.data_ora), codice, colore, barcode, m.quantita, m.tipo.value, m.causale, m.utente])
+    ws = wb.create_sheet("Avvisi")
+    intestazione(ws, ("Profilo", "Colore", "Lunghezza mm", "Pezzi rimasti del materiale", "Scorta minima", "Livello"))
+    gruppi, collegamento, _ = c._dati_scorta(soglia)
+    riferimento = func.coalesce(gruppi.c.minima, soglia)
+    from sqlalchemy import or_
+    query = select(Pezzo, gruppi.c.totale, gruppi.c.minima).join(gruppi, collegamento).where(
+        Pezzo.eliminato_il.is_(None), Pezzo.id == gruppi.c.rappresentante,
+        or_(gruppi.c.totale <= 0, gruppi.c.totale <= riferimento * 3)).options(
+        selectinload(Pezzo.profilo), selectinload(Pezzo.colore)).order_by(Pezzo.id)
+    for p, totale, minima in session.execute(query.execution_options(yield_per=500)):
+        p._quantita_scorta, p._scorta_gruppo = totale, minima
+        _scrivi(ws, [p.profilo.codice, p.colore.nome_visualizzato, p.lunghezza_mm, totale,
+                     minima, c.livello_scorta(p, soglia)])
 
 
 def _chiudi_fogli(wb) -> None:
@@ -244,7 +317,10 @@ def _leggi_cella(valore: Any, modello: type, colonna: str, foglio: str, riga: in
         try:
             if isinstance(valore, bool) or not isinstance(valore, (int, float, Decimal)):
                 raise InvalidOperation
-            return Decimal(str(valore)).quantize(Decimal(1).scaleb(-(tipo.scale or 0)))
+            numero = Decimal(str(valore))
+            if not numero.is_finite():
+                raise InvalidOperation
+            return numero.quantize(Decimal(1).scaleb(-(tipo.scale or 0)))
         except InvalidOperation:
             err(f"numero atteso (trovato {valore!r})")
     elif isinstance(tipo, DateTime):
@@ -259,6 +335,11 @@ def _leggi_cella(valore: Any, modello: type, colonna: str, foglio: str, riga: in
         return d.astimezone(timezone.utc)
     else:                                         # testo / Enum
         testo = valore if isinstance(valore, str) else str(valore)
+        if getattr(tipo, "length", None) and len(testo) > tipo.length:
+            err(f"massimo {tipo.length} caratteri")
+        if modello is Profilo and colonna == "codice":
+            from ..db.normalizzazione import normalizza_codice
+            testo = normalizza_codice(testo)
         ammessi = STATI_VALIDI.get(colonna)
         if ammessi is not None and testo not in ammessi:
             err(f"valore non ammesso '{testo}'")
@@ -277,18 +358,20 @@ def valida_backup_logico_excel(percorso_input: str | Path) -> BackupValidato:
         raise BackupNonValidoError((ErroreBackup("", None, "", f"file XLSX non apribile: {e}"),)) from e
     try:
         nomi = tuple(wb.sheetnames)
-        if nomi == ("Inventario",) and tuple(
-                c for c in next(wb["Inventario"].iter_rows(values_only=True), ())) == INTESTAZIONI_REPORT_STORICO:
+        from .export_excel import INTESTAZIONI as intestazioni_report
+        if nomi and "Metadati" not in nomi and all(
+                tuple(next(wb[n].iter_rows(values_only=True), ())) in
+                (INTESTAZIONI_REPORT_STORICO, tuple(intestazioni_report)) for n in nomi):
             raise BackupNonValidoError((ErroreBackup(
                 "Inventario", None, "",
-                "file storico a foglio singolo (report Inventario): contiene solo le giacenze, "
+                "report Inventario a foglio singolo o per colore: contiene solo le giacenze, "
                 "senza ID, movimenti, spezzoni né relazioni. NON è un backup completo: "
                 "ripristino solo parziale (re-inserimento delle giacenze con l'import CSV)."),),
                 formato_storico=True)
-        if nomi != NOMI_FOGLI:
+        if nomi not in (NOMI_FOGLI, ("Metadati", *FOGLI), ("Metadati",*FOGLI_STORICI), ("Metadati",*FOGLI_STORICI,*FOGLI_LEGGIBILI)):
             raise BackupNonValidoError((ErroreBackup(
                 "", None, "", f"fogli attesi {list(NOMI_FOGLI)}, trovati {list(nomi)}"),))
-        righe_foglio = {n: list(wb[n].iter_rows(values_only=True)) for n in nomi}
+        righe_foglio = {n: list(wb[n].iter_rows(values_only=True)) for n in ("Metadati", *FOGLI) if n in wb.sheetnames}
     finally:
         wb.close()
 
@@ -300,7 +383,7 @@ def valida_backup_logico_excel(percorso_input: str | Path) -> BackupValidato:
     for r in r_meta[1:]:
         if r and r[0] is not None:
             meta[str(r[0])] = r[1]
-    if meta.get("versione_formato") != VERSIONE_FORMATO:
+    if meta.get("versione_formato") not in (1, 2, 3, 4, VERSIONE_FORMATO):
         errori.append(ErroreBackup("Metadati", None, "versione_formato",
                                    f"deve essere {VERSIONE_FORMATO} (trovato {meta.get('versione_formato')!r})"))
     try:
@@ -314,19 +397,51 @@ def valida_backup_logico_excel(percorso_input: str | Path) -> BackupValidato:
 
     tabelle: dict[str, tuple[Mapping[str, Any], ...]] = {}
     for nome, modello in FOGLI.items():
+        if nome not in righe_foglio:
+            if meta.get('versione_formato') in (1,2,3):
+                tabelle[nome]=();continue
+            errori.append(ErroreBackup(nome,None,'','foglio commesse mancante nel formato 4'));continue
         righe = righe_foglio[nome]
         attese = INTESTAZIONI[nome]
-        if not righe or tuple(righe[0][:len(attese)]) != attese or any(
-                v not in (None, "") for v in righe[0][len(attese):]):
-            errori.append(ErroreBackup(nome, 1, "", f"intestazioni attese {list(attese)}"))
+        facoltative = COLONNE_FACOLTATIVE.get(nome, ())
+        if nome == "Pezzi" and meta.get("versione_formato") in (2, 3, 4, 5):
+            facoltative = ()  # non perdere l'identità dei barcode unitari
+        base = attese[:len(attese) - len(facoltative)] if facoltative else attese
+        intestazione: tuple[str, ...] | None = None
+        if righe:
+            testa = righe[0]
+            if (tuple(testa[:len(attese)]) == attese
+                    and all(v in (None, "") for v in testa[len(attese):])):
+                intestazione = attese
+            elif (facoltative
+                  and tuple(testa[:len(base)]) == base
+                  and all(v in (None, "") for v in testa[len(base):])):
+                intestazione = base            # file vecchio: colonne facoltative assenti
+            elif (nome == "Profili" and meta.get("versione_formato") in (1, 2, 3, 4)
+                  and tuple(testa[:len(INTESTAZIONE_PROFILI_STORICA)]) == INTESTAZIONE_PROFILI_STORICA
+                  and all(v in (None, "") for v in testa[len(INTESTAZIONE_PROFILI_STORICA):])):
+                intestazione = INTESTAZIONE_PROFILI_STORICA
+        if intestazione is None:
+            errori.append(ErroreBackup(nome, 1, "",
+                                       f"intestazioni attese {list(attese)} (o, per i file vecchi, {list(base)})"))
             continue
         convertite: list[Mapping[str, Any]] = []
         for numero, r in enumerate(righe[1:], start=2):
             if all(v in (None, "") for v in r):
                 continue
-            valori = list(r) + [None] * (len(attese) - len(r))
+            valori = list(r) + [None] * (len(intestazione) - len(r))
             riga_conv = {c: _leggi_cella(valori[i], modello, c, nome, numero, errori)
-                         for i, c in enumerate(attese)}
+                         for i, c in enumerate(intestazione)}
+            for c in attese[len(intestazione):]:      # colonne facoltative assenti -> NULL
+                riga_conv[c] = False if c == "unitario" else None
+            if nome == "Profili" and "peso_kg_per_metro" not in riga_conv:
+                # Metadato storico non esportato dal formato 5. Nessun UPDATE
+                # dei profili già esistenti: il restore inserisce solo nuovi ID.
+                riga_conv["peso_kg_per_metro"] = Decimal("1.0000")
+            if (riga_conv.get("colore_hex") is not None
+                    and not _HEX_VALIDO.match(riga_conv["colore_hex"])):
+                errori.append(ErroreBackup(nome, numero, "colore_hex",
+                                           f"valore non valido {riga_conv['colore_hex']!r} (atteso #RRGGBB)"))
             riga_conv["_riga"] = numero
             convertite.append(MappingProxyType(riga_conv))
         tabelle[nome] = tuple(convertite)
@@ -338,7 +453,10 @@ def valida_backup_logico_excel(percorso_input: str | Path) -> BackupValidato:
         _controlli_relazionali(tabelle, errori)
     if errori:
         raise BackupNonValidoError(tuple(errori))
-    return BackupValidato(VERSIONE_FORMATO, esportato, MappingProxyType(tabelle))
+    soglia = meta.get("soglia_sotto_scorta")
+    if soglia is not None and (type(soglia) is not int or not 1 <= soglia <= 99):
+        raise BackupNonValidoError((ErroreBackup("Metadati", None, "soglia_sotto_scorta", "intero da 1 a 99 atteso"),))
+    return BackupValidato(VERSIONE_FORMATO, esportato, MappingProxyType(tabelle), soglia)
 
 
 def _controlli_relazionali(tabelle, errori: list[ErroreBackup]) -> None:
@@ -346,6 +464,20 @@ def _controlli_relazionali(tabelle, errori: list[ErroreBackup]) -> None:
     for nome, righe in tabelle.items():
         visti: dict[Any, int] = {}
         for r in righe:
+            if nome=='Commesse':
+                from ..services.archivio_commesse import chiave_cognome
+                try:
+                    if chiave_cognome(r.get('cognome'))!=r.get('cognome_chiave') or not re.fullmatch('[0-9a-f]{64}',r.get('identita') or ''):
+                        raise ValueError('Identità o cognome non coerente')
+                except ValueError as e:errori.append(ErroreBackup(nome,r['_riga'],'',str(e)))
+            if nome=='RigheCommesse':
+                from ..services.commesse import RichiestaTaglio
+                try:RichiestaTaglio(r.get('profilo'),r.get('colore'),r.get('lunghezza'),r.get('quantita'),r.get('riferimento'),r.get('barra_intera'))
+                except (ValueError,TypeError) as e:errori.append(ErroreBackup(nome,r['_riga'],'',str(e)))
+            if nome == "Profili" and (not r.get("codice") or not r.get("peso_kg_per_metro", 0) or
+                                      r["peso_kg_per_metro"] <= 0 or not r.get("lunghezza_standard_mm") or
+                                      r["lunghezza_standard_mm"] <= 0):
+                errori.append(ErroreBackup(nome, r["_riga"], "", "codice, peso e lunghezza positivi obbligatori"))
             if r["id"] is None:
                 continue
             if r["id"] in visti:
@@ -355,6 +487,8 @@ def _controlli_relazionali(tabelle, errori: list[ErroreBackup]) -> None:
         for colonne in UNIVOCHE.get(nome, ()):
             visti_u: dict[tuple, int] = {}
             for r in righe:
+                if nome == "Pezzi" and len(colonne) > 1 and r.get("unitario"):
+                    continue
                 chiave = tuple(r[c] for c in colonne)
                 if None in chiave:
                     continue
@@ -369,6 +503,8 @@ def _controlli_relazionali(tabelle, errori: list[ErroreBackup]) -> None:
                                            f"riferimento a {padre}.id={r[colonna]} inesistente"))
     for nome, modello in FOGLI.items():           # vincoli CHECK noti
         for r in tabelle[nome]:
+            if nome == "Pezzi" and r.get("unitario") and r.get("quantita") not in (0, 1):
+                errori.append(ErroreBackup(nome, r["_riga"], "quantita", "un barcode unitario ammette solo 0 oppure 1"))
             for colonna, minimo in (("quantita", 1 if nome == "Movimenti" else 0), ("lunghezza_mm", 1)):
                 if colonna in r and r[colonna] is not None and r[colonna] < minimo:
                     errori.append(ErroreBackup(nome, r["_riga"], colonna, f"deve essere almeno {minimo}"))
@@ -409,6 +545,14 @@ def ripristina_backup_logico_excel(
             if righe:
                 session.execute(insert(modello.__table__), righe)
         _riallinea_sequenze(session)
+        if backup.soglia_scorta is not None:
+            from ..domain import Impostazione
+            from ..services.impostazioni import CHIAVE_SOGLIA
+            riga = session.get(Impostazione, CHIAVE_SOGLIA)
+            if riga is None:
+                session.add(Impostazione(chiave=CHIAVE_SOGLIA, valore=str(backup.soglia_scorta)))
+            else:
+                riga.valore = str(backup.soglia_scorta)
 
 
 def _verifica_destinazione(session: Session, backup: BackupValidato, modalita: str) -> None:
@@ -431,8 +575,13 @@ def _verifica_destinazione(session: Session, backup: BackupValidato, modalita: s
                 col = getattr(modello, colonne[0])
                 gia = set(session.scalars(select(col)))
             else:
-                gia = {tuple(r) for r in session.execute(select(*[getattr(modello, c) for c in colonne]))}
+                query = select(*[getattr(modello, c) for c in colonne])
+                if nome == "Pezzi":
+                    query = query.where(Pezzo.unitario.is_(False))
+                gia = {tuple(r) for r in session.execute(query)}
             for r in backup.tabelle[nome]:
+                if nome == "Pezzi" and len(colonne) > 1 and r.get("unitario"):
+                    continue
                 chiave = tuple(r[c] for c in colonne)
                 if None in chiave:
                     continue

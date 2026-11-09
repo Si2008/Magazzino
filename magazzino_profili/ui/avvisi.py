@@ -79,8 +79,8 @@ def _riga_avviso(
     sotto = [z.profilo.descrizione or ""]
     if z.ubicazione:
         sotto.append(z.ubicazione)
-    if z.quantita:
-        sotto.append(f"{z.quantita} {'pezzo' if z.quantita == 1 else 'pezzi'} rimasti")
+    if consultazione.quantita_per_scorta(z):
+        sotto.append(f"{consultazione.quantita_per_scorta(z)} {'pezzo' if consultazione.quantita_per_scorta(z) == 1 else 'pezzi'} rimasti")
     else:
         sotto.append("nessun pezzo disponibile")
 
@@ -112,7 +112,7 @@ def _riga_avviso(
     colonna.addWidget(lab_s)
 
     riferimento = z.scorta_minima if z.scorta_minima else scheda._soglia
-    frazione = min(1.0, z.quantita / (riferimento * 3)) if (riferimento and z.quantita and z.quantita > 0) else 0.0
+    frazione = min(1.0, consultazione.quantita_per_scorta(z) / (riferimento * 3)) if (riferimento and consultazione.quantita_per_scorta(z) and consultazione.quantita_per_scorta(z) > 0) else 0.0
     sfondo = QFrame(riga)
     sfondo.setObjectName("MeterSfondo")
     sfondo.setFixedHeight(M.METER_H)
@@ -149,6 +149,8 @@ class SchedaAvvisi(QWidget):
     def __init__(self, factory, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._factory = factory
+        self._pagina = 0
+        self._dimensione_pagina = 30
 
         # Soglia globale di sotto scorta: letta una volta all'avvio; ogni
         # modifica dello stepper viene salvata in debounce (350 ms; 0 con
@@ -218,6 +220,16 @@ class SchedaAvvisi(QWidget):
         area.setContentsMargins(0, 0, 0, 0)
         area.setWidget(self._corpo)
         root.addWidget(area, 1)
+        paginazione = QHBoxLayout()
+        self._precedente = bottone("Precedenti", parent=self)
+        self._successiva = bottone("Successivi", parent=self)
+        self._pagina_info = QLabel(self)
+        self._precedente.clicked.connect(lambda: self._cambia_pagina(-1))
+        self._successiva.clicked.connect(lambda: self._cambia_pagina(1))
+        paginazione.addWidget(self._precedente)
+        paginazione.addWidget(self._pagina_info, 1)
+        paginazione.addWidget(self._successiva)
+        root.addLayout(paginazione)
 
         # segnaposto vuoto
         self._vuoto = QFrame(self._corpo)
@@ -249,7 +261,11 @@ class SchedaAvvisi(QWidget):
         """Crea/rigenera le righe (chiamato da ``aggiorna``)."""
         sessione = self._factory()
         try:
-            lista = consultazione.pezzi_avvisi(sessione, self._soglia)
+            totale = consultazione.pezzi_avvisi(sessione, self._soglia, conteggio=True)
+            self._pagina = min(self._pagina, max(0, (totale - 1) // self._dimensione_pagina))
+            offset = self._pagina * self._dimensione_pagina
+            lista = consultazione.pezzi_avvisi(sessione, self._soglia,
+                limite=self._dimensione_pagina, offset=offset)
         finally:
             sessione.close()
 
@@ -270,6 +286,9 @@ class SchedaAvvisi(QWidget):
             self._v_corpo.insertWidget(self._v_corpo.count() - 1, riga)  # prima dello stretch
 
         n = len(lista)
+        self._precedente.setEnabled(self._pagina > 0)
+        self._successiva.setEnabled(offset + n < totale)
+        self._pagina_info.setText(f"{offset + 1 if totale else 0}–{offset + n} di {totale} avvisi")
         self._vuoto.setVisible(n == 0)
         # Sottotitolo: spiega la soglia globale corrente.
         self.contatore.setText(
@@ -290,6 +309,7 @@ class SchedaAvvisi(QWidget):
         finally:
             sessione.close()
         if salvato != self._soglia:
+            self._pagina = 0
             self._soglia = salvato
             self.soglia_cambiata.emit(salvato)
             self.aggiorna()
@@ -299,3 +319,7 @@ class SchedaAvvisi(QWidget):
 
     def aggiorna(self) -> None:
         self._vuole_mostrare()
+
+    def _cambia_pagina(self, delta):
+        self._pagina = max(0, self._pagina + delta)
+        self.aggiorna()

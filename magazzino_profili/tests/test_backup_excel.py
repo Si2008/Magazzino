@@ -66,9 +66,11 @@ def svuota(eng):
                 c.execute(delete(m.__table__))
 
 
-def snap(eng):
+def snap(eng, *, includi_peso=True):
     with eng.connect() as c:
-        return {m.__tablename__: [tuple(r) for r in c.execute(select(m.__table__).order_by(m.__table__.c.id))]
+        return {m.__tablename__: [tuple(r) for r in c.execute(select(*[
+                    col for col in m.__table__.columns if includi_peso or col.name != "peso_kg_per_metro"
+                ]).order_by(m.__table__.c.id))]
                 for m in TABELLE}
 
 
@@ -98,6 +100,11 @@ def popola(eng):
         s.commit()
     with Session(eng, expire_on_commit=False) as s:
         scarica(s, "AB12-RAL7016-6000", 3, "op", "Scarico")
+        # Snapshot storico deliberatamente impostato dopo il movimento.
+        p = s.scalar(select(Pezzo).where(Pezzo.barcode == "AB12-RAL7016-6000"))
+        p.stato = "Scaricato"
+        p.data_ultimo_cambio_stato = datetime(2026, 10, 20, 8, 0, 0, 123456, tzinfo=timezone.utc)
+        s.commit()
     with Session(eng, expire_on_commit=False) as s:
         registra_spezzone(s, 1, 800, 500, "op")
 
@@ -118,34 +125,34 @@ def test_fogli_intestazioni_conteggi(amb, tmp_path):
     with Session(src) as s:
         out = be.esporta_backup_logico_excel(s, tmp_path / "b.xlsx")
     wb = load_workbook(out)
-    assert wb.sheetnames == ["Metadati", "Profili", "Colori", "Pezzi", "Movimenti", "Spezzoni"]
+    assert wb.sheetnames == list(be.NOMI_FOGLI)
     for nome in be.FOGLI:
         assert tuple(c.value for c in wb[nome][1]) == be.INTESTAZIONI[nome]
         assert all(c.font.bold for c in wb[nome][1])
-    assert [wb[n].max_row - 1 for n in be.FOGLI] == [2, 2, 3, 4, 1]
+    assert [wb[n].max_row - 1 for n in be.FOGLI] == [0, 2, 2, 3, 4, 1, 0, 0]
     meta = {r[0].value: r[1].value for r in wb["Metadati"].iter_rows(min_row=2)}
-    assert meta["versione_formato"] == 1 and meta["righe_Pezzi"] == 3
+    assert meta["versione_formato"] == be.VERSIONE_FORMATO and meta["righe_Pezzi"] == 3
     assert meta["applicazione"] == "Magazzino Profili"
     assert "utenti" not in wb.sheetnames
 
 
 def test_intestazioni_coprono_lo_schema():
     for nome, modello in be.FOGLI.items():
-        assert set(be.INTESTAZIONI[nome]) == {c.name for c in modello.__table__.columns}, nome
+        assert set(be.INTESTAZIONI[nome]) == {c.name for c in modello.__table__.columns if c.name != "peso_kg_per_metro"}, nome
 
 
 # ------------------------------------------------------------------ roundtrip
 def test_roundtrip_db_vuoto(amb, tmp_path):
     src, dst = amb
     popola(src)
-    prima = snap(src)
+    prima = snap(src, includi_peso=False)
     with Session(src) as s:
         out = be.esporta_backup_logico_excel(s, tmp_path / "b.xlsx")
     bk = be.valida_backup_logico_excel(out)
     svuota(src)
     with Session(dst) as s:
         be.ripristina_backup_logico_excel(s, bk, modalita="db_vuoto")
-    assert snap(dst) == prima                      # id, FK, Decimal, microsecondi, null: tutto uguale
+    assert snap(dst, includi_peso=False) == prima  # tutti i dati esportati, escluso il metadato storico dismesso
     with Session(dst, expire_on_commit=False) as s:
         p = carica(s, "CD22", "Nero", 4000, 1, "op", "dopo")
         assert p.id == max(r[0] for r in prima["pezzi"]) + 1
@@ -155,7 +162,7 @@ def test_roundtrip_preserva_vassoio_stato_eliminati(amb, tmp_path):
     """Vassoio, stato, timestamp con microsecondi e pezzo eliminato: presenti e identici."""
     src, dst = amb
     popola(src)
-    prima = snap(src)
+    prima = snap(src, includi_peso=False)
     assert any(r[8] == "Vassoio 4" and r[9] == "Scaricato" for r in prima["pezzi"])
     assert any(r[11] is not None for r in prima["pezzi"])          # eliminato_il valorizzato
     with Session(src) as s:
@@ -169,7 +176,7 @@ def test_roundtrip_preserva_vassoio_stato_eliminati(amb, tmp_path):
     svuota(src)
     with Session(dst) as s:
         be.ripristina_backup_logico_excel(s, bk, modalita="db_vuoto")
-    assert snap(dst) == prima
+    assert snap(dst, includi_peso=False) == prima
 
 
 def test_sequenze_senza_riallineamento_falliscono_su_postgres(amb, tmp_path, monkeypatch):
@@ -236,14 +243,14 @@ def ok(amb, tmp_path):
     ("Movimenti", 2, "data_ora", "ieri", "ISO 8601"),
     ("Movimenti", 2, "pezzo_id", 77, "Pezzi.id=77"),
     ("Spezzoni", 2, "utilizzato", "si", "booleano"),
-    ("Profili", 2, "peso_kg_per_metro", "pesante", "numero atteso"),
-    ("Metadati", 2, "valore", 2, "versione_formato"),
+    ("Profili", 2, "lunghezza_standard_mm", "lunga", "intero atteso"),
+    ("Metadati", 2, "valore", 99, "versione_formato"),
 ])
 def test_errori_con_foglio_riga_colonna(ok, tmp_path, foglio, riga, colonna, valore, frag):
     out, *_ = ok
     if foglio == "Metadati":
         wb = load_workbook(out)
-        wb["Metadati"]["B2"] = 2
+        wb["Metadati"]["B2"] = valore
         wb.save(tmp_path / "x.xlsx")
     else:
         _riapri_e_modifica(out, foglio, riga, colonna, valore, tmp_path / "x.xlsx")

@@ -132,7 +132,7 @@ def test_barra_avviso_arriva_alla_larghezza_finale(qtbot, factory):
     qtbot.addWidget(f)
     f.resize(1400, 900)
     f.show()
-    f._tab.setCurrentIndex(4)
+    f._tab.setCurrentIndex(f._nomi_pagine.index("scheda_avvisi"))
     QTest.qWait(900)
     barre = f.scheda_avvisi.findChildren(type(f.scheda_avvisi.findChildren(QWidget, "MeterBarra")[0]))
     assert barre

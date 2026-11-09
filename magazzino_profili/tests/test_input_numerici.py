@@ -16,6 +16,15 @@ from magazzino_profili.ui.scheda_carico import SchedaCarico
 from magazzino_profili.ui.scheda_scarico import SchedaScarico
 
 
+@pytest.fixture(autouse=True)
+def errore_inatteso_non_deve_aprire_un_modale(monkeypatch):
+    # Un errore inatteso deve fallire il test, invece di bloccare pytest
+    # su una QMessageBox invisibile nella piattaforma offscreen.
+    def inatteso(_parent, _titolo, errore, _azione):
+        raise AssertionError(f"Errore UI inatteso: {type(errore).__name__}: {errore}") from errore
+    monkeypatch.setattr("magazzino_profili.ui.scheda_carico.mostra_errore", inatteso)
+
+
 @pytest.fixture()
 def factory(tmp_path: Path):
     eng = crea_engine(url=f"sqlite:///{tmp_path / 'input.db'}")
@@ -84,6 +93,6 @@ def test_salvataggio_carico_con_lunghezza_multi_cifra(qtbot, factory) -> None:
     w.salva_carico()
 
     s = factory()
-    pz = s.scalar(select(Pezzo).where(Pezzo.barcode == "AB12-BIANCO-3000"))
+    pz = list(s.scalars(select(Pezzo).where(Pezzo.lunghezza_mm == 3000)))
     s.close()
-    assert pz is not None and pz.quantita == 7
+    assert len(pz) == 7 and all(p.quantita == 1 and p.unitario for p in pz)

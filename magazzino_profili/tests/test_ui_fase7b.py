@@ -106,20 +106,13 @@ def test_controllo_stato_collegato_e_ferma(factory, qapp) -> None:
 
 
 # ------------------------------------------------------------------ schede
-def test_scarico_ricevi_scansione_compila_e_chiede_causale(factory, qapp) -> None:
+def test_scarico_ricevi_scansione_senza_causale(factory, qapp) -> None:
     _pezzo(factory)
     scheda = SchedaScarico(factory, "maria")
-    assert scheda.causale.text().strip() == ""
-    assert scheda.anteprima.text() == ""
-
-    scheda.ricevi_scansione("ab12-an007-6000")
-
-    assert scheda.barcode.text() == "AB12-AN007-6000"
-    assert "giacenza: 5 pz" in scheda.anteprima.text()
-    # isVisible() sarebbe False in test (finestre mai mostrate): controllo il testo
-    assert "causale" in scheda.messaggio.text().lower()
-    # consuma i timer programmati da mostra() mentre il widget è ancora vivo
-    qapp.processEvents()
+    assert not hasattr(scheda, "causale")
+    assert scheda.ricevi_scansione("ab12-an007-6000") is True
+    with factory() as sessione:
+        assert sessione.query(Pezzo).one().quantita == 4
 
 
 def test_carico_ricevi_scansione_compila_il_campo(factory, qapp) -> None:
@@ -185,8 +178,8 @@ def test_dialogo_telefono_stati(factory, qapp) -> None:
     # senza indirizzo: messaggio di configurazione
     d1 = DialogoTelefono(c, None)
     testo = " ".join(w.text() for w in d1.findChildren(QLabel))
-    assert "Indirizzo del server web non configurato" in testo
-    assert "https://" in testo
+    assert "Inserisci l'indirizzo HTTPS" in testo
+    assert "HTTPS" in testo
     d1.close()
 
     # con indirizzo: QR presente + testo dell'indirizzo

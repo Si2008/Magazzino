@@ -7,10 +7,10 @@ cancellato da disco, toglie solo il riferimento).
 
 from __future__ import annotations
 
-from decimal import Decimal
+from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIntValidator, QPixmap
+from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtGui import QIntValidator, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFileDialog,
@@ -30,6 +30,8 @@ from PySide6.QtWidgets import (
 from ..domain import Profilo  # modello per sessione.get
 from ..services import anagrafica
 from ..services import consultazione
+from ..services.catalogo_immagini import CatalogoImmagini
+from ..services.proposta_immagine import GestoreProposta, StatoImmagine
 from .componenti import (
     MessaggioErrore,
     bottone,
@@ -37,25 +39,33 @@ from .componenti import (
 )
 from .icone import ic_px, pixmap_icona
 from .tema import M, tema_attivo
+from .validatori import ValidatoreMaiuscolo
 
-_COLONNE = ("CODICE", "DESCRIZIONE", "PESO KG/M", "LUNG. STD", "PEZZI")
-_PESO = 2
-_LUNG = 3
-_PEZZI = 4
+_COLONNE = ("CODICE", "DESCRIZIONE", "LUNG. STD", "PEZZI")
+_LUNG = 2
+_PEZZI = 3
 
 
 class SchedaProfilo(QWidget):
-    """Gestione profili (sezione + peso per metro)."""
+    """Gestione anagrafica e immagini, accessibile dall'Inventario."""
 
     cambiato = Signal()
 
-    def __init__(self, factory, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        factory,
+        parent: QWidget | None = None,
+        *,
+        catalogo: CatalogoImmagini | None = None,
+    ) -> None:
         super().__init__(parent)
         self._factory = factory
         self._profilo_id: int | None = None
         self._immagine_locale: str | None = None  # PNG importato, non ancora salvato
         self._rimossa_in_locales = False
         self._righe: list[tuple[int, str]] = []  # (id, codice) per la selezione
+        self._catalogo = catalogo if catalogo is not None else CatalogoImmagini()
+        self._proposta = GestoreProposta(self._catalogo)
 
         radice = QHBoxLayout(self)
         radice.setContentsMargins(M.PAG_H, M.PAG_T, M.PAG_H, M.PAG_B)
@@ -84,17 +94,20 @@ class SchedaProfilo(QWidget):
 
         self._tabella = QTableWidget(0, len(_COLONNE), card)
         self._tabella.setHorizontalHeaderLabels(_COLONNE)
+        self._tabella.setColumnHidden(1, True)
         self._tabella.verticalHeader().setVisible(False)
         self._tabella.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self._tabella.setSelectionBehavior(QAbstractItemView.SelectRows)
         self._tabella.setSelectionMode(QAbstractItemView.SingleSelection)
         self._tabella.setShowGrid(False)
+        self._tabella.setIconSize(QSize(48, 48))
+        self._tabella.verticalHeader().setDefaultSectionSize(64)
         self._tabella.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Interactive
         )
-        self._tabella.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self._tabella.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._tabella.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        for c in (_PESO, _LUNG, _PEZZI):
+        for c in (_LUNG, _PEZZI):
             self._tabella.horizontalHeader().setSectionResizeMode(c, QHeaderView.ResizeMode.ResizeToContents)
         self._tabella.itemSelectionChanged.connect(self._su_selezione)
         v.addWidget(self._tabella, 1)
@@ -124,10 +137,10 @@ class SchedaProfilo(QWidget):
 
         self.codice = QLineEdit(dx)
         self.codice.setPlaceholderText("Es. AB12")
+        self.codice.setMaxLength(64)                      # String(64) del modello
+        self.codice.setValidator(ValidatoreMaiuscolo(self.codice))
         self.descrizione = QLineEdit(dx)
         self.descrizione.setPlaceholderText("Es. Angolo 40x40")
-        self.peso = QLineEdit(dx)
-        self.peso.setPlaceholderText("Es. 1,28")
         self.lunghezza = QLineEdit(dx)
         self.lunghezza.setPlaceholderText("Es. 6000")
         self.lunghezza.setValidator(QIntValidator(1, 99_999_999, dx))
@@ -136,7 +149,6 @@ class SchedaProfilo(QWidget):
 
         riga_pl = QHBoxLayout()
         riga_pl.setSpacing(M.GAP_SM)
-        riga_pl.addWidget(campo_con_etichetta("Peso kg/m", self.peso, dx), 1)
         riga_pl.addWidget(campo_con_etichetta("Lunghezza std mm", self.lunghezza, dx), 1)
         vd.addLayout(riga_pl)
 
@@ -155,11 +167,28 @@ class SchedaProfilo(QWidget):
 
         self._anteprima = QLabel(dx)
         self._anteprima.setObjectName("BoxImmagine")
-        self._anteprima.setFixedHeight(M.IMG_BOX_H)
+        self._anteprima.setFixedHeight(200)
         self._anteprima.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._anteprima.setWordWrap(True)
         self._mostra_immagine(None)
         vd.addWidget(self._anteprima, 1)
+        self.apri_immagine_btn = bottone("Apri immagine e ingrandisci", icona="image", parent=dx)
+        self.apri_immagine_btn.setEnabled(False)
+        self.apri_immagine_btn.clicked.connect(self._apri_immagine)
+        vd.addWidget(self.apri_immagine_btn)
+        # Anteprima immediatamente visibile, prima dei campi anagrafici.
+        vd.removeWidget(titolo_img)
+        vd.removeWidget(self._anteprima)
+        vd.removeWidget(self.apri_immagine_btn)
+        vd.insertWidget(1, titolo_img)
+        vd.insertWidget(2, self._anteprima)
+        vd.insertWidget(3, self.apri_immagine_btn)
+
+        self._nota_catalogo = QLabel("", dx)
+        self._nota_catalogo.setObjectName("Dim")
+        self._nota_catalogo.setWordWrap(True)
+        self._nota_catalogo.setVisible(False)
+        vd.addWidget(self._nota_catalogo)
 
         riga_btn = QHBoxLayout()
         riga_btn.setSpacing(M.GAP_SM)
@@ -175,6 +204,8 @@ class SchedaProfilo(QWidget):
 
         radice.addWidget(dx)
 
+        # Alla fine di __init__: tutti i widget esistono.
+        self.codice.textChanged.connect(self._su_codice_cambiato)
         self._rinfresca_tabella()
         self._aggiorna_pulsante_immagine()
 
@@ -208,10 +239,21 @@ class SchedaProfilo(QWidget):
                 i.setData(Qt.UserRole, profilo.id)
                 return i
 
-            peso = f"{Decimal(str(profilo.peso_kg_per_metro)).quantize(Decimal('0.0001'))}".replace(".", ",")
             tab.setItem(r, 0, _item(profilo.codice or ""))
+            from ..services.immagini import immagine_del_profilo
+            from .visualizzatore_immagine import miniatura_sezione
+            immagine = immagine_del_profilo(profilo)
+            if immagine:
+                try:
+                    stato = immagine.stat()
+                    miniatura = miniatura_sezione(str(immagine), stato.st_mtime_ns, stato.st_size)
+                    tab.item(r, 0).setIcon(QIcon(miniatura))
+                    tab.item(r, 0).setToolTip("Sezione associata automaticamente. Seleziona il profilo per ingrandirla.")
+                except OSError:
+                    tab.item(r, 0).setToolTip("Immagine non leggibile: verificare il file PNG")
+            else:
+                tab.item(r, 0).setToolTip("Sezione non disponibile: nessun PNG corrisponde al codice profilo")
             tab.setItem(r, 1, _item(profilo.descrizione or ""))
-            tab.setItem(r, _PESO, _item(peso, 1))
             tab.setItem(r, _LUNG, _item(f"{profilo.lunghezza_standard_mm:,}".replace(",", ".") + " mm", 1))
             tab.setItem(r, _PEZZI, _item(str(totale), 1))
             self._righe.append((profilo.id, profilo.codice or ""))
@@ -229,40 +271,47 @@ class SchedaProfilo(QWidget):
             p = sessione.get(Profilo, pid)
             # forza il caricamento delle relazioni
             codice, descrizione = p.codice, p.descrizione
-            peso = p.peso_kg_per_metro
             lunghezza = p.lunghezza_standard_mm
-            immagine = p.immagine_sezione
+            from ..services.immagini import immagine_del_profilo
+            immagine = immagine_del_profilo(p)
+            immagine = str(immagine) if immagine else None
         finally:
             sessione.close()
         self._profilo_id = pid
+        self._proposta.azzera()
+        self._nota_catalogo.setVisible(False)
         self._immagine_locale = None
         self._rimossa_in_locales = False
         self._titolo_form.setText(f"Anagrafica — {codice}")
         self.codice.setText(codice or "")
         self.descrizione.setText(descrizione or "")
-        if peso is not None:
-            self.peso.setText(f"{Decimal(str(peso))}".replace(".", ","))
-        else:
-            self.peso.clear()
         self.lunghezza.setText(str(lunghezza)) if lunghezza else self.lunghezza.clear()
         self._mostra_immagine(immagine)
         self._aggiorna_pulsante_immagine()
 
     # ------------------------------------------------------------------ immagine
     def _mostra_immagine(self, percorso: str | None) -> None:
-        if percorso and not QPixmap(percorso).isNull():
-            box = QPixmap(percorso).scaled(
-                M.PROF_DX - 2 * M.CARD_PAD,
-                M.IMG_BOX_H,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
-            )
+        from .visualizzatore_immagine import leggi_anteprima
+        box = leggi_anteprima(percorso, M.PROF_DX - 2 * M.CARD_PAD, self._anteprima.height()) if percorso else QPixmap()
+        self._percorso_immagine = percorso if not box.isNull() else None
+        if hasattr(self, "apri_immagine_btn"):
+            self.apri_immagine_btn.setEnabled(self._percorso_immagine is not None)
+        if not box.isNull():
             self._anteprima.setPixmap(box)
             self._anteprima.setText("")
         else:
             t = tema_attivo()
             self._anteprima.setPixmap(pixmap_icona("image", t.testo_debole, ic_px(34)))
-            self._anteprima.setText("Nessuna immagine caricata")
+            codice = self.codice.text().strip()
+            self._anteprima.setText(f"Nessuna sezione PNG nel catalogo per {codice}" if codice else "Seleziona un profilo per vedere la sezione")
+
+    def _apri_immagine(self):
+        if self._percorso_immagine:
+            from .visualizzatore_immagine import apri_immagine
+            try:
+                apri_immagine(self._percorso_immagine, self)
+            except ValueError as errore:
+                self.messaggio.mostra(str(errore))
 
     def _aggiorna_pulsante_immagine(self) -> None:
         """Il pulsante "Rimuovi" ha senso solo se c'è un'immagine (salvata o locale)."""
@@ -281,8 +330,11 @@ class SchedaProfilo(QWidget):
         self._immagine_locale = None
         self._rimossa_in_locales = False
         self._titolo_form.setText("Nuovo profilo")
-        for c in (self.codice, self.descrizione, self.peso, self.lunghezza):
+        for c in (self.codice, self.descrizione, self.lunghezza):
             c.clear()
+        # Azzeramento dello stato DOPO i clear(): la proposta non ripropone nulla.
+        self._proposta.azzera()
+        self._nota_catalogo.setVisible(False)
         self._mostra_immagine(None)
         self._aggiorna_pulsante_immagine()
 
@@ -298,24 +350,69 @@ class SchedaProfilo(QWidget):
         self._rimossa_in_locales = False
         self._mostra_immagine(percorso)
         self._aggiorna_pulsante_immagine()
+        if self._profilo_id is None:
+            # Nuova immagine a mano: la proposta non deve più sovrascriverla.
+            self._proposta.su_importazione_manuale(percorso)
+            self._nota_catalogo.setVisible(False)
 
     def _rimuovi_immagine(self) -> None:
         """Segna la rimozione dell'immagine (il file resta su disco)."""
-        from .messaggi import chiedi_conferma
+        nuovo = self._profilo_id is None
+        proposta_attiva = (
+            nuovo and self._proposta.stato is StatoImmagine.PROPOSTA
+        )
+        if not proposta_attiva:
+            from .messaggi import chiedi_conferma
 
-        if not chiedi_conferma(
-            self,
-            "Rimuovi immagine",
-            "Rimuovere l'immagine della sezione da questo profilo?\n"
-            "Il file PNG non viene cancellato dal disco; la rimozione diventa definitiva "
-            "solo quando salvi il profilo.",
-            "Rimuovi",
-            pericolosa=True,
-        ):
-            return
+            if not chiedi_conferma(
+                self,
+                "Rimuovi immagine",
+                "Rimuovere l'immagine della sezione da questo profilo?\n"
+                "Il file PNG non viene cancellato dal disco; la rimozione diventa definitiva "
+                "solo quando salvi il profilo.",
+                "Rimuovi",
+                pericolosa=True,
+            ):
+                return
         self._rimossa_in_locales = True
         self._immagine_locale = None
         self._mostra_immagine(None)
+        self._aggiorna_pulsante_immagine()
+        if nuovo:
+            # Non riproporre finché il codice normalizzato non cambia.
+            self._proposta.su_rimozione(self.codice.text())
+            self._nota_catalogo.setVisible(False)
+
+    # ------------------------------------------------------------------ proposta
+    def _su_codice_cambiato(self, testo: str) -> None:
+        if self._profilo_id is not None:      # profilo esistente: mai proposte
+            return
+        self._proposta.su_codice_cambiato(testo)
+        self._applica_stato_immagine()
+
+    def _applica_stato_immagine(self) -> None:
+        stato = self._proposta.stato
+        if stato is StatoImmagine.MANUALE:
+            self._nota_catalogo.setVisible(False)
+            return
+        if stato is StatoImmagine.PROPOSTA and self._proposta.percorso is not None:
+            percorso = str(self._proposta.percorso)
+            if QPixmap(percorso).isNull():            # PNG illeggibile per Qt: nessuna proposta
+                self._proposta.azzera()
+                stato = StatoImmagine.NESSUNA
+            else:
+                self._immagine_locale = percorso
+                self._rimossa_in_locales = False
+                self._mostra_immagine(percorso)
+                self._nota_catalogo.setText(f"Immagine trovata nel catalogo: {Path(percorso).name}")
+                self._nota_catalogo.setVisible(True)
+                self._aggiorna_pulsante_immagine()
+                return
+        if stato is StatoImmagine.NESSUNA:
+            self._immagine_locale = None
+            self._rimossa_in_locales = False
+            self._mostra_immagine(None)
+        self._nota_catalogo.setVisible(False)
         self._aggiorna_pulsante_immagine()
 
     # ------------------------------------------------------------------ salvataggio
@@ -323,16 +420,29 @@ class SchedaProfilo(QWidget):
         codice = self.codice.text().strip()
         descrizione = self.descrizione.text().strip()
         try:
-            peso = float(self.peso.text().strip().replace(",", ".")) if self.peso.text().strip() else None
             lunghezza = int(self.lunghezza.text().strip()) if self.lunghezza.text().strip() else None
         except ValueError:
-            self.messaggio.mostra("Peso o lunghezza non validi.")
+            self.messaggio.mostra("Lunghezza non valida.")
             return
 
         nuovo = self._profilo_id is None
-        if nuovo and (not codice or not descrizione or peso is None or lunghezza is None):
+        if nuovo and (not codice or not descrizione or lunghezza is None):
             self.messaggio.mostra(
-                "Per un nuovo profilo codice, descrizione, peso e lunghezza sono obbligatori."
+                "Per un nuovo profilo codice, descrizione e lunghezza sono obbligatori."
+            )
+            return
+
+        # Il file proposto/importato potrebbe essere sparito dal disco: nessun profilo,
+        # l'utente può ripremere Salva (senza immagine) o sceglierne un'altra.
+        if self._immagine_locale and not Path(self._immagine_locale).is_file():
+            self._immagine_locale = None
+            self._proposta.azzera()
+            self._nota_catalogo.setVisible(False)
+            self._mostra_immagine(None)
+            self._aggiorna_pulsante_immagine()
+            self.messaggio.mostra(
+                "L'immagine selezionata non è più disponibile. "
+                "Premi di nuovo Salva per salvare senza immagine, oppure scegline un'altra."
             )
             return
 
@@ -344,21 +454,19 @@ class SchedaProfilo(QWidget):
                         sessione,
                         codice=codice,
                         descrizione=descrizione,
-                        peso_kg_per_metro=peso,
                         lunghezza_standard_mm=lunghezza,
+                        file_immagine=self._immagine_locale,
+                        auto_immagine=not self._rimossa_in_locales,
                     )
                 else:
                     p = anagrafica.aggiorna_profilo(
                         sessione,
                         self._profilo_id,
                         descrizione=descrizione or None,
-                        peso_kg_per_metro=peso,
                         lunghezza_standard_mm=lunghezza,
+                        file_immagine=self._immagine_locale,
+                        rimuovi_immagine=self._rimossa_in_locales,
                     )
-                if self._rimossa_in_locales:
-                    anagrafica.rimuovi_immagine_sezione(sessione, p.id)
-                elif self._immagine_locale:
-                    anagrafica.associa_immagine_sezione(sessione, p.id, self._immagine_locale)
             finally:
                 sessione.close()
         except Exception as errore:  # noqa: BLE001 - spiegato all'utente, dettaglio nel log

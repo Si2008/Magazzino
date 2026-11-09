@@ -18,6 +18,10 @@ class ScansioneTelefono(Base):
     utente: Mapped[str] = mapped_column(String(64))
     creata_il: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     letta: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    destinatario: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    presa_il: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    esito: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    dettaglio: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
     def __repr__(self) -> str:
         return f"<ScansioneTelefono {self.id} {self.barcode!r} letta={self.letta}>"

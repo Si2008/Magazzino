@@ -145,8 +145,8 @@ def test_parser_barcode_esistente_ha_precedenza(qtbot, tmp_path) -> None:
     assert (w.codice.text(), w.colore.text()) == ("AB", "12-NERO")
 
 
-# ---------------------------------------------------------------- S6 HTML nelle causali
-def test_causale_html_mostrata_come_testo(qtbot, tmp_path) -> None:
+# ---------------------------------------------------------------- causale nello storico
+def test_causale_storica_non_mostrata(qtbot, tmp_path) -> None:
     F = _fabbrica(tmp_path)
     _profilo(F, "AB12")
     s = F()
@@ -154,7 +154,7 @@ def test_causale_html_mostrata_come_testo(qtbot, tmp_path) -> None:
     s.close()
     w = SchedaCarico(F, "test")
     qtbot.addWidget(w)
-    assert "<b>GRASSETTO</b>" in w.movimenti.toPlainText()
+    assert "GRASSETTO" not in w.movimenti.toPlainText()
 
 
 # ---------------------------------------------------------------- P8 scarico minuscolo
@@ -365,6 +365,7 @@ def test_setup_non_altera_la_sezione_web(tmp_path, monkeypatch) -> None:
     dati = tomllib.loads(testo)
     assert dati["database"]["password"] == "PasswordDiProva1"
     assert dati["database"]["porta"] == 5432
-    assert dati["web"]["host"] == "0.0.0.0"
+    originale = tomllib.loads((radice / "config.example.toml").read_text(encoding="utf-8"))
+    assert dati["web"] == originale["web"]
     assert dati["web"]["porta"] == 8443
     assert "pg_dump" in dati["backup"]

@@ -153,11 +153,9 @@ AZIONI_CONSENTITE: dict[Ruolo, frozenset[str]] = {
 
 def schede_consenti(ruolo: Ruolo | str) -> tuple[str, ...]:
     """Schede della finestra principale visibili per il ruolo."""
-    ruolo = ruolo if isinstance(ruolo, Ruolo) else Ruolo(ruolo)
-    return SCHEDE_CONSENTITE[ruolo]
+    return SCHEDE_CONSENTITE[Ruolo.AMMINISTRATORE]
 
 
 def puo(ruolo: Ruolo | str, azione: str) -> bool:
-    """Indica se il ruolo può compiere l'azione (es. ``"carico"``, ``"report"``)."""
-    ruolo = ruolo if isinstance(ruolo, Ruolo) else Ruolo(ruolo)
-    return azione in AZIONI_CONSENTITE[ruolo]
+    """Accesso libero richiesto dal proprietario: sempre privilegi massimi."""
+    return azione in AZIONI_CONSENTITE[Ruolo.AMMINISTRATORE]

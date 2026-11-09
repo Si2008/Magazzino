@@ -40,6 +40,38 @@ def _condizione_pezzo_attivo():
     return Pezzo.eliminato_il.is_(None)
 
 
+def _dati_scorta(soglia_globale=None):
+    """Una sola aggregazione SQL per combinazione, anche con migliaia di seriali."""
+    gruppi = select(Pezzo.profilo_id.label("profilo"), Pezzo.colore_id.label("colore"),
+        Pezzo.lunghezza_mm.label("lunghezza"), func.sum(Pezzo.quantita).label("totale"),
+        func.max(Pezzo.scorta_minima).label("minima"),
+        func.coalesce(func.min(case((Pezzo.quantita > 0, Pezzo.id), else_=None)),
+                      func.min(Pezzo.id)).label("rappresentante")
+    ).where(_condizione_pezzo_attivo()).group_by(Pezzo.profilo_id, Pezzo.colore_id, Pezzo.lunghezza_mm).subquery()
+    collegamento = and_(Pezzo.profilo_id == gruppi.c.profilo, Pezzo.colore_id == gruppi.c.colore,
+                       Pezzo.lunghezza_mm == gruppi.c.lunghezza)
+    limite = gruppi.c.minima - 1
+    if soglia_globale is not None:
+        limite = func.coalesce(limite, soglia_globale)
+    return gruppi, collegamento, limite
+
+
+def _leggi_scorte(session, query):
+    risultati = []
+    for pezzo, quantita, minima in session.execute(query.options(*_opzioni_pezzo())):
+        pezzo._quantita_scorta = int(quantita or 0)
+        pezzo._scorta_gruppo = minima
+        risultati.append(pezzo)
+    from .archivio_commesse import nomi_per_pezzi
+    nomi=nomi_per_pezzi(session,[p.id for p in risultati])
+    for p in risultati:p._commessa_cognome=nomi.get(p.id,'')
+    return risultati
+
+
+def quantita_per_scorta(pezzo):
+    return getattr(pezzo, "_quantita_scorta", pezzo.quantita) or 0
+
+
 def lista_pezzi(session: Session) -> list[Pezzo]:
     """Tutti i pezzi in giacenza attivi, ordinati per barcode."""
     return list(
@@ -52,6 +84,15 @@ def lista_pezzi(session: Session) -> list[Pezzo]:
     )
 
 
+def itera_pezzi(session: Session, *, includi_eliminati=False):
+    """Esportazione a blocchi di 500, senza materializzare tutto l'inventario."""
+    query = select(Pezzo).options(*_opzioni_pezzo())
+    if not includi_eliminati:
+        query = query.where(_condizione_pezzo_attivo())
+    query = query.order_by(Pezzo.id if includi_eliminati else Pezzo.barcode)
+    yield from session.scalars(query.execution_options(yield_per=500))
+
+
 def lista_colori(session: Session) -> list[Colore]:
     """Tutti i colori, ordinati per codice (per i filtri della UI)."""
     return list(session.scalars(select(Colore).order_by(Colore.codice_normalizzato)))
@@ -62,22 +103,8 @@ def lista_profilo(session: Session) -> list[Profilo]:
     return list(session.scalars(select(Profilo).order_by(Profilo.codice)))
 
 
-def pezzi_sotto_scora(session: Session, soglia_globale: int | None = None) -> list[Pezzo]:
-    """Pezzi con scorta minima definita e giacenza al di sotto di essa.
-
-    Con ``soglia_globale`` i pezzi senza scorta_minima entrano in avviso
-    fino a (inclusi) ``soglia_globale`` pezzi.
-    """
-    return list(
-        session.scalars(
-            select(Pezzo)
-            .options(*_opzioni_pezzo())
-            .where(
-                _condizione_pezzo_attivo(),
-                Pezzo.quantita <= _limite_sotto_scorta(soglia_globale),
-            )
-        )
-    )
+def pezzi_sotto_scora(session: Session, soglia_globale=None):
+    return cerca_pezzi(session, stato="sotto", soglia_globale=soglia_globale)
 
 
 def _like_escapato(testo: str) -> str:
@@ -95,6 +122,10 @@ def cerca_pezzi(
     ubicazione: str | None = None,
     soglia_globale: int | None = None,
     stato_barcode: str | None = None,
+    *,
+    limite: int | None = None,
+    offset: int = 0,
+    conteggio: bool = False,
 ) -> list[Pezzo]:
     """Cerca pezzi per testo libero, colori, profilo, ubicazione e stato scorta.
 
@@ -116,6 +147,8 @@ def cerca_pezzi(
     """
     if stato_barcode not in (None, "Caricato", "Scaricato"):
         raise ValueError("Stato barcode non valido: ammessi 'Caricato' e 'Scaricato'")
+    gruppi, collegamento, limite_scorta = _dati_scorta(soglia_globale)
+    stock = gruppi.c.totale
     condizioni = [_condizione_pezzo_attivo()]
     if stato_barcode is not None:
         condizioni.append(Pezzo.stato == stato_barcode)
@@ -148,47 +181,43 @@ def cerca_pezzi(
         )
 
     if stato == "sotto":
-        condizioni.append(Pezzo.quantita <= _limite_sotto_scorta(soglia_globale))
+        condizioni.append(stock <= limite_scorta)
     elif stato == "ok":
         condizioni.append(
             or_(
-                _limite_sotto_scorta(soglia_globale).is_(None),
-                Pezzo.quantita > _limite_sotto_scorta(soglia_globale),
+                limite_scorta.is_(None),
+                stock > limite_scorta,
             )
         )
     elif stato == "esaurito":
-        condizioni.append(Pezzo.quantita <= 0)
+        condizioni.append(stock <= 0)
     elif stato == "riordino":
         condizioni.append(
             or_(
-                Pezzo.quantita <= 0,
-                Pezzo.quantita <= _limite_sotto_scorta(soglia_globale),
+                stock <= 0,
+                stock <= limite_scorta,
             )
         )
 
-    return list(
-        session.scalars(
-            select(Pezzo)
-            .options(*_opzioni_pezzo())
-            .where(*condizioni)
-            .order_by(Pezzo.barcode)
-        )
-    )
+    if conteggio:
+        return int(session.scalar(select(func.count()).select_from(Pezzo).join(gruppi, collegamento).where(*condizioni)) or 0)
+    query = select(Pezzo, stock, gruppi.c.minima).join(gruppi, collegamento).where(*condizioni).order_by(Pezzo.barcode, Pezzo.id)
+    if limite is not None:
+        if not 1 <= limite <= 1000 or offset < 0:
+            raise ValueError("Pagina non valida")
+        query = query.limit(limite).offset(offset)
+    return _leggi_scorte(session, query)
 
 
-def stato_scorta(pezzo: Pezzo, soglia_globale: int | None = None) -> str:
-    """Stato scorta di un pezzo: ``"ok"``, ``"sotto"`` o ``"esaurito"``.
-
-    ``soglia_globale`` vale solo per i pezzi senza ``scorta_minima`` ("fino a N pezzi").
-    Funzione pura: non tocca la sessione.
-    """
-    if pezzo.quantita is None or pezzo.quantita <= 0:
+def stato_scorta(pezzo: Pezzo, soglia_globale=None):
+    """La scorta riguarda il materiale; lo stato Caricato/Scaricato il singolo barcode."""
+    quantita = quantita_per_scorta(pezzo)
+    minima = getattr(pezzo, "_scorta_gruppo", pezzo.scorta_minima)
+    if quantita <= 0:
         return "esaurito"
-    if pezzo.scorta_minima is not None:
-        return "sotto" if pezzo.quantita < pezzo.scorta_minima else "ok"
-    if soglia_globale is not None and pezzo.quantita <= soglia_globale:
-        return "sotto"
-    return "ok"
+    if minima is not None:
+        return "sotto" if quantita < minima else "ok"
+    return "sotto" if soglia_globale is not None and quantita <= soglia_globale else "ok"
 
 
 def peso_unitario_kg(pezzo: Pezzo) -> float:
@@ -234,10 +263,9 @@ def riepilogo_inventario(session: Session, soglia_globale: int | None = None) ->
     Chiavi extra: ``pezzi`` (alias di ``pezzi_totali``), ``profili``,
     ``colori``, ``barcodes_unici``.
     """
-    da_riordinare = or_(
-        Pezzo.quantita <= 0,
-        and_(Pezzo.scorta_minima.is_not(None), Pezzo.quantita < Pezzo.scorta_minima),
-    )
+    gruppi, collegamento, limite = _dati_scorta(soglia_globale)
+    da_riordinare = and_(Pezzo.id == gruppi.c.rappresentante,
+                        or_(gruppi.c.totale <= 0, gruppi.c.totale <= limite))
     peso = case(
         (
             and_(Pezzo.quantita > 0, Pezzo.lunghezza_mm > 0, Profilo.peso_kg_per_metro > 0),
@@ -256,6 +284,7 @@ def riepilogo_inventario(session: Session, soglia_globale: int | None = None) ->
             func.coalesce(func.sum(case((da_riordinare, 1), else_=0)), 0),
         ).select_from(Pezzo)
         .join(Profilo, Pezzo.profilo_id == Profilo.id)
+        .join(gruppi, collegamento)
         .where(_condizione_pezzo_attivo())
     ).one()
     pezzi_totali = int(riga[1] or 0)
@@ -277,11 +306,21 @@ def pezzo_per_barcode(session: Session, barcode: str | None) -> Pezzo | None:
     if not valore:
         return None
     # Solo pezzi attivi: un barcode eliminato non è più consultabile nei flussi.
-    return session.scalar(
+    pezzo = session.scalar(
         select(Pezzo)
         .options(*_opzioni_pezzo())
         .where(Pezzo.barcode == valore, _condizione_pezzo_attivo())
     )
+    if pezzo is not None:
+        stock, minima = session.execute(select(func.coalesce(func.sum(Pezzo.quantita), 0),
+            func.max(Pezzo.scorta_minima)).where(Pezzo.profilo_id == pezzo.profilo_id,
+            Pezzo.colore_id == pezzo.colore_id, Pezzo.lunghezza_mm == pezzo.lunghezza_mm,
+            _condizione_pezzo_attivo())).one()
+        pezzo._quantita_scorta, pezzo._scorta_gruppo = int(stock), minima
+        from .archivio_commesse import nomi_per_pezzi
+        pezzo._commessa_cognome=nomi_per_pezzi(session,[pezzo.id]).get(pezzo.id,'')
+    return pezzo
+
 
 
 def pezzo_per_combinazione(
@@ -307,6 +346,7 @@ def pezzo_per_combinazione(
             Profilo.codice == codice_n,
             Colore.codice_normalizzato == colore_n,
             Pezzo.lunghezza_mm == lunghezza_mm,
+            Pezzo.unitario.is_(False),
             _condizione_pezzo_attivo(),
         )
     )
@@ -411,22 +451,14 @@ def lista_colori_con_conteggio(session: Session) -> list[tuple[Colore, int, int]
     return [(colore, int(referenze or 0), int(pezzi or 0)) for colore, referenze, pezzi in righe]
 
 
-def pezzi_da_riordinare(session: Session, soglia_globale: int | None = None) -> list[Pezzo]:
-    """Pezzi esauriti o sotto la scorta minima, per giacenza crescente."""
-    return list(
-        session.scalars(
-            select(Pezzo)
-            .options(*_opzioni_pezzo())
-            .where(
-                _condizione_pezzo_attivo(),
-                or_(
-                    Pezzo.quantita <= 0,
-                    Pezzo.quantita <= _limite_sotto_scorta(soglia_globale),
-                ),
-            )
-            .order_by(Pezzo.quantita.asc(), Pezzo.barcode)
-        )
-    )
+def pezzi_da_riordinare(session: Session, soglia_globale=None, *, conteggio=False):
+    gruppi, collegamento, limite = _dati_scorta(soglia_globale)
+    query = select(Pezzo, gruppi.c.totale, gruppi.c.minima)
+    query = query.select_from(Pezzo).join(gruppi, collegamento).where(_condizione_pezzo_attivo(),
+        Pezzo.id == gruppi.c.rappresentante, or_(gruppi.c.totale <= 0, gruppi.c.totale <= limite))
+    if conteggio:
+        return int(session.scalar(query.with_only_columns(func.count())) or 0)
+    return _leggi_scorte(session, query.order_by(gruppi.c.totale, Pezzo.barcode))
 
 
 def livello_scorta(pezzo: Pezzo, soglia_globale: int | None = None) -> str:
@@ -438,26 +470,33 @@ def livello_scorta(pezzo: Pezzo, soglia_globale: int | None = None) -> str:
     base = stato_scorta(pezzo, soglia_globale)
     if base != "ok":
         return base
-    riferimento = pezzo.scorta_minima if pezzo.scorta_minima is not None else soglia_globale
-    if riferimento is not None and pezzo.quantita <= riferimento * MOLTIPLICATORE_ESAURIMENTO:
+    minima = getattr(pezzo, "_scorta_gruppo", pezzo.scorta_minima)
+    riferimento = minima if minima is not None else soglia_globale
+    if riferimento is not None and quantita_per_scorta(pezzo) <= riferimento * MOLTIPLICATORE_ESAURIMENTO:
         return "esaurimento"
     return "ok"
 
 
-def pezzi_avvisi(session: Session, soglia_globale: int | None = None) -> list[Pezzo]:
-    """Pezzi per la scheda Avvisi: esauriti, sotto scorta e in esaurimento, per giacenza crescente."""
-    riferimento = func.coalesce(Pezzo.scorta_minima, soglia_globale) if soglia_globale is not None else Pezzo.scorta_minima
-    return list(
-        session.scalars(
-            select(Pezzo)
-            .options(*_opzioni_pezzo())
-            .where(
-                _condizione_pezzo_attivo(),
-                or_(
-                    Pezzo.quantita <= 0,
-                    Pezzo.quantita <= riferimento * MOLTIPLICATORE_ESAURIMENTO,
-                ),
-            )
-            .order_by(Pezzo.quantita.asc(), Pezzo.barcode)
-        )
-    )
+def pezzi_avvisi(session: Session, soglia_globale=None, *, limite=None, offset=0, conteggio=False):
+    gruppi, collegamento, _ = _dati_scorta(soglia_globale)
+    riferimento = func.coalesce(gruppi.c.minima, soglia_globale) if soglia_globale is not None else gruppi.c.minima
+    query = (select(Pezzo, gruppi.c.totale, gruppi.c.minima).select_from(Pezzo)
+        .join(gruppi, collegamento).where(_condizione_pezzo_attivo(), Pezzo.id == gruppi.c.rappresentante,
+            or_(gruppi.c.totale <= 0, gruppi.c.totale <= riferimento * MOLTIPLICATORE_ESAURIMENTO))
+        .order_by(gruppi.c.totale, Pezzo.barcode))
+    if conteggio:
+        return int(session.scalar(query.with_only_columns(func.count()).order_by(None)) or 0)
+    if limite is not None:
+        if not 1 <= limite <= 1000 or offset < 0:
+            raise ValueError("Pagina avvisi non valida")
+        query = query.limit(limite).offset(offset)
+    return _leggi_scorte(session, query)
+
+
+def totale_per_combinazione(session, codice, colore, lunghezza):
+    return int(session.scalar(select(func.coalesce(func.sum(Pezzo.quantita), 0))
+        .select_from(Pezzo).join(Profilo, Pezzo.profilo_id == Profilo.id)
+        .join(Colore, Pezzo.colore_id == Colore.id)
+        .where(Profilo.codice == normalizza_codice(codice),
+               Colore.codice_normalizzato == normalizza_colore(colore),
+               Pezzo.lunghezza_mm == lunghezza, _condizione_pezzo_attivo())) or 0)

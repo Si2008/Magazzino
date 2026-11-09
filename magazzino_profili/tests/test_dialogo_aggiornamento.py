@@ -86,16 +86,16 @@ def test_errore_download_mostra_recupero_e_permette_riprovare(qtbot):
 
 
 def test_avanzamento_barra(qtbot):
-    dlg = DialogoAggiornamento(_manifest(), scarica=_scarica_ok(Path()))
+    dlg = DialogoAggiornamento(_manifest(), scarica=_scarica_ok(Path()), esegui=lambda comando: None)
     qtbot.addWidget(dlg)
     dlg._btn_ora.click()
     qtbot.waitUntil(lambda: "preparo il riavvio" in dlg._stato.text(), timeout=5000)
     assert dlg._barra.value() == 100
 
 
-def test_config_aggiornamento_disabilitata_di_default(tmp_path):
+def test_config_aggiornamento_github_di_default(tmp_path):
     cfg = ag.leggi_config_aggiornamento(tmp_path / "inesistente.toml")
-    assert cfg.abilitato is False and cfg.feed_url is None
+    assert cfg.abilitato is True and cfg.feed_url == ag.GITHUB_FEED
 
 
 def test_config_aggiornamento_da_file(tmp_path):

@@ -29,7 +29,7 @@ def test_worker_non_elimina_un_barcode_diventato_caricato(monkeypatch):
     def falso_ids(session, adesso):
         return [1, 2]
 
-    def falso_elimina(session, id_):
+    def falso_elimina(session, id_, **kw):
         eliminati.append(id_)
 
     fabbrica = MagicMock()
@@ -138,92 +138,31 @@ def test_web_main_usa_lo_stesso_factory_per_app_e_worker():
 
 
 def test_web_main_avvia_e_ferma_il_worker(monkeypatch, tmp_path):
-    """main() del processo web: worker avviato e fermato; server avviato (simulato)."""
-    import magazzino_profili.web as w
     import magazzino_profili.web.app as wa
-
-    (tmp_path / "cert.pem").write_text("cert", encoding="utf-8")
-    (tmp_path / "key.pem").write_text("key", encoding="utf-8")
-    cfg = tmp_path / "config.toml"
-    cfg.write_text(
-        "[web]\n"
-        "certificato_pem = 'cert.pem'\n"
-        "chiave_privata = 'key.pem'\n"
-        "[scadenze]\n"
-        "intervallo_secondi = 10.0\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setenv("MAGAZZINO_CONFIG", str(cfg))
-    monkeypatch.setattr(wa, "crea_app", lambda **k: w.crea_app())  # no-op
-    monkeypatch.setattr(wa, "avvia", lambda self: None)
-    monkeypatch.setattr(wa, "ferma", lambda self: None)
-
-    codice = wa.main()
-    assert codice == 0
-
-
-def test_ui_dialogo_accesso_e_barra_di_stato():
-    """DialogoAccesso è un QDialog e chiama accept(); barra di stato usata."""
-    from PySide6.QtWidgets import QApplication, QDialog
-
-    import magazzino_profili.ui.finestra_principale as f
-
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
-
-    assert issubclass(f.DialogoAccesso, QDialog)
-    assert "accept" in inspect.getsource(f.DialogoAccesso)
+    from types import SimpleNamespace
+    from fastapi import FastAPI
+    cert = tmp_path / "cert.pem"
+    cert.write_text("finto")
+    engine = MagicMock()
+    engine.dialect.name = "sqlite"
+    monkeypatch.setattr(wa, "leggi_sezione_web", lambda: dict(host="127.0.0.1", porta=8443, certificato_pem=str(cert), chiave_privata=str(cert), durata_token_secondi=60, segrete_token=None))
+    monkeypatch.setattr(wa, "leggi_config_scadenze", lambda: SimpleNamespace(intervallo_secondi=10))
+    monkeypatch.setattr(wa, "leggi_config", lambda: object())
+    monkeypatch.setattr(wa, "crea_engine", lambda **k: engine)
+    factory = MagicMock()
+    monkeypatch.setattr(wa, "crea_session_factory", lambda e: factory)
+    avvia, ferma = MagicMock(), MagicMock()
+    monkeypatch.setattr(wa, "avvia", avvia)
+    monkeypatch.setattr(wa, "ferma", ferma)
+    monkeypatch.setattr(wa, "crea_app", lambda **k: FastAPI())
+    monkeypatch.setattr(wa.uvicorn, "run", MagicMock())
+    monkeypatch.setattr(wa, "leggi_sezione_update", lambda: {"abilitato": False})
+    assert wa.main() == 0
+    avvia.assert_called_once()
+    ferma.assert_called_once_with(avvia.call_args.args[0])
+    engine.dispose.assert_called_once()
 
 
-def test_main_non_usa_account_predefinito_when_utenze_esse(monkeypatch):
-    """main non crea un utente predefinito: nessun account di ripiego, codice 1.
-
-    Nel processo esiste già un'interfaccia (QApplication): ``main()`` non deve
-    crearne un'altra né aggirare l'accesso; esce con codice 1.
-    """
-    from PySide6.QtWidgets import QApplication
-
+def test_desktop_controlla_scadenze_anche_senza_server_telefono():
     import magazzino_profili.main as m
-
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])  # mantenuto vivo per tutta la durata del test
-
-    def falso_factory():
-        s = MagicMock()
-        s.__enter__.return_value = s
-        s.__exit__.return_value = False
-        s.scalars.return_value.first.return_value = object()
-        return s
-
-    monkeypatch.setattr(m, "crea_session_factory", lambda eng: falso_factory)
-    monkeypatch.setattr(m, "_esiste_almeno_un_utente", lambda f: True)
-    codice = m.main()
-    assert codice == 1
-
-
-def test_main_solleva_errore_leggibile_when_nessuna_utente(monkeypatch):
-    """Senza utenti, main() deve dare errore leggibile (e non crashare)."""
-    import magazzino_profili.main as m
-
-    monkeypatch.setattr(m, "_esiste_almeno_un_utente", lambda f: False)
-    with pytest.raises(Exception) as excinfo:
-        m.main()
-    assert "utenti" in str(excinfo.value).lower()
-
-
-def test_desktop_non_crea_worker_nella_sua_main():
-    """main.py (desktop) non crea il worker delle scadenze: è nel processo web."""
-    import magazzino_profili.main as m
-    import magazzino_profili.web.app as wa
-
-    assert "PianificatoreScadenze" not in inspect.getsource(m)
-    assert "PianificatoreScadenze" in inspect.getsource(wa)
-
-
-def test_ui_non_crea_worker():
-    """L'UI desktop non crea il worker (è nel processo web)."""
-    import magazzino_profili.ui.finestra_principale as f
-
-    assert "PianificatoreScadenze" not in inspect.getsource(f)
+    assert "PianificatoreScadenze" in inspect.getsource(m)

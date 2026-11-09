@@ -1,0 +1,5 @@
+"""Identità permanente della distribuzione Windows. APP_ID non deve cambiare."""
+APP_ID = "MagazzinoProfili.7FCFE24E-DAF6-45F0-85D5-888801F37BA4"
+EDITORE = "Si2008"
+NOME_PRODOTTO = "Magazzino Profili"
+MUTEX_APPLICAZIONE = "Local\\MagazzinoProfili.7FCFE24E-DAF6-45F0-85D5-888801F37BA4"

@@ -55,7 +55,8 @@ def attive() -> bool:
         if os.environ.get("MAGAZZINO_NO_ANIM") == "1":
             _ATTIVE = False
         else:
-            salvato = QSettings("MagazzinoProfili", "MagazzinoProfili").value(_CHIAVE, None)
+            from ..percorsi_installazione import preferenze
+            salvato = preferenze("MagazzinoProfili", "MagazzinoProfili").value(_CHIAVE, None)
             if salvato is None:
                 _ATTIVE = _windows_animazioni_attive()
             else:
@@ -67,7 +68,8 @@ def imposta_attive(valore: bool, salva: bool = True) -> None:
     global _ATTIVE
     _ATTIVE = bool(valore)
     if salva:
-        QSettings("MagazzinoProfili", "MagazzinoProfili").setValue(_CHIAVE, _ATTIVE)
+        from ..percorsi_installazione import preferenze
+        preferenze("MagazzinoProfili", "MagazzinoProfili").setValue(_CHIAVE, _ATTIVE)
 
 
 def _tieni(widget: QWidget, anim) -> None:

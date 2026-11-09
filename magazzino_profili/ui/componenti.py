@@ -21,7 +21,6 @@ from PySide6.QtGui import (
     QFontMetrics,
     QIcon,
     QIntValidator,
-    QLinearGradient,
     QPainter,
     QPen,
     QPixmap,
@@ -37,48 +36,26 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from . import animazioni
+from . import animazioni, registro_colori
 from .icone import ic_px, icona_svg, pixmap_icona
-from .tema import M, alfa, colore_da_css, colore_di_codice, colore_sbiadito, px, rem, tema_attivo
+from .tema import M, alfa, colore_da_css, px, rem, tema_attivo
 
 
 # ---------------------------------------------------------------- pallino colore
-def _disegna_pallino(hx: str, d: int) -> QPixmap:
-    """Pallino colorato con gradiente, bordo e riflesso (stile mockup)."""
-    t = tema_attivo()
-    img = QPixmap(d, d)
-    img.fill(Qt.GlobalColor.transparent)
-    p = QPainter(img)
-    p.setRenderHint(QPainter.RenderHint.Antialiasing)
-    corpo = QColor(hx)
-    grad = QLinearGradient(0, 0, 0, d)
-    grad.setColorAt(0.0, corpo.lighter(125))
-    grad.setColorAt(1.0, corpo.darker(120))
-    p.setBrush(grad)
-    p.setPen(QPen(QColor(t.bordo_campo), float(max(1, d // 16))))
-    margine = max(1, d // 16)
-    p.drawEllipse(margine, margine, d - 2 * margine, d - 2 * margine)
-    # riflesso
-    p.setPen(Qt.PenStyle.NoPen)
-    r = max(2, d // 5)
-    p.setBrush(QColor(255, 255, 255, 90))
-    p.drawEllipse(margine + r // 2, margine + r // 2, r, r)
-    p.end()
-    return img
+def icona_colore(
+    codice: str | None,
+    diametro: int | None = None,
+    sbiadita: bool = False,
+) -> QIcon:
+    """Icona "pallino colore" per un codice colore (Fase 8: colore REALE).
 
-
-def icona_colore(codice: str, diametro: int | None = None, sbiadita: bool = False) -> QIcon:
-    """Icona "pallino colore" per un codice colore (deterministica).
-
-    Il colore viene dal modulo ``tema`` (mappa nota + derivazione HSL),
-    quindi è stabile tra sessioni e non dipende dal database.
-    Con ``sbiadita=True`` il pallino si mescola con lo sfondo (tab senza pezzi).
+    Il pallino viene dal registro unico (:mod:`.registro_colori`): colore
+    confermato → suggerimento dal codice → non definito (tratteggiato con «?»).
+    Tinta unita ESATTA, bicolore diviso a metà, «sbiadita» = solo trasparenza.
     """
     d = diametro or px(16)
-    hx = colore_di_codice(codice)
-    if sbiadita:
-        hx = colore_sbiadito(hx, tema_attivo().carta2)
-    return QIcon(_disegna_pallino(hx, d))
+    swatch = registro_colori.registro().swatch(codice)
+    return QIcon(registro_colori.pixmap_swatch(swatch, d, tema_attivo(), sbiadito=sbiadita))
 
 
 def icona_linea(nome: str, colore_hx: str, d: int | None = None, margine: float = 0.0) -> QIcon:
@@ -132,6 +109,7 @@ def bottone(
         b.setProperty("dim", dim)
     b.setCursor(Qt.CursorShape.PointingHandCursor)
     if icona:
+        b.setProperty("nome_icona", icona)
         colore = {
             "primario": t.accento_inchiostro,
             "ok": t.ok_inchiostro,
@@ -176,7 +154,8 @@ class Pillola(QLabel):
             "avviso": (t.avviso, t.avviso_vel),
             "pericolo": (t.pericolo, t.pericolo_vel),
         }.get(self._variante, (t.testo_dim, t.carta2))
-        return QColor(primo), colore_da_css(velo)
+        from .tema import composito_su
+        return QColor(primo), composito_su(velo, t.carta)
 
     def sizeHint(self) -> QSize:
         fm = QFontMetrics(self._font())
@@ -258,6 +237,7 @@ class CardKPI(QFrame):
         self.set_tono(tono)
 
     def set_tono(self, tono: str, icona: str | None = None) -> None:
+        self._tono = tono
         t = tema_attivo()
         if icona:
             self._icona_nome = icona
@@ -465,10 +445,13 @@ class ListaMovimenti(QWidget):
         )
         colore = {"ok": t.ok, "pericolo": t.pericolo, "avviso": t.avviso}.get(variante, t.testo_dim)
         data_ora = m.data_ora if isinstance(m.data_ora, datetime) else datetime.fromisoformat(m.data_ora)
-        ora = data_ora.strftime("%d/%m %H:%M")
+        from datetime import timezone
+        if data_ora.tzinfo is None:
+            data_ora = data_ora.replace(tzinfo=timezone.utc)
+        ora = data_ora.astimezone().strftime("%d/%m %H:%M %Z")
         pz = m.pezzo
         titolo = f"{pz.profilo.codice} · {pz.colore.nome_visualizzato} · {pz.lunghezza_mm} mm"
-        sottotitolo = f"{etichetta} · {m.causale or ''}"
+        sottotitolo = etichetta
 
         riga = QFrame()
         riga.setObjectName("RigaMov")
@@ -493,7 +476,7 @@ class ListaMovimenti(QWidget):
         lab_t.setObjectName("MovTitolo")
         lab_s = QLabel(sottotitolo, riga)
         lab_s.setObjectName("MovSotto")
-        lab_s.setTextFormat(Qt.TextFormat.PlainText)  # la causale va mostrata come testo
+        lab_s.setTextFormat(Qt.TextFormat.PlainText)
         colonna.addWidget(lab_t)
         colonna.addWidget(lab_s)
         h.addLayout(colonna, 1)
@@ -517,8 +500,7 @@ class ListaMovimenti(QWidget):
         destra.addWidget(lab_o)
         h.addLayout(destra)
 
-        causale = m.causale or ""
-        self._testi.append(f"{etichetta} {segno} {m.quantita} — {titolo}" + (f" · {causale}" if causale else ""))
+        self._testi.append(f"{etichetta} {segno} {m.quantita} — {titolo}")
         return riga
 
 

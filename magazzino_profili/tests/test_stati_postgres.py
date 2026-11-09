@@ -13,7 +13,7 @@ from magazzino_profili.db.config import ErroreConfigurazione, leggi_config
 from magazzino_profili.domain import Base, Colore, Pezzo, Profilo
 from magazzino_profili.services import (
     PezzoEliminatoError, carica, elimina_scaduti, elimina_scaduto, imposta_stato,
-    lista_scaduti_per_eliminazione,
+    lista_scaduti_per_eliminazione, scarica,
 )
 
 _URL = os.environ.get("MAGAZZINO_TEST_DB_URL", "")
@@ -50,6 +50,14 @@ def eng():
 def _scaricato_a_t0(eng) -> int:
     with Session(eng, expire_on_commit=False) as s:
         pid = carica(s, "AB12", "NERO", 6000, 5, "t", "prova").id
+    with Session(eng) as s:
+        scarica(s, "AB12-NERO-6000", 5, "t", "Uscita completa")
+    # Il clock della prova appartiene alla transizione, non al successivo
+    # imposta_stato idempotente (che correttamente non cambia un timestamp).
+    with Session(eng) as s, s.begin():
+        p = s.get(Pezzo, pid)
+        p.stato = None
+        p.data_ultimo_cambio_stato = None
     with Session(eng, expire_on_commit=False) as s:
         imposta_stato(s, pid, "Scaricato", now=lambda: T0)
     return pid
@@ -103,10 +111,12 @@ def test_passaggio_a_caricato_in_corso_la_cancellazione_non_avviene(eng) -> None
     a.get(Pezzo, pid).data_ultimo_cambio_stato = T0 + timedelta(hours=49)
     a.flush()
     t, esito = _in_thread(lambda: _elimina(eng, pid, T0 + timedelta(hours=50)))
-    time.sleep(0.7)
-    assert esito == []  # il controllo attende la transazione che sta cambiando stato
-    a.commit()
-    a.close()
+    try:
+        time.sleep(0.7)
+        assert esito == []  # il controllo attende la transazione che sta cambiando stato
+        a.commit()
+    finally:
+        a.close()
     t.join(10)
     assert esito == [False]
     stato, _, eliminato = _stato(eng, pid)

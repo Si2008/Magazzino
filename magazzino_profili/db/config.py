@@ -20,6 +20,7 @@ Formato atteso::
 from __future__ import annotations
 
 import sys
+import os
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,7 +31,7 @@ NOME_FILE_DEFAULT = "config.toml"
 _RADICE_PROGETTO = Path(__file__).resolve().parents[2]
 # Segnaposto della password in config.example.toml: se l'utente l'ha
 # copiato in config.toml senza cambiarla, va segnalato (solo un avviso).
-PASSWORD_SEGNAPOSTO = 1234
+PASSWORD_SEGNAPOSTO = "LA_TUA_PASSWORD"
 
 
 class ErroreConfigurazione(Exception):
@@ -59,6 +60,11 @@ class ConfigurazioneDatabase:
 def _candidati_config(percorso: Path | None) -> list[Path]:
     if percorso is not None:
         return [Path(percorso)]
+    from ..percorsi_installazione import installata, config_installata
+    if installata():
+        return [config_installata()]
+    if os.environ.get("MAGAZZINO_CONFIG"):
+        return [Path(os.environ["MAGAZZINO_CONFIG"]).expanduser()]
     candidati = [Path.cwd() / NOME_FILE_DEFAULT]
     if getattr(sys, "frozen", False):
         # Eseguibile PyInstaller: la config vive ACCANTO all'exe
@@ -66,6 +72,53 @@ def _candidati_config(percorso: Path | None) -> list[Path]:
         candidati.append(Path(sys.executable).parent / NOME_FILE_DEFAULT)
     candidati.append(_RADICE_PROGETTO / NOME_FILE_DEFAULT)
     return candidati
+
+
+def trova_config(percorso: str | Path | None = None) -> Path | None:
+    """Unica ricerca della configurazione per desktop, backup e server."""
+    return next((p.resolve() for p in _candidati_config(Path(percorso) if percorso else None)
+                 if p.is_file()), None)
+
+
+def leggi_sezione(nome: str, percorso: str | Path | None = None) -> tuple[dict, Path]:
+    file = trova_config(percorso)
+    base = file.parent if file else (Path(sys.executable).parent if getattr(sys, "frozen", False)
+                                     else _RADICE_PROGETTO)
+    if file is None:
+        return {}, base
+    with file.open("rb") as fonte:
+        sezione = tomllib.load(fonte).get(nome, {})
+    if not isinstance(sezione, dict):
+        raise ErroreConfigurazione(f"La sezione [{nome}] deve essere una tabella TOML")
+    return sezione, base
+
+
+def scrivi_url_pubblico(url: str):
+    """Modifica soltanto l'URL web, preservando tutte le altre impostazioni."""
+    import re
+    import json
+    from ..file_sicuri import destinazione_atomica, blocco_cartella
+    from ..services.telefono import valida_url_pubblico
+    url = valida_url_pubblico(url)
+    file = trova_config()
+    if file is None:
+        raise ErroreConfigurazione("Configurazione del programma assente")
+    with blocco_cartella(file.parent):
+        righe = file.read_text(encoding="utf-8").splitlines(keepends=True)
+        indice = next((i for i, riga in enumerate(righe) if riga.strip() == "[web]"), None)
+        valore = "url_pubblico = " + json.dumps(url) + "\n"
+        if indice is None:
+            righe.extend(["\n[web]\n", valore])
+        else:
+            fine = next((i for i in range(indice + 1, len(righe)) if righe[i].lstrip().startswith("[")), len(righe))
+            esistente = next((i for i in range(indice + 1, fine) if re.match(r"\s*url_pubblico\s*=", righe[i])), None)
+            if esistente is None:
+                righe.insert(indice + 1, valore)
+            else:
+                righe[esistente] = valore
+        with destinazione_atomica(file) as tmp:
+            tmp.write_text("".join(righe), encoding="utf-8")
+    return url
 
 
 def leggi_config(percorso: str | Path | None = None) -> ConfigurazioneDatabase:
@@ -94,14 +147,16 @@ def leggi_config(percorso: str | Path | None = None) -> ConfigurazioneDatabase:
             password=str(sezione["password"]),
             dbname=str(sezione["dbname"]),
         )
-    except (KeyError, TypeError) as errore:
+    except (KeyError, TypeError, ValueError) as errore:
         raise ErroreConfigurazione(
             "La sezione [database] deve contenere le chiavi "
             "host, porta, utente, password, dbname"
         ) from errore
 
     # Avviso (non bloccante): la password è ancora quella di esempio.
-    if configurazione.password == PASSWORD_SEGNAPOSTO:
+    if not 1 <= configurazione.porta <= 65535 or not configurazione.host or not configurazione.dbname:
+        raise ErroreConfigurazione("Host, nome database e porta 1..65535 sono obbligatori")
+    if configurazione.password in (PASSWORD_SEGNAPOSTO, "1234"):
         print(
             "AVVISO: la password del database in config.toml è ancora il "
             "valore di esempio di config.example.toml. Imposta una password "

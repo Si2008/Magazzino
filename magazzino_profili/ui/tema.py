@@ -52,25 +52,29 @@ class M:
     BTN_SM_PV, BTN_SM_PH = rem(0.3125), rem(0.625)    # 8, 15
     BTN_ICONA = rem(2.25)                             # 54
     # barra del titolo / schede / pagina
-    TITOLO_PV, TITOLO_PH = rem(0.625), rem(1.125)     # 15, 27
+    TITOLO_PV, TITOLO_PH = rem(0.375), rem(1.0)
     LOGO = rem(1.875)                                 # 45
     FONT_BRAND = rem(0.9375)                          # 22
-    TAB_PV, TAB_PH = rem(0.625), rem(1.0625)          # 15, 26
+    TAB_PV, TAB_PH = rem(0.417), rem(1.0625)
     CONTA = rem(1.1875)                               # 28 (badge contatore)
     FONT_CONTA = rem(0.6875)                          # 16
-    PAG_T, PAG_H, PAG_B = rem(1.25), rem(1.375), rem(1.75)   # 30, 33, 42
-    CARD_PAD = rem(1.125)                             # 27
-    GAP = rem(0.875)                                  # 21
+    PAG_T, PAG_H, PAG_B = rem(0.875), rem(1.0), rem(1.0)
+    CARD_PAD = rem(1.0)
+    GAP = rem(0.667)
     GAP_SM = rem(0.75)                                # 18
     # KPI
-    KPI_PV, KPI_PH = rem(0.875), rem(1.0)             # 21, 24
-    KPI_ICO = rem(2.375)                              # 57
+    KPI_PV, KPI_PH = rem(0.5), rem(0.75)
+    KPI_ICO = rem(1.833)
     KPI_ICO_R = rem(0.625)                            # 15
     KPI_ICO_SVG = rem(1.25)                           # 30
     KPI_GAP = rem(0.8125)                             # 20
     FONT_KPI_V = rem(1.3125)                          # 32
     # inventario
-    ASIDE_W = rem(20.625)                             # 495
+    ASIDE_W = rem(20.0)                               # 480, larghezza iniziale ridimensionabile
+    ASIDE_MIN = rem(16.0)                             # 384
+    COLONNA_MIN = rem(18.0)                           # 432, form/elenco sempre utilizzabili
+    DIVISORE_W = rem(0.5)                             # 12, trascinabile anche con mouse impreciso
+    RIGA_PROFILI = rem(3.0)                           # 72, area cliccabile dei profili
     TOOLBAR_PAD = rem(0.875)                          # 21
     TOOLBAR_GAP = rem(0.5)                            # 12
     CAMPO_PV, CAMPO_PH = rem(0.5625), rem(0.625)      # 14, 15
@@ -78,7 +82,7 @@ class M:
     TD_PV, TD_PH = rem(0.625), rem(0.875)             # 15, 21
     PILL_PV, PILL_PH = rem(0.125), rem(0.5625)        # 3, 14
     PILL_PUNTO = rem(0.375)                           # 9
-    RIGA_INV = 76                                     # altezza riga inventario (verificata a screenshot)
+    RIGA_INV = 64                                     # due righe di testo, senza miniature pesanti
     # colonna laterale
     LAT_PV, LAT_PH = rem(1.0), rem(1.125)             # 24, 27
     FONT_LAT_TITOLO = rem(1.125)                      # 27
@@ -87,8 +91,8 @@ class M:
     CAMPO_MB = rem(0.875)                             # 21
     BIG_FONT = rem(1.125)                             # 27
     BIG_PV, BIG_PH = rem(0.8125), rem(0.875)          # 20, 21
-    SPLIT_SX = rem(27.5)                              # 660 (colonna form)
-    PROF_DX = rem(22.5)                               # 540
+    SPLIT_SX = rem(22.0)                              # 528 (form iniziale, ridimensionabile)
+    PROF_DX = rem(19.0)                               # 456
     IMG_BOX_H = rem(12.5)                             # 300
     CHIP_PV, CHIP_PH = rem(0.25), rem(0.6875)         # 6, 16
     CHIP_R = 16                                       # raggio chip: Qt IGNORA border-radius > altezza/2 (chip alti ~35 px)
@@ -147,6 +151,10 @@ class Tema:
     ok_vel: str
     avviso_vel: str
     pericolo_vel: str
+    # Il disegno tecnico resta su bianco per conservare le linee nere del PNG.
+    sfondo_disegno: str = "#ffffff"
+    inchiostro_chiaro: str = "#ffffff"
+    inchiostro_scuro: str = "#161a22"
 
 
 SCURO = Tema(
@@ -160,7 +168,7 @@ SCURO = Tema(
     testo="#eceef2",
     testo_dim="#9ba3b1",
     testo_debole="#8d97ab",
-    accento="#5b8dff",
+    accento="#7aa4ff",
     accento_sfondo="#243350",
     ok="#3ccb82",
     avviso="#f0b04a",
@@ -168,7 +176,7 @@ SCURO = Tema(
     accento_inchiostro="#0b1633",
     ok_inchiostro="#06261a",
     pericolo_inchiostro="#2c0a08",
-    accento_vel="rgba(91, 141, 255, 36)",
+    accento_vel="rgba(122, 164, 255, 36)",
     ok_vel="rgba(60, 203, 130, 36)",
     avviso_vel="rgba(240, 176, 74, 38)",
     pericolo_vel="rgba(244, 122, 116, 36)",
@@ -189,7 +197,7 @@ CHIARO = Tema(
     accento_sfondo="#e3ebfc",
     ok="#117a48",
     avviso="#8f5900",
-    pericolo="#c43832",
+    pericolo="#b92e29",
     accento_inchiostro="#ffffff",
     ok_inchiostro="#ffffff",
     pericolo_inchiostro="#ffffff",
@@ -214,42 +222,20 @@ def tema_attivo() -> Tema:
 
 
 # ---------------------------------------------------------------------------
-# Icona "pallino colore": il colore è derivato in modo deterministico dal
-# codice (come nel mockup), così è stabile tra sessioni.
+# Icona "pallino colore" — Fase 8: ``colore_di_codice`` è una funzione sottile
+# di compatibilità: restituisce il primo colore del registro (confermato o
+# suggerito), oppure il neutro ``#9aa0a8`` se non definito. Mai un colore
+# casuale derivato da un hash.
 # ---------------------------------------------------------------------------
 
-_NOTI: dict[str, str] = {
-    "AN007": "#a9aeb7",
-    "AN001": "#b9bec9",
-    "RAL9010": "#f2f1ea",
-    "RAL9005": "#0e0e10",
-    "RAL7016": "#383e42",
-    "RAL8014": "#4a3728",
-    "ROSSO": "#c8443c",
-    "BLU": "#33619e",
-    "GRIGIO": "#8a909b",
-    "NERO": "#232529",
-    "BIANCO": "#f0f1f3",
-}
+def colore_di_codice(codice: str | None) -> str:
+    """Compatibilità: primo colore del registro per il codice, altrimenti ``#9aa0a8``."""
+    from .registro_colori import registro
 
-
-def _hsl(h: int, s: int, l: int) -> str:
-    """Converte HSL in esadecimale (implementazione compatta)."""
-    s /= 100.0
-    l /= 100.0
-    k = lambda d: (d + h / 30.0) % 12.0
-    a = s * min(l, 1.0 - l)
-    f = lambda d: l - a * max(-1.0, min(k(d) - 3.0, min(9.0 - k(d), 1.0)))
-    return "#%02x%02x%02x" % tuple(int(round(f(d) * 255)) for d in (0, 8, 4))
-
-
-def colore_di_codice(codice: str) -> str:
-    """Colore esadecimale associato a un codice colore (deterministico)."""
-    t = (codice or "").upper().strip()
-    if t in _NOTI:
-        return _NOTI[t]
-    h = sum(ord(c) * 7 for c in t) % 360
-    return _hsl(h, 18, 55)
+    swatch = registro().swatch(codice)
+    if swatch.definito:
+        return swatch.colori[0]
+    return "#9aa0a8"
 
 
 def colore_sbiadito(hx: str, sfondo: str, peso: float = 0.65) -> str:
@@ -277,6 +263,37 @@ def colore_da_css(valore: str) -> QColor:
 def schiarisci(hx: str, percento: int = 108) -> str:
     """Equivalente di ``filter: brightness(1.08)`` per l'hover dei pulsanti pieni."""
     return QColor(hx).lighter(percento).name()
+
+
+def luminanza_relativa(colore: str) -> float:
+    c = QColor(colore)
+    canali = [v / 255 for v in (c.red(), c.green(), c.blue())]
+    lineari = [v / 12.92 if v <= .04045 else ((v + .055) / 1.055) ** 2.4 for v in canali]
+    return sum(v * p for v, p in zip(lineari, (.2126, .7152, .0722)))
+
+
+def rapporto_contrasto(primo: str, secondo: str) -> float:
+    a, b = sorted((luminanza_relativa(primo), luminanza_relativa(secondo)))
+    return (b + .05) / (a + .05)
+
+
+def composito_su(velo: str, sfondo: str) -> QColor:
+    """Rende opaco un velo: il contrasto resta stabile anche sulla riga selezionata."""
+    v, s = colore_da_css(velo), QColor(sfondo)
+    a = v.alphaF()
+    return QColor(*[round(a*x+(1-a)*y) for x,y in zip(
+        (v.red(),v.green(),v.blue()), (s.red(),s.green(),s.blue()))])
+
+
+def inchiostro_contrasto(sfondo: str, t: Tema | None = None) -> str:
+    t = t or tema_attivo()
+    return max((t.inchiostro_chiaro, t.inchiostro_scuro),
+               key=lambda colore: rapporto_contrasto(colore, sfondo))
+
+
+def hover_pieno(colore: str, t: Tema) -> str:
+    # In chiaro si scurisce: schiarire il fondo riduce il contrasto col bianco.
+    return QColor(colore).darker(108).name() if t is CHIARO else schiarisci(colore)
 
 
 def palette_tema(t: Tema):
@@ -416,11 +433,12 @@ QFrame#Toast[tono="danger"] {{ border-left-color: {t.pericolo}; }}
 QFrame#Toast QLabel {{ font-weight: 600; }}
 
 /* ---------- campi ---------- */
-QLineEdit, QComboBox, QSpinBox {{
+QLineEdit, QComboBox, QSpinBox, QTextEdit, QPlainTextEdit {{
     background: {t.superficie}; border: 1px solid {t.bordo_campo}; border-radius: {M.R_SM}px;
     padding: {M.CAMPO_PV}px {M.CAMPO_PH}px; selection-background-color: {t.accento_vel}; selection-color: {t.testo};
 }}
 QLineEdit:focus, QComboBox:focus {{ border-color: {t.accento}; }}
+QLineEdit {{ placeholder-text-color: {t.testo_dim}; }}
 QLineEdit:disabled, QComboBox:disabled {{ color: {t.testo_debole}; }}
 QLineEdit[classe="grande"] {{
     font-family: "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
@@ -443,16 +461,18 @@ QPushButton {{
     padding: {M.BTN_PV}px {M.BTN_PH}px; font-weight: 600; font-size: {M.FONT_BTN}px;
 }}
 QPushButton:hover {{ border-color: {t.accento}; }}
+QPushButton:focus {{ border: 2px solid {t.accento}; }}
+QPushButton:checked {{ border-color: {t.accento}; background: {t.accento_vel}; color: {t.testo}; }}
 QPushButton:disabled {{ color: {t.testo_debole}; border-color: {t.bordo}; }}
 QPushButton[dim="sm"] {{ padding: {M.BTN_SM_PV}px {M.BTN_SM_PH}px; font-size: {M.FONT_BTN_SM}px; }}
 QPushButton[dim="lg"] {{ padding: {M.BTN_LG_PV}px {M.BTN_LG_PH}px; font-size: {M.FONT_BTN_LG}px; }}
 QPushButton[dim="icona"] {{ padding: 0; }}
 QPushButton[classe="primario"] {{ background: {t.accento}; border-color: {t.accento}; color: {t.accento_inchiostro}; }}
-QPushButton[classe="primario"]:hover {{ background: {schiarisci(t.accento)}; }}
+QPushButton[classe="primario"]:hover {{ background: {hover_pieno(t.accento, t)}; }}
 QPushButton[classe="ok"] {{ background: {t.ok}; border-color: {t.ok}; color: {t.ok_inchiostro}; }}
-QPushButton[classe="ok"]:hover {{ background: {schiarisci(t.ok)}; }}
+QPushButton[classe="ok"]:hover {{ background: {hover_pieno(t.ok, t)}; }}
 QPushButton[classe="pericolo"] {{ background: {t.pericolo}; border-color: {t.pericolo}; color: {t.pericolo_inchiostro}; }}
-QPushButton[classe="pericolo"]:hover {{ background: {schiarisci(t.pericolo)}; }}
+QPushButton[classe="pericolo"]:hover {{ background: {hover_pieno(t.pericolo, t)}; }}
 QPushButton[classe="primario"]:disabled, QPushButton[classe="ok"]:disabled, QPushButton[classe="pericolo"]:disabled {{
     background: {t.carta2}; color: {t.testo_debole}; border-color: {t.bordo};
 }}
@@ -474,7 +494,7 @@ QPushButton[classe="link"] {{ background: transparent; border: none; color: {t.a
 QPushButton[classe="link"]:hover {{ text-decoration: underline; }}
 
 /* ---------- tabelle ---------- */
-QTableWidget {{
+QTableWidget, QListWidget, QTreeWidget {{
     background: transparent; border: none; gridline-color: transparent;
     selection-background-color: {t.accento_vel}; selection-color: {t.testo};
 }}
@@ -490,6 +510,8 @@ QHeaderView::section {{
 QTableCornerButton::section {{ background: {t.carta}; border: none; }}
 
 QScrollArea, QScrollArea > QWidget, QScrollArea > QWidget > QWidget {{ background: transparent; border: none; }}
+QSplitter::handle {{ background: {t.bordo}; border-radius: 4px; }}
+QSplitter::handle:hover, QSplitter::handle:pressed {{ background: {t.accento}; }}
 QScrollBar:vertical {{ background: transparent; width: {rem(0.5)}px; margin: 0; }}
 QScrollBar::handle:vertical {{ background: {t.bordo_forte}; border-radius: {rem(0.25)}px; min-height: {rem(1.25)}px; }}
 QScrollBar::handle:vertical:hover {{ background: {t.testo_debole}; }}
@@ -529,7 +551,7 @@ def qss_badge(t: Tema, colore: str) -> str:
     """Badge rotondo (es. contatore avvisi)."""
     return (
         f"background: {colore};\n"
-        f"color: #ffffff;\n"
+        f"color: {inchiostro_contrasto(colore, t)};\n"
         f"border-radius: {css(9)};\n"
         f"min-width: {css(18)};\n"
         f"min-height: {css(18)};"

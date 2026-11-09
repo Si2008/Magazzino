@@ -1,4 +1,4 @@
-"""Scheda Scarico: riduzione di giacenza da barcode, con causale."""
+"""Scheda Scarico: riduzione di giacenza da barcode."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..services import consultazione, scarica
+from . import registro_colori
 from .collega_telefono import crea_pulsante_telefono
 from .componenti import (
     Anteprima,
@@ -22,10 +23,17 @@ from .componenti import (
     Stepper,
     bottone,
     campo_con_etichetta,
-    chip,
 )
 from .messaggi import chiedi_conferma, mostra_errore
-from .tema import M, alfa, colore_di_codice, rem, tema_attivo
+from .tema import M, rem, tema_attivo, inchiostro_contrasto
+
+
+def _luminanza(hex_val: str) -> float:
+    """Luminanza percepita (0–1) di un colore ``#rrggbb`` (per il contrasto del chip)."""
+    from PySide6.QtGui import QColor
+
+    c = QColor(hex_val)
+    return (0.2126 * c.red() + 0.7152 * c.green() + 0.0722 * c.blue()) / 255.0
 
 
 class SchedaScarico(QWidget):
@@ -35,6 +43,7 @@ class SchedaScarico(QWidget):
 
     #: l'utente ha premuto "Collega telefono"
     telefono_richiesto = Signal()
+    richiamo_richiesto = Signal(str)
 
     def __init__(
         self,
@@ -52,7 +61,8 @@ class SchedaScarico(QWidget):
 
         card = QFrame(self)
         card.setObjectName("Card")
-        card.setFixedWidth(M.SPLIT_SX)
+        card.setMinimumWidth(M.COLONNA_MIN)
+        self.pannello_operazione = card
         # Il form è alto più dello schermo: come nel mockup (`.main{overflow:auto}`)
         # il contenuto scorre dentro la card invece di essere compresso.
         vcard = QVBoxLayout(card)
@@ -94,20 +104,7 @@ class SchedaScarico(QWidget):
 
         stepper = Stepper(valore=1, minimo=1, parent=card)
         self.quantita = stepper.campo  # quantita.text()/setText continuano a funzionare
-        self.causale = QLineEdit(card)
-        self.causale.setPlaceholderText("Causale (obbligatoria)")
-        riga = QHBoxLayout()
-        riga.setSpacing(M.GAP_SM)
-        riga.addWidget(campo_con_etichetta("Quantità (pz)", stepper, card), 1)
-        riga.addWidget(campo_con_etichetta("Causale (obbligatoria)", self.causale, card), 1)
-        v.addLayout(riga)
-
-        chips = QHBoxLayout()
-        chips.setSpacing(rem(0.375))
-        for nome in ("Lavorazione", "Vendita", "Scarto"):
-            chips.addWidget(chip(nome, self.causale, card))
-        chips.addStretch(1)
-        v.addLayout(chips)
+        v.addWidget(campo_con_etichetta("Quantità (pz)", stepper, card))
 
         self.messaggio = MessaggioErrore(card)
         v.addWidget(self.messaggio)
@@ -121,15 +118,45 @@ class SchedaScarico(QWidget):
         self.salva = bottone("Scarica", "pericolo", "lg", "down", card)
         self.salva.clicked.connect(self.salva_scarico)
         v.addWidget(self.salva)
+        self.chiama_vassoio = bottone("Chiama vassoio", parent=card)
+        self.chiama_vassoio.clicked.connect(lambda: self.richiamo_richiesto.emit(self.barcode.text().strip()))
+        v.addWidget(self.chiama_vassoio)
         scroller.setWidget(contenuto)
         vcard.addWidget(scroller)
 
         # ---------------- colonna destra: movimenti recenti ----------------
         lato = QFrame(self)
         lato.setObjectName("Card")
-        vl = QVBoxLayout(lato)
-        vl.setContentsMargins(M.CARD_PAD, M.CARD_PAD, M.CARD_PAD, M.CARD_PAD)
+        lato.setMinimumWidth(M.COLONNA_MIN)
+        self.pannello_profili = lato
+        layout_lato = QVBoxLayout(lato)
+        layout_lato.setContentsMargins(M.CARD_PAD, M.CARD_PAD, M.CARD_PAD, M.CARD_PAD)
+        layout_lato.setSpacing(M.GAP_SM)
+        from .ricerca_profili import RicercaProfili
+        self._profilo_da_elenco = None
+        self.ricerca_profili = RicercaProfili(self._factory, scarico=True, parent=lato)
+        self.ricerca_profili.selezionato.connect(self._seleziona_profilo)
+        layout_lato.addWidget(self.ricerca_profili, 3)
+        scroller_lato = QScrollArea(lato)
+        scroller_lato.setWidgetResizable(True)
+        scroller_lato.setMinimumHeight(rem(3))
+        scroller_lato.setMaximumHeight(rem(9))
+        self.dettagli_elenco = bottone("Dettagli e ultimi movimenti", dim="sm", parent=lato)
+        self.dettagli_elenco.setCheckable(True)
+        self.dettagli_elenco.setToolTip("Apri o richiudi i dettagli lasciando spazio all'elenco profili")
+        self.dettagli_elenco.toggled.connect(scroller_lato.setVisible)
+        layout_lato.addWidget(self.dettagli_elenco)
+        scroller_lato.hide()
+        contenuto_lato = QWidget()
+        scroller_lato.setWidget(contenuto_lato)
+        layout_lato.addWidget(scroller_lato, 2)
+        vl = QVBoxLayout(contenuto_lato)
+        vl.setContentsMargins(0, 0, 0, 0)
         vl.setSpacing(M.GAP_SM)
+        self.dettaglio_selezione = QLabel("Seleziona il pezzo da scaricare: misura e vassoio sono nell’elenco.", lato)
+        self.dettaglio_selezione.setObjectName("Dim")
+        self.dettaglio_selezione.setWordWrap(True)
+        vl.addWidget(self.dettaglio_selezione)
         titolo_m = QLabel("Ultimi movimenti", lato)
         titolo_m.setObjectName("TitoloCard")
         vl.addWidget(titolo_m)
@@ -137,10 +164,12 @@ class SchedaScarico(QWidget):
         area = QScrollArea(lato)
         area.setWidgetResizable(True)
         area.setWidget(self.movimenti)
+        area.setMinimumHeight(rem(8))
         vl.addWidget(area, 1)
 
-        radice.addWidget(card)
-        radice.addWidget(lato, 1)
+        from .pannelli import dividi_pannelli
+        self.divisione = dividi_pannelli(card, lato, (44, 56), self)
+        radice.addWidget(self.divisione)
 
         self._mostra_movimenti()
         self.barcode.setFocus()
@@ -177,20 +206,37 @@ class SchedaScarico(QWidget):
         giacenza = pezzo.quantita
         dopo = giacenza - quantita
         t = tema_attivo()
-        colore = colore_di_codice(pezzo.colore.codice_normalizzato)
+        # Fase 8: il chip mostra il colore REALE del codice dal registro unico:
+        # confermato → suggerimento dal codice → non definito (contorno neutro).
+        swatch = registro_colori.registro().swatch(pezzo.colore.codice_normalizzato)
         dim = t.testo_dim
         flusso = f'<div style="font-size:{M.FONT_FLUSSO}px;font-weight:700">'
         colore_flusso = t.pericolo if dopo < 0 else t.testo
         righe = [
             f'<div style="font-size:{M.FONT_LAT_TITOLO + 4}px;font-weight:800">{pezzo.profilo.codice}</div>',
         ]
+        from html import escape
+        if getattr(pezzo,'_commessa_cognome',''):
+            righe.append('Commessa: '+escape(pezzo._commessa_cognome))
         if pezzo.profilo.descrizione:
             righe.append(
                 f'<div style="color:{dim};font-size:{M.FONT_SMALL}px">{pezzo.profilo.descrizione}</div>'
             )
+        if not swatch.definito:
+            chip = (
+                f'<span style="border:1.5px solid {dim};color:{dim};'
+                f'border-radius:999px;padding:3px 10px;font-weight:700">{pezzo.colore.nome_visualizzato}</span>'
+            )
+        else:
+            # testo leggibile: luminanza del primo colore > 0.6 → testo scuro, altrimenti chiaro
+            sfondo_chip = swatch.colori[0] if len(swatch.colori) == 1 else t.carta2
+            testo_chip = inchiostro_contrasto(sfondo_chip)
+            chip = (
+                f'<span style="background:{sfondo_chip};color:{testo_chip};'
+                f'border-radius:999px;padding:3px 10px;font-weight:700">{pezzo.colore.nome_visualizzato}</span>'
+            )
         righe.append(
-            f'<div style="margin-top:6px"><span style="background:{colore};color:{alfa(colore, 0.6)};'
-            f'border-radius:999px;padding:3px 10px;font-weight:700">{pezzo.colore.nome_visualizzato}</span>'
+            f'<div style="margin-top:6px">{chip}'
             f"&nbsp; {self._numero_it(pezzo.lunghezza_mm)} mm</div>"
         )
         if pezzo.ubicazione:
@@ -205,6 +251,27 @@ class SchedaScarico(QWidget):
         )
         self.anteprima.setText("<br>".join(righe))
 
+    def _seleziona_profilo(self, scelta):
+        precedente = self._profilo_da_elenco
+        self._profilo_da_elenco = scelta
+        if scelta is None:
+            if precedente is not None:
+                self.barcode.clear()
+            self.dettaglio_selezione.setText("Nessun pezzo selezionato.")
+            return
+        self.barcode.setText(scelta.barcode)
+        self.quantita.setText("1")
+        self.dettaglio_selezione.setText(
+            f"{scelta.codice} · {scelta.colore} · {scelta.lunghezza_mm} mm\n"
+            f"Vassoio: {scelta.vassoio or 'Non assegnato'} · Barcode: {scelta.barcode}")
+
+    def aggiorna_tema(self):
+        self._aggiorna_anteprima(self.barcode.text())
+
+    def showEvent(self, evento):
+        self.ricerca_profili.aggiorna()
+        super().showEvent(evento)
+
     @staticmethod
     def _numero_it(n: int) -> str:
         return f"{n:,}".replace(",", ".")
@@ -213,19 +280,12 @@ class SchedaScarico(QWidget):
     def ricevi_scansione(self, barcode: str) -> None:
         """Barcode dal telefono: compila il campo e salva come farebbe un lettore con Invio."""
         self.barcode.setText(barcode.strip().upper())
-        self.barcode.textChanged.emit(self.barcode.text())  # stessa catena di una digitazione manuale
-        self._su_invio()
+        return self._su_invio()
 
     def _su_invio(self) -> None:
-        if not self.causale.text().strip():
-            self.messaggio.mostra("La causale è obbligatoria.")
-            return
-        self.salva_scarico()
+        return self.salva_scarico()
 
     def salva_scarico(self) -> None:
-        if not self.causale.text().strip():
-            self.messaggio.mostra("La causale è obbligatoria.")
-            return
         testo = self.barcode.text().strip()
         if not testo:
             self.messaggio.mostra("Compila il barcode.")
@@ -270,7 +330,7 @@ class SchedaScarico(QWidget):
                     barcode=testo,
                     quantita=quantita,
                     utente=self._utente or "operatore",
-                    causale=self.causale.text().strip(),
+                    causale="Scarico",
                 )
             finally:
                 sessione.close()
@@ -279,12 +339,13 @@ class SchedaScarico(QWidget):
             return
 
         self._azzera_form()
+        self.ricerca_profili.aggiorna()
         self._mostra_movimenti()
         self.cambiato.emit()
+        return True
 
     def _azzera_form(self) -> None:
         self.barcode.clear()
         self.quantita.setText("1")
-        self.causale.clear()
         self.messaggio.mostra("")
         self.anteprima.clear()

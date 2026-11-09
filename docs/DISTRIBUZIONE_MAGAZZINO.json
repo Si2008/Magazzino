@@ -1,0 +1,23 @@
+{
+  "versione": "2.0.0",
+  "python": "3.14.7",
+  "pyside6": "6.12.0",
+  "piattaforma": "Windows 10/11 x64",
+  "eseguibile_sha256": "27c0f238ffec6ffeb078ad82123e700b496a93b24ebd88e6798f4960dccfd545",
+  "launcher_sha256": "f2be82f7406420ce24bdfae8e3bed0d9bbe489403a6518f0799eaa0e52fbcbf1",
+  "prova_eseguibile": {
+    "server_pronto_s": 1.633,
+    "pagina_mobile": true,
+    "risorse_locali": true,
+    "creazione_unitari": 3,
+    "idempotenza": true,
+    "barcode_png": true,
+    "immagine_catalogo": true,
+    "scarico": true,
+    "arresto_server": 0,
+    "launcher_config_e_argomenti": true,
+    "desktop_avviato_senza_errori": true
+  },
+  "numero_png": 211,
+  "dimensione_byte": 188802281
+}

@@ -155,7 +155,7 @@ def test_peso_con_profilo_senza_peso(factory, con_dati):
     pezzo = sessione.get(Pezzo, 1)
     assert pezzo.profilo.peso_kg_per_metro is not None
     assert peso_unitario_kg(pezzo) == 6.0
-    pezzo.profilo.peso_kg_per_metro = None
+    pezzo.profilo.__dict__["peso_kg_per_metro"] = None  # simula dati storici senza nuove scritture
     assert peso_unitario_kg(pezzo) == 0.0
     assert peso_totale_kg(pezzo) == 0.0
     sessione.close()

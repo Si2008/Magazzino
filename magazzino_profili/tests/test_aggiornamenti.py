@@ -109,25 +109,25 @@ def test_download_riuscito_e_avanzamento(tmp_path):
     visti = []
     f = ag.scarica_e_verifica(manifest(), tmp_path, apri_con(DATI), OK, lambda a, t: visti.append((a, t)))
     assert f.read_bytes() == DATI and visti[-1] == (len(DATI), len(DATI))
-    assert sorted(p.name for p in tmp_path.iterdir()) == ["Installer-1.2.0.exe"]  # niente .part né .lock
+    assert sorted(p.name for p in (p for p in tmp_path.iterdir() if p.name != ".magazzino.lock")) == ["Installer-1.2.0.exe"]  # niente .part né .lock
 
 
 def test_download_troncato(tmp_path):
     with pytest.raises(ag.ErroreAggiornamento, match="incompleto"):
         ag.scarica_e_verifica(manifest(), tmp_path, apri_con(DATI[:-10]), OK)
-    assert list(tmp_path.iterdir()) == []
+    assert list((p for p in tmp_path.iterdir() if p.name != ".magazzino.lock")) == []
 
 
 def test_rete_interrotta_a_meta(tmp_path):
     with pytest.raises(ag.ErroreAggiornamento, match="rete"):
         ag.scarica_e_verifica(manifest(), tmp_path, apri_con(DATI, errore_dopo=1000), OK)
-    assert list(tmp_path.iterdir()) == []
+    assert list((p for p in tmp_path.iterdir() if p.name != ".magazzino.lock")) == []
 
 
 def test_file_piu_grande_del_previsto(tmp_path):
     with pytest.raises(ag.ErroreAggiornamento, match="più grande"):
         ag.scarica_e_verifica(manifest(), tmp_path, apri_con(DATI + b"x" * 200000), OK)
-    assert list(tmp_path.iterdir()) == []
+    assert list((p for p in tmp_path.iterdir() if p.name != ".magazzino.lock")) == []
 
 
 def test_checksum_errato(tmp_path):
@@ -135,13 +135,13 @@ def test_checksum_errato(tmp_path):
     corrotto[5] ^= 1
     with pytest.raises(ag.ErroreAggiornamento, match="corrotto"):
         ag.scarica_e_verifica(manifest(), tmp_path, apri_con(bytes(corrotto)), OK)
-    assert list(tmp_path.iterdir()) == []
+    assert list((p for p in tmp_path.iterdir() if p.name != ".magazzino.lock")) == []
 
 
 def test_firma_errata_non_rende_disponibile_nulla(tmp_path):
     with pytest.raises(ag.ErroreAggiornamento, match="autentico"):
         ag.scarica_e_verifica(manifest(), tmp_path, apri_con(DATI), firma_errata)
-    assert list(tmp_path.iterdir()) == []
+    assert list((p for p in tmp_path.iterdir() if p.name != ".magazzino.lock")) == []
 
 
 def test_la_verifica_vede_il_file_parziale_e_non_quello_finale(tmp_path):
@@ -185,11 +185,11 @@ def test_download_concorrenti_rifiutati(tmp_path):
     ag.scarica_e_verifica(manifest(), tmp_path, apri_con(DATI), OK)  # dopo la fine il blocco è libero
 
 
-def test_blocco_tra_processi_file_lock(tmp_path):
-    (tmp_path / ".aggiornamento.lock").write_text("1234")
-    with pytest.raises(ag.ErroreAggiornamento, match="altro processo"):
-        ag.scarica_e_verifica(manifest(), tmp_path, apri_con(DATI), OK)
-    assert (tmp_path / ".aggiornamento.lock").exists()  # il lock altrui NON viene cancellato
+def test_file_lock_residuo_non_blocca_dopo_crash(tmp_path):
+    (tmp_path / ".magazzino.lock").write_text("0")
+    file=ag.scarica_e_verifica(manifest(),tmp_path,apri_con(DATI),OK)
+    assert file.read_bytes()==DATI
+    assert (tmp_path / ".magazzino.lock").exists()
 
 
 # ---------------------------------------------------------------------------

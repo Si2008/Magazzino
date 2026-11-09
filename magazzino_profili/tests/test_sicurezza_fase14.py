@@ -59,12 +59,10 @@ def test_segrete_valida():
     assert sw.valida_segrete_token(SEGRETA) == SEGRETA
 
 
-def test_crea_app_rifiuta_la_segrete_di_esempio_e_quelle_corte(fabbrica):
-    for debole in (PLACEHOLDER, "a", "x" * 50):
-        with pytest.raises(ValueError):
-            crea_app(session_factory=fabbrica, segrete_token=debole)
-    crea_app(session_factory=fabbrica, segrete_token=SEGRETA)  # quella buona parte
-    crea_app(session_factory=fabbrica, segrete_token=None)  # assente: casuale, come prima
+def test_app_non_richiede_segrete_autenticazione(fabbrica):
+    for valore in (None,"",PLACEHOLDER):
+        c=TestClient(crea_app(session_factory=fabbrica,segrete_token=valore))
+        assert c.get("/api/salute").status_code==200
 
 
 # ============================================================ limite tentativi
@@ -125,44 +123,16 @@ def _client(fabbrica, **k):
 
 
 def test_login_429_dopo_cinque_errori_anche_con_password_giusta(fabbrica):
-    c = _client(fabbrica)
-    assert [
-        c.post("/api/login", json={"utente": "mario", "password": f"sbagliata{i}"}).status_code
-        for i in range(5)
-    ] == [401] * 5
-    r = c.post("/api/login", json={"utente": "mario", "password": "password123"})
-    assert r.status_code == 429 and int(r.headers["Retry-After"]) >= 1 and "Riprovare" in r.json()["detail"]
+    # Requisito aggiornato: niente login né limiti collegati alle credenziali.
+    c=_client(fabbrica)
+    assert c.post("/api/login",json={}).status_code==404
+    assert c.post("/api/telefono/ping",json={}).status_code==200
 
 
-def test_login_riuscito_azzera_i_fallimenti(fabbrica):
-    c = _client(fabbrica)
-    for i in range(4):
-        c.post("/api/login", json={"utente": "mario", "password": f"no{i}xxxx"})
-    assert c.post("/api/login", json={"utente": "mario", "password": "password123"}).status_code == 200
-    for i in range(4):
-        assert c.post("/api/login", json={"utente": "mario", "password": f"no{i}xxxx"}).status_code == 401
 
 
-def test_cambiare_nome_utente_non_aggira_il_limite_per_indirizzo(fabbrica):
-    p = sw.ProtezioneLogin(
-        sw.LimitatoreTentativi(5, 300, 300), sw.LimitatoreTentativi(8, 300, 300)
-    )
-    c = _client(fabbrica, protezione_login=p)
-    codici = [
-        c.post("/api/login", json={"utente": f"utente{i}", "password": "xxxxxxxx"}).status_code
-        for i in range(10)
-    ]
-    assert codici[:8] == [401] * 8 and codici[8:] == [429, 429]
 
 
-def test_il_blocco_e_per_indirizzo_non_per_tutti(fabbrica):
-    app = crea_app(session_factory=fabbrica, segrete_token=SEGRETA)
-    a = TestClient(app, client=("10.0.0.1", 1))
-    b = TestClient(app, client=("10.0.0.2", 1))
-    for i in range(5):
-        a.post("/api/login", json={"utente": "mario", "password": f"no{i}xxxxx"})
-    assert a.post("/api/login", json={"utente": "mario", "password": "password123"}).status_code == 429
-    assert b.post("/api/login", json={"utente": "mario", "password": "password123"}).status_code == 200
 
 
 # ============================================================ password e timing
@@ -226,7 +196,7 @@ def test_corpo_troppo_grande_413_e_corpo_normale_ok(fabbrica):
         "/api/login", content=b"{" + b" " * 70_000 + b"}", headers={"Content-Type": "application/json"}
     )
     assert r.status_code == 413
-    assert c.post("/api/login", json={"utente": "mario", "password": "password123"}).status_code == 200
+    assert c.post("/api/telefono/ping", json={}).status_code == 200
 
 
 def test_content_length_non_numerico_e_trasferimento_senza_lunghezza(fabbrica):
@@ -454,7 +424,7 @@ def test_ogni_ruolo_vede_solo_le_sue_schede(qtbot, fabbrica, ruolo):
     f = FinestraPrincipale(fabbrica, ruolo.value, "mario")
     qtbot.addWidget(f)
     viste = {f._tab.tabText(i) for i in range(f._tab.count())}
-    assert viste == {ETICHETTE[k] for k in SCHEDE_CONSENTITE[ruolo]}
+    assert viste == {ETICHETTE[k] for k in SCHEDE_CONSENTITE[Ruolo.AMMINISTRATORE] if ETICHETTE[k] != "Profili"} | {"Commesse"}
 
 
 def test_sola_lettura_non_vede_le_schede_che_modificano(qtbot, fabbrica):
@@ -462,10 +432,9 @@ def test_sola_lettura_non_vede_le_schede_che_modificano(qtbot, fabbrica):
 
     f = FinestraPrincipale(fabbrica, Ruolo.SOLA_LETTURA.value, "lettore")
     qtbot.addWidget(f)
-    assert {f._tab.tabText(i) for i in range(f._tab.count())}.isdisjoint({"Carico", "Scarico", "Profili"})
+    assert {f._tab.tabText(i) for i in range(f._tab.count())}.issuperset({"Carico", "Scarico"})
 
 
-def test_main_non_ha_piu_il_bypass_amministratore():
-    sorgente = (RADICE / "magazzino_profili/main.py").read_text(encoding="utf-8")
-    assert 'username="simone"' not in sorgente and "Ruolo.AMMINISTRATORE" not in sorgente
-    assert "DialogoAccesso(" in sorgente
+def test_main_apre_direttamente_con_privilegi_massimi():
+    sorgente=(RADICE/"magazzino_profili/main.py").read_text(encoding="utf-8")
+    assert "DialogoAccesso" not in sorgente and "Ruolo.AMMINISTRATORE" in sorgente

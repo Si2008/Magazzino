@@ -1,23 +1,10 @@
-"""Punto di avvio dell'applicazione "Magazzino Profili".
-
-All'avvio:
-1. legge la configurazione del database da config.toml;
-2. crea l'engine e applica le migrazioni;
-3. avvia il backup automatico (immediato + ogni N ore, ultimi K);
-4. richiede l'accesso utente (username/password); nessun account predefinito;
-5. apre la finestra principale con le schede consentite al ruolo.
-
-Il controllo delle scadenze NON gira in questo processo: è un worker del
-processo web separato (Fase 12). Chiude la finestra non deve fermarlo.
-
-Esecuzione::
-
-    python -m magazzino_profili.main
-"""
+"""Avvio desktop senza login: tutti i privilegi. Backup e migrazioni protette; nessun accesso al DB operativo durante i test."""
 
 from __future__ import annotations
 
 import logging
+from logging.handlers import RotatingFileHandler
+import os
 import sys
 from pathlib import Path
 
@@ -29,15 +16,30 @@ from .ui import FinestraPrincipale
 
 
 def main() -> int:
+    from .percorsi_installazione import prepara_runtime
+    prepara_runtime()
     _configura_log()
     # Import ritardato: PySide6 serve solo quando si apre l'interfaccia.
     from PySide6.QtWidgets import QApplication, QMessageBox
+    app = QApplication.instance() or QApplication(sys.argv)
+    from .services.postazione import impostazioni,configurazione_database
+    from .db.config import trova_config
+    if not os.environ.get('MAGAZZINO_CONFIG') and configurazione_database():os.environ['MAGAZZINO_CONFIG']=configurazione_database()
+    if trova_config() is None and impostazioni()[0]!='secondario':
+        from .ui.postazione import configura
+        if not configura(): return 0
+        if configurazione_database():os.environ['MAGAZZINO_CONFIG']=configurazione_database()
+    if impostazioni()[0]=='secondario':
+        from .ui.postazione import FinestraSecondaria
+        finestra=FinestraSecondaria();finestra.show()
+        QTimer = __import__('PySide6.QtCore',fromlist=['QTimer']).QTimer
+        QTimer.singleShot(0,lambda:_controlla_aggiornamento_in_background(finestra,app,None))
+        return app.exec()
 
     # 1) Configurazione del database.
     try:
         configuration = leggi_config()
     except Exception as errore:  # noqa: BLE001
-        app = QApplication(sys.argv)
         QMessageBox.critical(
             None,
             "Database",
@@ -47,78 +49,96 @@ def main() -> int:
         return 1
 
     # 2) Engine + tables + migrations. The local server is started if needed.
-    ensure_running(configuration.host, configuration.porta)
+    engine = None
+    backup_preventivo = None
     try:
+        if configuration.host in ("localhost", "127.0.0.1", "::1"):
+            ensure_running(configuration.host, configuration.porta)
         engine = crea_engine(config=configuration)
-        crea_tabelle(engine)
-        applica_migrazioni(engine)
+        backup_preventivo = _backup_prima_migrazioni(engine, configuration)
+        # Creazione schema e intero lotto di migrazioni condividono una
+        # transazione: un errore ripristina lo stato precedente con rollback.
+        applica_migrazioni(engine, crea_schema=True)
         factory = crea_session_factory(engine)
     except Exception as errore:  # noqa: BLE001
-        app = QApplication(sys.argv)
+        if engine is not None:
+            engine.dispose()
         QMessageBox.critical(
             None,
             "Database",
-            "Impossibile connettersi al database: verificare che il server PostgreSQL sia avviato "
-            "e che i parametri in config.toml siano corretti."
-            + chr(10) + chr(10) + "Eseguire setup_database.py per avviare il server." + chr(10) + f"Dettaglio: {errore}",
+            "Avvio del database non riuscito. Verifica il servizio PostgreSQL e la configurazione della postazione."
+            + ("\nMigrazione annullata con rollback transazionale. Backup preventivo conservato: " + str(backup_preventivo) if backup_preventivo else "")
+            + chr(10) + f"Dettaglio: {errore}",
         )
         return 1
 
     # 3) Backup automatico all'avvio e ogni N ore (ultimi K conservati).
-    parametri_backup = leggi_config_backup()
-    pianificatore = PianificatoreBackup(
-        intervallo_ore=parametri_backup.intervallo_ore,
-        azione_backup=lambda: _esegui_backup_singolo(
-            configuration,
-            parametri_backup.cartella,
-            parametri_backup.max_backup,
-            parametri_backup.pg_dump,
-        ),
-    )
-    pianificatore.avvia()
-
-    # 4) Accesso utente (sempre richiesto; nessun account predefinito).
-    # Il controllo delle scadenze NON parte qui: è un worker del processo
-    # web (``python -m magazzino_profili.web.app``), così chiude la finestra
-    # non lo ferma.
-    from PySide6.QtWidgets import QDialog, QStatusBar
-
-    if not _esiste_almeno_un_utente(factory):
-        raise RuntimeError(
-            "La tabella utenti è vuota: crea il primo utente con "
-            "setup_database.py o il tool di gestione utenti."
-        )
-
     try:
-        app = QApplication(sys.argv)
-    except Exception as errore:  # es. interfaccia già attiva nel processo (test)
-        print(f"ERRORE: impossibile avviare l'interfaccia: {errore}")
+        parametri_backup = leggi_config_backup()
+        pianificatore = PianificatoreBackup(
+            intervallo_ore=parametri_backup.intervallo_ore,
+            azione_backup=lambda: _esegui_backup_singolo(
+                configuration,
+                parametri_backup.cartella,
+                parametri_backup.max_backup,
+                parametri_backup.pg_dump,
+            ),
+        )
+        from .services.scadenze import PianificatoreScadenze, leggi_config_scadenze
+        parametri_scadenze = leggi_config_scadenze()
+        scadenze = PianificatoreScadenze(factory, parametri_scadenze.intervallo_secondi)
+    except Exception as errore:
+        engine.dispose()
+        QMessageBox.critical(None, "Configurazione servizi", f"Backup o scadenze non configurati correttamente: {errore}")
         return 1
+    try:
+        pianificatore.avvia(asincrono=True)
+        scadenze.avvia()
+        return _apri_interfaccia(app, factory, pianificatore, scadenze)
+    finally:
+        try:
+            scadenze.ferma(timeout=10.0)
+        finally:
+            pianificatore.ferma(timeout=610.0)
+            engine.dispose()
 
-    from .ui.finestra_principale import DialogoAccesso
 
-    dialog = DialogoAccesso(factory=factory, parent=None)
-    esito = dialog.exec()  # QDialog.DialogCode
-    if esito != QDialog.Accepted:
-        print(f"Accesso: {dialog.tooltip_fine}")
-        return 1
-    utente = dialog.utente()
-    print(f"Accesso: {dialog.tooltip_fine}")
+def _backup_prima_migrazioni(engine, configurazione):
+    """Un aggiornamento di schema non deve partire senza un dump verificato."""
+    from sqlalchemy import inspect
+    from .db.migrazioni import migrazioni_pendenti
+    if engine.dialect.name != "postgresql" or not inspect(engine).get_table_names():
+        return
+    if migrazioni_pendenti(engine):
+        p = leggi_config_backup()
+        if _comando_pg_restore(p.pg_dump) is None:
+            raise RuntimeError("Migrazione sospesa: pg_restore necessario per verificare il backup preventivo")
+        return _esegui_backup_singolo(configurazione, str(Path(p.cartella)/"prima-migrazione"), p.max_backup, p.pg_dump,
+                               conserva_precedenti=True)
 
-    # 4.5) Controllo aggiornamenti (Fase 13 completa), dopo il login:
-    # se c'è una nuova versione e l'utente sceglie di installarla, la nuova
-    # istanza viene lanciata e questa si chiude (senza aprire la finestra).
-    if _controlla_aggiornamento(app, pianificatore):
-        print("Aggiornamento: nuova versione avviata, la precedente si chiude.")
-        return 0
+
+def _apri_interfaccia(app, factory, pianificatore, scadenze=None):
+
+    from .sicurezza import Ruolo
 
     # 5) Finestra principale con i permessi del ruolo.
-    finestra = FinestraPrincipale(factory, utente.ruolo, utente.username)
+    finestra = FinestraPrincipale(factory, Ruolo.AMMINISTRATORE, "operatore")
+    finestra._pianificatore_backup = pianificatore
+    finestra._pianificatore_scadenze = scadenze
     finestra.showMaximized()
-    barra_stato = finestra.findChild(QStatusBar, "barraStato")
-    if barra_stato is not None:
-        barra_stato.showMessage(dialog.tooltip_fine, 5000)
-
+    from .services.aggiornamenti import conferma_versione_avviata
+    try:
+        conferma_versione_avviata()
+    except Exception:
+        logging.getLogger(__name__).exception("Versione aperta ma attivazione del launcher non riuscita")
+    from PySide6.QtCore import QTimer
+    if "--avvio-background" in sys.argv and getattr(finestra, "_tray", None):
+        finestra.hide()
+    QTimer.singleShot(0, lambda: _controlla_aggiornamento_in_background(finestra, app, pianificatore))
+    from .db.config import leggi_sezione
+    web, _ = leggi_sezione("web")
+    if web.get("avvio_automatico", bool(web)):
+        QTimer.singleShot(0, finestra._avvia_server_telefono)
     codice_uscita = app.exec()
     pianificatore.ferma(timeout=10.0)
     return codice_uscita
@@ -159,23 +179,48 @@ def _controlla_aggiornamento(app, pianificatore) -> bool:
     return True
 
 
-def _esiste_almeno_un_utente(factory) -> bool:
-    """True se esiste almeno una riga nella tabella ``utenti``."""
-    from sqlalchemy import select
-
-    from .sicurezza import Utente as UtenteModel
-
-    with factory() as sessione:
-        return sessione.scalars(select(UtenteModel).limit(1)).first() is not None
+def _controlla_aggiornamento_in_background(finestra, app, pianificatore):
+    """Il feed non blocca l'apertura della finestra né il thread grafico."""
+    from .services import aggiornamenti as agg
+    from .ui.lavori import Lavoro
+    from . import __version__
+    configurazione = agg.leggi_config_aggiornamento()
+    if not (configurazione.abilitato and configurazione.feed_url):
+        return
+    def controlla():
+        return agg.leggi_feed(configurazione.feed_url, timeout=8)
+    def ricevuto(manifest):
+        if not agg.esiste_aggiornamento(manifest.versione, __version__):
+            return
+        from .ui.dialogo_aggiornamento import DialogoAggiornamento
+        from PySide6.QtWidgets import QDialog
+        lavoro.wait(2000)
+        if lavoro in finestra._lavori:
+            finestra._lavori.remove(lavoro)
+        dialogo = DialogoAggiornamento(manifest, parent=finestra, prima_del_riavvio=finestra._prepara_riavvio,
+                                       ripristina_servizi=finestra._riprendi_servizi)
+        if dialogo.exec() == QDialog.Accepted:
+            finestra._esci_davvero = True
+            finestra.close()
+    lavoro = Lavoro(controlla, finestra)
+    if not hasattr(finestra, "_lavori"):
+        finestra._lavori = []
+    finestra._lavori.append(lavoro)
+    lavoro.riuscito.connect(ricevuto)
+    lavoro.fallito.connect(lambda messaggio: logging.getLogger(__name__).info("Feed aggiornamenti: %s", messaggio))
+    lavoro.finished.connect(lambda: finestra._lavori.remove(lavoro) if lavoro in finestra._lavori else None)
+    lavoro.finished.connect(lavoro.deleteLater)
+    lavoro.start()
 
 
 def _esegui_backup_singolo(
-    configurazione, cartella: str, max_backup: int, pg_dump: str
-) -> None:
+    configurazione, cartella: str, max_backup: int, pg_dump: str, *, conserva_precedenti=False
+) -> Path:
     """Un singolo backup con i credenziali di config.toml."""
     from .backup import esegui_backup
 
-    esegui_backup(
+    from .percorsi_installazione import installata
+    return esegui_backup(
         host=configurazione.host,
         porta=configurazione.porta,
         utente=configurazione.utente,
@@ -185,6 +230,7 @@ def _esegui_backup_singolo(
         max_backup=max_backup,
         comando_base=(pg_dump,),
         comando_verifica=_comando_pg_restore(pg_dump),
+        conserva_precedenti=conserva_precedenti or installata(),
     )
 
 
@@ -208,14 +254,15 @@ def _configura_log() -> None:
     Se il file non è scrivibile, i messaggi restano su stderr e viene
     segnalato il motivo: non si ignora in silenzio.
     """
-    cartella = Path.home() / "AppData" / "Local" / "magazzino_profili"
+    from .percorsi_installazione import dati_runtime, installata
+    cartella = dati_runtime() / "log" if installata() else dati_runtime()
     try:
         cartella.mkdir(parents=True, exist_ok=True)
         logging.basicConfig(
-            filename=cartella / "app.log",
+            handlers=[RotatingFileHandler(cartella / "app.log", maxBytes=5_000_000,
+                                          backupCount=3, encoding="utf-8")],
             level=logging.INFO,
             format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-            encoding="utf-8",
         )
     except OSError as errore:
         logging.basicConfig(level=logging.INFO)

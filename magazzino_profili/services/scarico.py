@@ -32,6 +32,10 @@ def scarica(
     barcode_pulito = barcode.strip().upper()
 
     with session.begin():
+        return _scarica_in_transazione(session, barcode_pulito, quantita, utente, causale)
+
+
+def _scarica_in_transazione(session, barcode_pulito, quantita, utente, causale):
         # solo pezzi attivi: i barcode eliminati (cancellazione logica)
         # non sono più movimentabili (regola Fase 7)
         pezzo = session.scalar(

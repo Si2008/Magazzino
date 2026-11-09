@@ -35,7 +35,7 @@ INTESTAZIONI_V2 = (
     "Versione formato", "ID pezzo", "Codice profilo", "Descrizione", "Colore",
     "Lunghezza (mm)", "Quantita", "Ubicazione", "Numero vassoio", "Barcode",
     "Stato barcode", "Data ultimo cambio stato UTC", "Eliminato il UTC",
-    "Scorta minima",
+    "Scorta minima", "Barcode unitario",
 )
 
 # Intestazione V2 -> attributo REALE di Pezzo (nominativo confermato nel modello).
@@ -81,6 +81,7 @@ class RigaV2:
     stato_cambiato_il: datetime | None
     eliminato_il: datetime | None
     scorta_minima: int | None
+    unitario: bool = False
 
 
 @dataclass(frozen=True)
@@ -117,35 +118,37 @@ def riga_v2_da_pezzo(pezzo: Pezzo) -> list[str]:
     a = ATTRIBUTI_PEZZO
     return [
         VERSIONE_FORMATO, str(pezzo.id), pezzo.profilo.codice, pezzo.profilo.descrizione,
-        pezzo.colore.nome_visualizzato, str(pezzo.lunghezza_mm), str(pezzo.quantita),
+        pezzo.colore.codice_normalizzato, str(pezzo.lunghezza_mm), str(pezzo.quantita),
         _testo(pezzo.ubicazione), _testo(getattr(pezzo, a["Numero vassoio"])), pezzo.barcode,
         _testo(getattr(pezzo, a["Stato barcode"])),
         _testo(getattr(pezzo, a["Data ultimo cambio stato UTC"])),
         _testo(getattr(pezzo, a["Eliminato il UTC"])),
         _testo(getattr(pezzo, a["Scorta minima"])),
+        "1" if pezzo.unitario else "0",
     ]
 
 
 def righe_v2_da_db(session: Session) -> list[list[str]]:
     """TUTTI i pezzi, eliminati compresi, per id (non usare ``lista_pezzi``)."""
-    pezzi = session.scalars(
-        select(Pezzo)
-        .options(selectinload(Pezzo.profilo), selectinload(Pezzo.colore))
-        .order_by(Pezzo.id)
-    ).all()
-    return [riga_v2_da_pezzo(p) for p in pezzi]
+    return list(itera_righe_v2(session))
+
+
+def itera_righe_v2(session: Session):
+    from ..services.consultazione import itera_pezzi
+    for pezzo in itera_pezzi(session, includi_eliminati=True):
+        yield riga_v2_da_pezzo(pezzo)
 
 
 def esporta_inventario_csv_v2(session: Session, percorso_output: str | Path) -> Path:
     percorso = Path(percorso_output)
     percorso.parent.mkdir(parents=True, exist_ok=True)
-    righe = righe_v2_da_db(session)  # prima di toccare il disco
+    righe = itera_righe_v2(session)
     temporaneo = percorso.with_name(percorso.name + ".tmp")
-    with open(temporaneo, "w", encoding="utf-8", newline="") as file:
+    from ..file_sicuri import destinazione_atomica
+    with destinazione_atomica(percorso) as temporaneo, open(temporaneo, "w", encoding="utf-8-sig", newline="") as file:
         writer = csv.writer(file, delimiter=";")
         writer.writerow(INTESTAZIONI_V2)
         writer.writerows(righe)
-    os.replace(temporaneo, percorso)  # mai un file a metà
     return percorso
 
 
@@ -182,13 +185,25 @@ def _data(testo: str, colonna: str, err: Callable[[str, str], None]) -> datetime
     return d.astimezone(timezone.utc)
 
 
+def colonna_peso(nome: str) -> bool:
+    """Compatibilità degli scambi storici: la colonna viene ignorata, non validata."""
+    return bool(re.match(r"^(?:peso|weight)(?:\b|_)", str(nome).strip(), re.IGNORECASE))
+
+
 def valida_righe_v2(righe: Iterable[Sequence[str]]) -> RisultatoV2:
     """Valida righe testuali; la prima è l'intestazione. Nessun accesso al DB."""
     it = iter(righe)
     intestazione = next(it, None)
     if intestazione is None:
         return RisultatoV2((), (ErroreRiga(1, "", "file vuoto"),))
-    if tuple(intestazione) != INTESTAZIONI_V2:
+    larghezza_originale = len(intestazione)
+    indici = [n for n, nome in enumerate(intestazione) if not colonna_peso(nome)]
+    ignora_peso = len(indici) != larghezza_originale
+    if ignora_peso:
+        intestazione = [intestazione[n] for n in indici]
+    if tuple(intestazione) == (*INTESTAZIONI_V2[:-1], ""):
+        intestazione = intestazione[:-1]  # ODS storico con cella finale vuota
+    if tuple(intestazione) not in (INTESTAZIONI_V2, INTESTAZIONI_V2[:-1]):
         return RisultatoV2((), (ErroreRiga(
             1, "", "intestazioni diverse dal formato V2 (testo e ordine esatti)"),))
 
@@ -198,11 +213,18 @@ def valida_righe_v2(righe: Iterable[Sequence[str]]) -> RisultatoV2:
     barcode_visti: dict[str, int] = {}
 
     for numero, campi in enumerate(it, start=2):
+        if ignora_peso:
+            if len(campi) != larghezza_originale:
+                errori.append(ErroreRiga(numero, "", f"attese {larghezza_originale} colonne, trovate {len(campi)}"))
+                continue
+            campi = [campi[n] for n in indici]
         if not any(c.strip() for c in campi):
             continue
-        if len(campi) != len(INTESTAZIONI_V2):
+        if len(intestazione) == len(INTESTAZIONI_V2) - 1 and len(campi) == len(INTESTAZIONI_V2) and not campi[-1]:
+            campi = campi[:-1]
+        if len(campi) != len(intestazione):
             errori.append(ErroreRiga(
-                numero, "", f"attese {len(INTESTAZIONI_V2)} colonne, trovate {len(campi)}"))
+                numero, "", f"attese {len(intestazione)} colonne, trovate {len(campi)}"))
             continue
         prima = len(errori)
 
@@ -210,6 +232,9 @@ def valida_righe_v2(righe: Iterable[Sequence[str]]) -> RisultatoV2:
             errori.append(ErroreRiga(_n, colonna, motivo))
 
         c = dict(zip(INTESTAZIONI_V2, campi))
+        unitario = c.get("Barcode unitario", "0").strip() or "0"
+        if unitario not in ("0", "1"):
+            err("Barcode unitario", "valori ammessi 0 oppure 1")
         if c["Versione formato"].strip() != VERSIONE_FORMATO:
             err("Versione formato", f"deve essere {VERSIONE_FORMATO}")
         id_pezzo = _intero(c["ID pezzo"], "ID pezzo", err, 1, True)
@@ -226,10 +251,12 @@ def valida_righe_v2(righe: Iterable[Sequence[str]]) -> RisultatoV2:
             err("Colore", "valore mancante")
         lunghezza = _intero(c["Lunghezza (mm)"], "Lunghezza (mm)", err, 1, True)
         quantita = _intero(c["Quantita"], "Quantita", err, 0, True)
+        if unitario == "1" and quantita not in (0, 1):
+            err("Quantita", "il barcode unitario ammette solo 0 oppure 1")
         # ``numero_vassoio`` è testo libero nel modello: testo non vuoto, niente check numerico.
         vassoio = c["Numero vassoio"].strip() or None
         scorta = _intero(c["Scorta minima"], "Scorta minima", err, 0, False)
-        barcode = c["Barcode"].strip()
+        barcode = c["Barcode"].strip().upper()
         if not barcode:
             err("Barcode", "valore mancante")
         elif barcode in barcode_visti:
@@ -241,12 +268,16 @@ def valida_righe_v2(righe: Iterable[Sequence[str]]) -> RisultatoV2:
             err("Stato barcode", f"stato non valido '{stato}'")
         cambiato = _data(c["Data ultimo cambio stato UTC"], "Data ultimo cambio stato UTC", err)
         eliminato = _data(c["Eliminato il UTC"], "Eliminato il UTC", err)
+        for nome, massimo in (("Codice profilo", 64), ("Colore", 64), ("Numero vassoio", 128),
+                               ("Ubicazione", 128), ("Barcode", 255)):
+            if len(c[nome].strip()) > massimo:
+                err(nome, f"massimo {massimo} caratteri")
 
         if len(errori) == prima:
             valide.append(RigaV2(
                 numero, id_pezzo, codice, c["Descrizione"], colore, lunghezza, quantita,
                 c["Ubicazione"].strip() or None, vassoio, barcode, stato, cambiato,
-                eliminato, scorta))
+                eliminato, scorta, unitario == "1"))
     return RisultatoV2(tuple(valide), tuple(errori))
 
 
@@ -273,3 +304,62 @@ def verifica_riferimenti_v2(session: Session, risultato: RisultatoV2) -> tuple[E
         for r in risultato.righe
         if normalizza_codice(r.codice_profilo) not in profili
     )
+
+
+def importa_inventario_v2(session: Session, risultato: RisultatoV2, utente: str = "") -> int:
+    """Applica una fotografia V2 in una sola transazione, conservando ID e storico.
+
+    Le quantità sono riconciliate con movimenti di differenza; ID/barcode e
+    combinazioni in conflitto vengono rifiutati, mai fusi silenziosamente.
+    """
+    from sqlalchemy import or_, text
+    from ..domain import Colore, Movimento, TipoMovimento, registra_movimento
+    from ..services.carico import _colore_o_crea
+    if not risultato.valido:
+        raise ValueError("File V2 non valido:\n" + "\n".join(map(str, risultato.errori)))
+    with session.begin():
+        if session.get_bind().dialect.name == "postgresql":
+            session.execute(text("LOCK TABLE profili, colori, pezzi, movimenti IN EXCLUSIVE MODE"))
+        profili = {p.codice: p for p in session.scalars(select(Profilo))}
+        for riga in risultato.righe:
+            codice = normalizza_codice(riga.codice_profilo)
+            if codice not in profili:
+                raise ValueError(f"Riga {riga.riga}: profilo {codice} non in anagrafica")
+            profilo = profili[codice]
+            colore = _colore_o_crea(session, normalizza_colore(riga.colore))
+            candidati = session.scalars(select(Pezzo).where(or_(
+                Pezzo.id == riga.id_pezzo, Pezzo.barcode == riga.barcode,
+                (Pezzo.profilo_id == profilo.id) & (Pezzo.colore_id == colore.id) &
+                (Pezzo.lunghezza_mm == riga.lunghezza_mm) & Pezzo.unitario.is_(False) &
+                (not riga.unitario))).with_for_update()).all()
+            if len(candidati) > 1:
+                raise ValueError(f"Riga {riga.riga}: conflitto fra ID, barcode e combinazione")
+            if candidati:
+                pezzo = candidati[0]
+                if pezzo.id != riga.id_pezzo or (pezzo.profilo_id, pezzo.colore_id, pezzo.lunghezza_mm) != (
+                        profilo.id, colore.id, riga.lunghezza_mm):
+                    raise ValueError(f"Riga {riga.riga}: identità del pezzo differente")
+                if pezzo.unitario != riga.unitario:
+                    raise ValueError(f"Riga {riga.riga}: impossibile cambiare un barcode aggregato in unitario con l'import")
+            else:
+                pezzo = Pezzo(id=riga.id_pezzo, profilo_id=profilo.id, colore_id=colore.id,
+                              lunghezza_mm=riga.lunghezza_mm, barcode=riga.barcode, quantita=0,
+                              unitario=riga.unitario)
+                session.add(pezzo)
+                session.flush()
+            delta = riga.quantita - pezzo.quantita
+            if delta:
+                registra_movimento(session, pezzo, TipoMovimento.CARICO if delta > 0 else TipoMovimento.SCARICO,
+                                    abs(delta), "Riconciliazione inventario V2", utente)
+            pezzo.barcode = riga.barcode
+            pezzo.numero_vassoio = riga.numero_vassoio
+            pezzo.ubicazione = riga.ubicazione
+            pezzo.scorta_minima = riga.scorta_minima
+            pezzo.stato = riga.stato_barcode
+            pezzo.data_ultimo_cambio_stato = riga.stato_cambiato_il
+            pezzo.eliminato_il = riga.eliminato_il
+        session.flush()
+        if session.get_bind().dialect.name == "postgresql":
+            session.execute(text("SELECT setval(pg_get_serial_sequence('pezzi','id'), "
+                                 "COALESCE((SELECT MAX(id) FROM pezzi),1), (SELECT MAX(id) IS NOT NULL FROM pezzi))"))
+    return len(risultato.righe)

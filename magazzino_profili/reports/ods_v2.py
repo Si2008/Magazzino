@@ -16,16 +16,18 @@ from odf.opendocument import OpenDocumentSpreadsheet, load
 from odf.table import Table, TableCell, TableRow
 from odf.text import P
 from sqlalchemy.orm import Session
+from .fogli_colore import nome_foglio_colore
 
 from .formato_v2 import (
     INTESTAZIONI_V2,
     ErroreRiga,
     RisultatoV2,
-    righe_v2_da_db,
+    itera_righe_v2,
     valida_righe_v2,
 )
 
 NOME_FOGLIO = "Inventario"
+INTESTAZIONI_ODS = tuple(n for n in INTESTAZIONI_V2 if n != "Descrizione")
 _NUMERICHE = {"ID pezzo", "Lunghezza (mm)", "Quantita", "Scorta minima"}
 # NB: "Numero vassoio" NON è numerico: nel modello è testo libero.
 
@@ -47,18 +49,29 @@ def _cella(testo: str, numerica: bool) -> TableCell:
 def esporta_inventario_ods_v2(session: Session, percorso_output: str | Path) -> Path:
     percorso = Path(percorso_output)
     percorso.parent.mkdir(parents=True, exist_ok=True)
-    righe = righe_v2_da_db(session)
+    righe = itera_righe_v2(session)
     doc = OpenDocumentSpreadsheet()
-    foglio = Table(name=NOME_FOGLIO)
-    doc.spreadsheet.addElement(foglio)
-    for valori in [list(INTESTAZIONI_V2), *righe]:
+    fogli, occupati = {}, set()
+    def aggiungi_riga(foglio, valori):
         tr = TableRow()
-        for nome, testo in zip(INTESTAZIONI_V2, valori):
+        for nome, testo in zip(INTESTAZIONI_ODS, valori):
             tr.addElement(_cella(testo, nome in _NUMERICHE))
         foglio.addElement(tr)
-    temporaneo = percorso.with_name(percorso.name + ".tmp")
-    doc.save(str(temporaneo))
-    os.replace(temporaneo, percorso)
+    def nuovo_foglio(codice):
+        foglio = Table(name=nome_foglio_colore(codice, occupati))
+        doc.spreadsheet.addElement(foglio)
+        aggiungi_riga(foglio, INTESTAZIONI_ODS)
+        return foglio
+    for valori in righe:
+        codice = valori[4]
+        if codice not in fogli:
+            fogli[codice] = nuovo_foglio(codice)
+        aggiungi_riga(fogli[codice], valori[:3]+valori[4:])
+    if not fogli:
+        nuovo_foglio(NOME_FOGLIO)
+    from ..file_sicuri import destinazione_atomica
+    with destinazione_atomica(percorso) as temporaneo:
+        doc.save(str(temporaneo))
     return percorso
 
 
@@ -70,23 +83,47 @@ def _testo_cella(c: TableCell) -> str:
 
 
 def leggi_righe_ods(percorso: Path) -> list[list[str]]:
-    """Righe testuali del foglio ``Inventario`` (o del primo), allineate a 14 colonne."""
+    """Legge tutti i fogli colore V2, anche il vecchio foglio singolo Inventario."""
     doc = load(str(percorso))
     fogli = doc.spreadsheet.getElementsByType(Table)
-    foglio = next((f for f in fogli if f.getAttribute("name") == NOME_FOGLIO), fogli[0])
+    if not fogli:
+        raise ValueError("Il documento ODS non contiene fogli")
+    risultato = []
+    for foglio in fogli:
+        righe = _leggi_foglio(foglio)
+        if not righe:
+            raise ValueError(f"Foglio {foglio.getAttribute('name')}: intestazione mancante")
+        if risultato and righe[0] != risultato[0]:
+            raise ValueError(f"Foglio {foglio.getAttribute('name')}: intestazione diversa, nessuna importazione")
+        risultato.extend(righe if not risultato else righe[1:])
+    return risultato
+
+
+def _leggi_foglio(foglio):
+    from .formato_v2 import colonna_peso
     n = len(INTESTAZIONI_V2)
     risultato: list[list[str]] = []
+    senza_descrizione = False
     for tr in foglio.getElementsByType(TableRow):
         valori: list[str] = []
         for c in tr.getElementsByType(TableCell):
             # Espande i ripetuti di LibreOffice, senza esplodere le righe
             # di riempimento (``number-columns-repeated="16384"``).
             ripeti = int(c.getAttribute("numbercolumnsrepeated") or 1)
-            valori.extend([_testo_cella(c)] * min(ripeti, n + 1))
+            valori.extend([_testo_cella(c)] * min(ripeti, 256))
+            if len(valori) > 256:
+                valori = valori[:256]
+                break
         while valori and valori[-1] == "":
             valori.pop()
         if not valori:
             continue  # riga vuota (anche quelle "ripetute" di LibreOffice)
+        if not risultato:
+            senza_descrizione = tuple(v for v in valori if not colonna_peso(v)) == INTESTAZIONI_ODS
+        if senza_descrizione:
+            valori.insert(3, "Descrizione" if not risultato else "")
+        if not risultato:
+            n = len(valori)
         risultato.append(valori + [""] * (n - len(valori)))
     return risultato
 

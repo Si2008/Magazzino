@@ -1,0 +1,12 @@
+{
+  "versione": "2.4.1",
+  "feed_pubblico": true,
+  "download_senza_autenticazione": true,
+  "firma_valida": true,
+  "checksum_valido": true,
+  "zip_uguale_release_locale": true,
+  "installazione_e_avvio_secondario": true,
+  "commit_sorgente": "7fe0eb9503754d5327457b31bbb726ef67a3bcae",
+  "branch": "codex/release-2.4.1",
+  "release": "https://github.com/Si2008/Magazzino/releases/tag/v2.4.1"
+}

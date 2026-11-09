@@ -35,8 +35,6 @@ from magazzino_profili.db import (
 )
 from magazzino_profili.db.migrazioni import applica_migrazioni
 from magazzino_profili.db.server import CARTELLA_DATA, CARTELLA_PGSQL, ensure_running
-from magazzino_profili.sicurezza import crea_utente, Ruolo
-from magazzino_profili.sicurezza.utenti import Utente
 
 PG_NAME = "magazzino_profili"
 PG_USER = "postgres"
@@ -48,6 +46,9 @@ def _random_password(length: int) -> str:
 
 
 def _password_file() -> str:
+    if CARTELLA_DATA.is_dir():
+        # Non generare nuove credenziali per un cluster già inizializzato.
+        return leggi_config().password
     file = CARTELLA_DATA.parent / "pg_pass"
     if file.is_file():
         return file.read_text(encoding="utf-8").strip()
@@ -102,7 +103,11 @@ def _ensure_db(password: str) -> None:
         create_engine(url).connect().close()
         print("database exists")
         return
-    except OperationalError:
+    except OperationalError as errore:
+        originale = getattr(errore, "orig", None)
+        if getattr(originale, "sqlstate", None) != "3D000":
+            raise RuntimeError("PostgreSQL non accessibile: verificare credenziali e server; "
+                               "nessun database è stato creato o modificato") from errore
         print("database missing: creating it")
     env = {**os.environ, "PGPASSWORD": password}
     subprocess.run(
@@ -181,23 +186,16 @@ def _write_config(password: str) -> None:
     print("config.toml updated")
 
 
-def _first_user() -> None:
+def _prepara_schema():
     config = leggi_config()
     engine = crea_engine(config=config)
-    crea_tabelle(engine)
-    applica_migrazioni(engine)
-    factory = crea_session_factory(engine)
-
-    with factory() as session:
-        if session.scalar(select(Utente)):
-            print("users already exist")
-            return
-
-    name = "amministratore"
-    password = _random_password(12)
-    with factory() as session:
-        crea_utente(session, name, password, Ruolo.AMMINISTRATORE)
-    print("first user created: " + name + " / " + password + "  (save it!)")
+    try:
+        from magazzino_profili.main import _backup_prima_migrazioni
+        _backup_prima_migrazioni(engine, config)
+        crea_tabelle(engine)
+        applica_migrazioni(engine)
+    finally:
+        engine.dispose()
 
 
 def main() -> int:
@@ -210,8 +208,7 @@ def main() -> int:
     print("server ready")
     _ensure_db(password)
     _write_config(password)
-    if "--no-user" not in sys.argv:
-        _first_user()
+    _prepara_schema()
     return 0
 
 

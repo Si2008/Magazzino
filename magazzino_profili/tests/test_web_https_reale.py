@@ -107,21 +107,11 @@ def server_https(tmp_path):
     thread.join(timeout=5)
 
 
-def test_https_reale_login_e_consultazione(server_https):
-    base = server_https["base"]
-    client = httpx.Client(verify=ssl.create_default_context(cafile=server_https["pem"]), timeout=5)
-    r = client.post(f"{base}/api/login", json={"utente": "remoto", "password": "Password123!"})
-    assert r.status_code == 200
-    token = r.json()["token"]
-
-    # il percorso HTTP in chiaro NON deve essere servito
+def test_https_reale_accesso_libero_e_consultazione(server_https):
+    base=server_https["base"]
+    with httpx.Client(verify=ssl.create_default_context(cafile=server_https["pem"]),timeout=5) as client:
+        assert client.get(base+"/").status_code==200
+        assert client.get(base+"/api/salute").status_code==200
+        assert client.get(base+"/api/pezzi/X").status_code==404
     with pytest.raises(Exception):
-        httpx.Client(verify=False, timeout=2).get(base.replace("https://", "http://"))
-
-    # senza token: 401 (prova che il server risponde in HTTPS)
-    r2 = client.get(f"{base}/api/pezzi/X")
-    assert r2.status_code == 401
-
-    # con token ma barcode inesistente: 404 (server raggiungibile in HTTPS)
-    r3 = client.get(f"{base}/api/pezzi/X", headers={"Authorization": f"Bearer {token}"})
-    assert r3.status_code == 404
+        with httpx.Client(timeout=2) as c:c.get(base.replace("https://","http://"))

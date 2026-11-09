@@ -1,0 +1,902 @@
+[
+  {
+    "tema": "chiaro",
+    "coppia": "testo / sfondo",
+    "testo": "#161a22",
+    "sfondo": "#e9ecf2",
+    "rapporto": 14.7266,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo / superficie",
+    "testo": "#161a22",
+    "sfondo": "#f3f5f9",
+    "rapporto": 15.967,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo / carta",
+    "testo": "#161a22",
+    "sfondo": "#ffffff",
+    "rapporto": 17.4278,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo / carta2",
+    "testo": "#161a22",
+    "sfondo": "#f1f3f8",
+    "rapporto": 15.6982,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_dim / sfondo",
+    "testo": "#556073",
+    "sfondo": "#e9ecf2",
+    "rapporto": 5.366,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_dim / superficie",
+    "testo": "#556073",
+    "sfondo": "#f3f5f9",
+    "rapporto": 5.818,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_dim / carta",
+    "testo": "#556073",
+    "sfondo": "#ffffff",
+    "rapporto": 6.3502,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_dim / carta2",
+    "testo": "#556073",
+    "sfondo": "#f1f3f8",
+    "rapporto": 5.72,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_debole / sfondo",
+    "testo": "#5d6a7d",
+    "sfondo": "#e9ecf2",
+    "rapporto": 4.6414,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_debole / superficie",
+    "testo": "#5d6a7d",
+    "sfondo": "#f3f5f9",
+    "rapporto": 5.0324,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_debole / carta",
+    "testo": "#5d6a7d",
+    "sfondo": "#ffffff",
+    "rapporto": 5.4928,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_debole / carta2",
+    "testo": "#5d6a7d",
+    "sfondo": "#f1f3f8",
+    "rapporto": 4.9477,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "accento / sfondo",
+    "testo": "#2b62e0",
+    "sfondo": "#e9ecf2",
+    "rapporto": 4.5197,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "accento / superficie",
+    "testo": "#2b62e0",
+    "sfondo": "#f3f5f9",
+    "rapporto": 4.9004,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "accento / carta",
+    "testo": "#2b62e0",
+    "sfondo": "#ffffff",
+    "rapporto": 5.3487,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "accento / carta2",
+    "testo": "#2b62e0",
+    "sfondo": "#f1f3f8",
+    "rapporto": 4.8179,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "ok / sfondo",
+    "testo": "#117a48",
+    "sfondo": "#e9ecf2",
+    "rapporto": 4.5486,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "ok / superficie",
+    "testo": "#117a48",
+    "sfondo": "#f3f5f9",
+    "rapporto": 4.9317,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "ok / carta",
+    "testo": "#117a48",
+    "sfondo": "#ffffff",
+    "rapporto": 5.3829,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "ok / carta2",
+    "testo": "#117a48",
+    "sfondo": "#f1f3f8",
+    "rapporto": 4.8487,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "avviso / sfondo",
+    "testo": "#8f5900",
+    "sfondo": "#e9ecf2",
+    "rapporto": 4.9335,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "avviso / superficie",
+    "testo": "#8f5900",
+    "sfondo": "#f3f5f9",
+    "rapporto": 5.349,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "avviso / carta",
+    "testo": "#8f5900",
+    "sfondo": "#ffffff",
+    "rapporto": 5.8384,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "avviso / carta2",
+    "testo": "#8f5900",
+    "sfondo": "#f1f3f8",
+    "rapporto": 5.259,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pericolo / sfondo",
+    "testo": "#b92e29",
+    "sfondo": "#e9ecf2",
+    "rapporto": 5.0909,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pericolo / superficie",
+    "testo": "#b92e29",
+    "sfondo": "#f3f5f9",
+    "rapporto": 5.5197,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pericolo / carta",
+    "testo": "#b92e29",
+    "sfondo": "#ffffff",
+    "rapporto": 6.0247,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pericolo / carta2",
+    "testo": "#b92e29",
+    "sfondo": "#f1f3f8",
+    "rapporto": 5.4267,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo / velo accento",
+    "testo": "#161a22",
+    "sfondo": "#e9effc",
+    "rapporto": 15.1182,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_dim / velo accento",
+    "testo": "#556073",
+    "sfondo": "#e9effc",
+    "rapporto": 5.5087,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "accento / velo accento",
+    "testo": "#2b62e0",
+    "sfondo": "#e9effc",
+    "rapporto": 4.6399,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pulsante accento normale",
+    "testo": "#ffffff",
+    "sfondo": "#2b62e0",
+    "rapporto": 5.3487,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pulsante accento hover",
+    "testo": "#ffffff",
+    "sfondo": "#285bcf",
+    "rapporto": 6.0212,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo / velo ok",
+    "testo": "#161a22",
+    "sfondo": "#e5f0eb",
+    "rapporto": 14.9342,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_dim / velo ok",
+    "testo": "#556073",
+    "sfondo": "#e5f0eb",
+    "rapporto": 5.4416,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "ok / velo ok",
+    "testo": "#117a48",
+    "sfondo": "#e5f0eb",
+    "rapporto": 4.6127,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pulsante ok normale",
+    "testo": "#ffffff",
+    "sfondo": "#117a48",
+    "rapporto": 5.3829,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pulsante ok hover",
+    "testo": "#ffffff",
+    "sfondo": "#107143",
+    "rapporto": 6.0604,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo / velo avviso",
+    "testo": "#161a22",
+    "sfondo": "#f7eddb",
+    "rapporto": 15.014,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_dim / velo avviso",
+    "testo": "#556073",
+    "sfondo": "#f7eddb",
+    "rapporto": 5.4707,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "avviso / velo avviso",
+    "testo": "#8f5900",
+    "sfondo": "#f7eddb",
+    "rapporto": 5.0297,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo / velo pericolo",
+    "testo": "#161a22",
+    "sfondo": "#f9ebea",
+    "rapporto": 15.0206,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "testo_dim / velo pericolo",
+    "testo": "#556073",
+    "sfondo": "#f9ebea",
+    "rapporto": 5.4731,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pericolo / velo pericolo",
+    "testo": "#b92e29",
+    "sfondo": "#f9ebea",
+    "rapporto": 5.1925,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pulsante pericolo normale",
+    "testo": "#ffffff",
+    "sfondo": "#b92e29",
+    "rapporto": 6.0247,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "pulsante pericolo hover",
+    "testo": "#ffffff",
+    "sfondo": "#ab2b26",
+    "rapporto": 6.763,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "bordo campo / sfondo",
+    "testo": "#7d889d",
+    "sfondo": "#e9ecf2",
+    "rapporto": 3.0176,
+    "minimo": 3.0,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "bordo campo / superficie",
+    "testo": "#7d889d",
+    "sfondo": "#f3f5f9",
+    "rapporto": 3.2718,
+    "minimo": 3.0,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "bordo campo / carta",
+    "testo": "#7d889d",
+    "sfondo": "#ffffff",
+    "rapporto": 3.5711,
+    "minimo": 3.0,
+    "esito": "superato"
+  },
+  {
+    "tema": "chiaro",
+    "coppia": "bordo campo / carta2",
+    "testo": "#7d889d",
+    "sfondo": "#f1f3f8",
+    "rapporto": 3.2167,
+    "minimo": 3.0,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo / sfondo",
+    "testo": "#eceef2",
+    "sfondo": "#12141a",
+    "rapporto": 15.8487,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo / superficie",
+    "testo": "#eceef2",
+    "sfondo": "#171a21",
+    "rapporto": 14.9886,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo / carta",
+    "testo": "#eceef2",
+    "sfondo": "#1e222b",
+    "rapporto": 13.7073,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo / carta2",
+    "testo": "#eceef2",
+    "sfondo": "#252a35",
+    "rapporto": 12.3719,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_dim / sfondo",
+    "testo": "#9ba3b1",
+    "sfondo": "#12141a",
+    "rapporto": 7.2477,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_dim / superficie",
+    "testo": "#9ba3b1",
+    "sfondo": "#171a21",
+    "rapporto": 6.8544,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_dim / carta",
+    "testo": "#9ba3b1",
+    "sfondo": "#1e222b",
+    "rapporto": 6.2685,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_dim / carta2",
+    "testo": "#9ba3b1",
+    "sfondo": "#252a35",
+    "rapporto": 5.6578,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_debole / sfondo",
+    "testo": "#8d97ab",
+    "sfondo": "#12141a",
+    "rapporto": 6.2657,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_debole / superficie",
+    "testo": "#8d97ab",
+    "sfondo": "#171a21",
+    "rapporto": 5.9257,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_debole / carta",
+    "testo": "#8d97ab",
+    "sfondo": "#1e222b",
+    "rapporto": 5.4191,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_debole / carta2",
+    "testo": "#8d97ab",
+    "sfondo": "#252a35",
+    "rapporto": 4.8912,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "accento / sfondo",
+    "testo": "#7aa4ff",
+    "sfondo": "#12141a",
+    "rapporto": 7.5232,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "accento / superficie",
+    "testo": "#7aa4ff",
+    "sfondo": "#171a21",
+    "rapporto": 7.1149,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "accento / carta",
+    "testo": "#7aa4ff",
+    "sfondo": "#1e222b",
+    "rapporto": 6.5067,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "accento / carta2",
+    "testo": "#7aa4ff",
+    "sfondo": "#252a35",
+    "rapporto": 5.8728,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "ok / sfondo",
+    "testo": "#3ccb82",
+    "sfondo": "#12141a",
+    "rapporto": 8.8164,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "ok / superficie",
+    "testo": "#3ccb82",
+    "sfondo": "#171a21",
+    "rapporto": 8.338,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "ok / carta",
+    "testo": "#3ccb82",
+    "sfondo": "#1e222b",
+    "rapporto": 7.6252,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "ok / carta2",
+    "testo": "#3ccb82",
+    "sfondo": "#252a35",
+    "rapporto": 6.8823,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "avviso / sfondo",
+    "testo": "#f0b04a",
+    "sfondo": "#12141a",
+    "rapporto": 9.6556,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "avviso / superficie",
+    "testo": "#f0b04a",
+    "sfondo": "#171a21",
+    "rapporto": 9.1316,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "avviso / carta",
+    "testo": "#f0b04a",
+    "sfondo": "#1e222b",
+    "rapporto": 8.351,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "avviso / carta2",
+    "testo": "#f0b04a",
+    "sfondo": "#252a35",
+    "rapporto": 7.5374,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pericolo / sfondo",
+    "testo": "#f47a74",
+    "sfondo": "#12141a",
+    "rapporto": 6.9103,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pericolo / superficie",
+    "testo": "#f47a74",
+    "sfondo": "#171a21",
+    "rapporto": 6.5354,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pericolo / carta",
+    "testo": "#f47a74",
+    "sfondo": "#1e222b",
+    "rapporto": 5.9767,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pericolo / carta2",
+    "testo": "#f47a74",
+    "sfondo": "#252a35",
+    "rapporto": 5.3944,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo / velo accento",
+    "testo": "#eceef2",
+    "sfondo": "#2b3449",
+    "rapporto": 10.6966,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_dim / velo accento",
+    "testo": "#9ba3b1",
+    "sfondo": "#2b3449",
+    "rapporto": 4.8916,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "accento / velo accento",
+    "testo": "#7aa4ff",
+    "sfondo": "#2b3449",
+    "rapporto": 5.0776,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pulsante accento normale",
+    "testo": "#0b1633",
+    "sfondo": "#7aa4ff",
+    "rapporto": 7.2924,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pulsante accento hover",
+    "testo": "#0b1633",
+    "sfondo": "#8eb2ff",
+    "rapporto": 8.4656,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo / velo ok",
+    "testo": "#eceef2",
+    "sfondo": "#223a37",
+    "rapporto": 10.4597,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_dim / velo ok",
+    "testo": "#9ba3b1",
+    "sfondo": "#223a37",
+    "rapporto": 4.7833,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "ok / velo ok",
+    "testo": "#3ccb82",
+    "sfondo": "#223a37",
+    "rapporto": 5.8186,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pulsante ok normale",
+    "testo": "#06261a",
+    "sfondo": "#3ccb82",
+    "rapporto": 7.7366,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pulsante ok hover",
+    "testo": "#06261a",
+    "sfondo": "#41db8c",
+    "rapporto": 9.0284,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo / velo avviso",
+    "testo": "#eceef2",
+    "sfondo": "#3d3730",
+    "rapporto": 10.1134,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_dim / velo avviso",
+    "testo": "#9ba3b1",
+    "sfondo": "#3d3730",
+    "rapporto": 4.625,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "avviso / velo avviso",
+    "testo": "#f0b04a",
+    "sfondo": "#3d3730",
+    "rapporto": 6.1615,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo / velo pericolo",
+    "testo": "#eceef2",
+    "sfondo": "#3c2e35",
+    "rapporto": 11.0617,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "testo_dim / velo pericolo",
+    "testo": "#9ba3b1",
+    "sfondo": "#3c2e35",
+    "rapporto": 5.0586,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pericolo / velo pericolo",
+    "testo": "#f47a74",
+    "sfondo": "#3c2e35",
+    "rapporto": 4.8231,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pulsante pericolo normale",
+    "testo": "#2c0a08",
+    "sfondo": "#f47a74",
+    "rapporto": 6.8306,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "pulsante pericolo hover",
+    "testo": "#2c0a08",
+    "sfondo": "#ff8882",
+    "rapporto": 7.882,
+    "minimo": 4.5,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "bordo campo / sfondo",
+    "testo": "#6a748a",
+    "sfondo": "#12141a",
+    "rapporto": 3.9257,
+    "minimo": 3.0,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "bordo campo / superficie",
+    "testo": "#6a748a",
+    "sfondo": "#171a21",
+    "rapporto": 3.7126,
+    "minimo": 3.0,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "bordo campo / carta",
+    "testo": "#6a748a",
+    "sfondo": "#1e222b",
+    "rapporto": 3.3952,
+    "minimo": 3.0,
+    "esito": "superato"
+  },
+  {
+    "tema": "scuro",
+    "coppia": "bordo campo / carta2",
+    "testo": "#6a748a",
+    "sfondo": "#252a35",
+    "rapporto": 3.0645,
+    "minimo": 3.0,
+    "esito": "superato"
+  }
+]

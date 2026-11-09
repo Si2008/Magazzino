@@ -154,17 +154,28 @@ def installa_protezioni_http(app: FastAPI, max_corpo_byte: int = MAX_CORPO_BYTE)
 
     @app.middleware("http")
     async def protezioni(request: Request, call_next):
+        def errore(codice, messaggio):
+            headers = dict(INTESTAZIONI_SICUREZZA)
+            headers["Cache-Control"] = "no-store"
+            return JSONResponse(status_code=codice, content={"detail": messaggio}, headers=headers)
         if request.url.path.startswith("/api"):
             if "transfer-encoding" in request.headers:
-                return JSONResponse(status_code=411, content={"detail": "Dimensione della richiesta non dichiarata."})
+                return errore(411, "Dimensione della richiesta non dichiarata.")
             lunghezza = request.headers.get("content-length")
             if lunghezza is not None:
                 try:
                     valore = int(lunghezza)
                 except ValueError:
-                    return JSONResponse(status_code=400, content={"detail": "Richiesta non valida."})
+                    return errore(400, "Richiesta non valida.")
+                if valore < 0:
+                    return errore(400, "Richiesta non valida.")
                 if valore > max_corpo_byte:
-                    return JSONResponse(status_code=413, content={"detail": "Richiesta troppo grande."})
+                    return errore(413, "Richiesta troppo grande.")
+                corpo = await request.body()
+                if len(corpo) > max_corpo_byte:
+                    return errore(413, "Richiesta troppo grande.")
+            elif request.method in ("POST", "PUT", "PATCH"):
+                return errore(411, "Dimensione della richiesta non dichiarata.")
         risposta = await call_next(request)
         risposta.headers.update(INTESTAZIONI_SICUREZZA)
         if request.url.path.startswith("/api"):

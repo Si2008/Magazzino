@@ -114,7 +114,7 @@ def test_vassoio_normalizzato_e_riletto(engine, sessione, ingresso, atteso) -> N
     with Session(engine) as nuova:  # nuova sessione = riapertura
         riletto = nuova.get(Pezzo, z.id)
         assert riletto.numero_vassoio == atteso
-        assert (riletto.ubicazione, riletto.barcode, riletto.quantita, riletto.stato) == ("Scaffale 1", "AB12-NERO-6000", 5, None)
+        assert (riletto.ubicazione, riletto.barcode, riletto.quantita, riletto.stato) == ("Scaffale 1", "AB12-NERO-6000", 5, "Caricato")
 
 
 @pytest.mark.parametrize("valore", ["x" * 129, 4, 4.0, ["4"]])

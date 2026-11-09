@@ -30,6 +30,7 @@ def _pezzo_bloccato(session: Session, profilo_id: int, colore_id: int, lunghezza
             Pezzo.profilo_id == profilo_id,
             Pezzo.colore_id == colore_id,
             Pezzo.lunghezza_mm == lunghezza_mm,
+            Pezzo.unitario.is_(False),
         )
         .with_for_update()
         .execution_options(populate_existing=True)
@@ -88,6 +89,7 @@ def _carica_in_transazione(
     crea_se_mancante: bool = True,
     *,
     now: Callable[[], datetime] = utc_now,
+    numero_vassoio: str | None = None,
 ) -> Pezzo:
     """Corpo di ``carica`` SENZA aprire la transazione.
 
@@ -126,6 +128,12 @@ def _carica_in_transazione(
         pezzo = _crea_pezzo(session, profilo, colore_db, lunghezza_mm, ubicazione_n)
     elif ubicazione_n and not (pezzo.ubicazione or "").strip():
         pezzo.ubicazione = ubicazione_n
+    if numero_vassoio is not None:
+        from .pezzi import _testo_opzionale
+        valore = _testo_opzionale(numero_vassoio, "Il numero di vassoio")
+        if pezzo.numero_vassoio and valore and pezzo.numero_vassoio != valore:
+            raise ValueError("La combinazione è già associata a un altro vassoio: modificarlo in Inventario")
+        pezzo.numero_vassoio = valore
 
     registra_movimento(
         session,
@@ -134,6 +142,7 @@ def _carica_in_transazione(
         quantita,
         causale=causale,
         utente=utente,
+        now=now,
     )
     return pezzo
 
@@ -150,6 +159,7 @@ def carica(
     crea_se_mancante: bool = True,
     *,
     now: Callable[[], datetime] = utc_now,
+    numero_vassoio: str | None = None,
 ) -> Pezzo:
     """Effettua un carico di magazzino (solo aumento di giacenza).
 
@@ -179,4 +189,5 @@ def carica(
             ubicazione,
             crea_se_mancante,
             now=now,
+            numero_vassoio=numero_vassoio,
         )

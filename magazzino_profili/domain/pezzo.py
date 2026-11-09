@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Index, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db.normalizzazione import normalizza_codice
@@ -43,7 +43,11 @@ class Pezzo(Base):
 
     __tablename__ = "pezzi"
     __table_args__ = (
-        UniqueConstraint("profilo_id", "colore_id", "lunghezza_mm", name="combinazione"),
+        Index("combinazione_legacy", "profilo_id", "colore_id", "lunghezza_mm", unique=True,
+              postgresql_where=text("NOT unitario"), sqlite_where=text("unitario = 0")),
+        Index("pezzi_materiale_attivo", "profilo_id", "colore_id", "lunghezza_mm",
+              postgresql_where=text("eliminato_il IS NULL"), sqlite_where=text("eliminato_il IS NULL")),
+        CheckConstraint("NOT unitario OR quantita IN (0,1)", name="pezzo_unitario_quantita"),
         CheckConstraint("quantita >= 0", name="quantita_non_negativa"),
         # Solo i due stati persistiti sono ammessi; NULL = record storico
         # privo di una transizione dimostrabile (migrazioni 004/005).
@@ -79,6 +83,9 @@ class Pezzo(Base):
     eliminato_il: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, index=True
     )
+    # I record storici restano aggregati. Le nuove etichette identificano un
+    # singolo pezzo fisico: giacenza 0/1, barcode seriale senza quantità.
+    unitario: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
 
     profilo: Mapped["Profilo"] = relationship(back_populates="pezzi")
     colore: Mapped["Colore"] = relationship(back_populates="pezzi")

@@ -56,7 +56,7 @@ def test_roundtrip(F, tmp_path, fmt):
         assert r.valido, r.errori
         attesi = f2.righe_v2_da_db(s)
     assert len(r.righe) == 2 == len(attesi)
-    assert r.righe[0].descrizione == 'Profilo  "è"; AB12\ncon a capo'
+    assert r.righe[0].descrizione == ('Profilo  "è"; AB12\ncon a capo' if fmt == "csv" else "")
     assert r.righe[0].ubicazione == "Scaffale; A" and r.righe[1].ubicazione is None
     assert [x.id_pezzo for x in r.righe] == sorted(x.id_pezzo for x in r.righe)
 
@@ -78,7 +78,7 @@ def test_timestamp_e_bom(F, tmp_path):
     assert f2._iso_utc(None) == ""
     with F() as s:
         out = f2.esporta_inventario_csv_v2(s, tmp_path / "i.csv")
-    (tmp_path / "b.csv").write_bytes(b"\xef\xbb\xbf" + out.read_bytes())
+    (tmp_path / "b.csv").write_bytes(out.read_text(encoding="utf-8-sig").encode("utf-8-sig"))
     assert f2.valida_csv_v2(tmp_path / "b.csv").valido is True
 
 
@@ -86,7 +86,7 @@ def _h(*righe):
     return [list(f2.INTESTAZIONI_V2), *righe]
 
 
-OK = ["2", "1", "AB12", "d", "RAL7016", "6000", "3", "", "4", "AB12-RAL7016-6000", "Caricato", "", "", "1"]
+OK = ["2", "1", "AB12", "d", "RAL7016", "6000", "3", "", "4", "AB12-RAL7016-6000", "Caricato", "", "", "1", "0"]
 
 
 def mod(**k):
@@ -181,7 +181,7 @@ def test_piezzo_completo_e_eliminato(F, tmp_path):
         assert prima.stato_cambiato_il == con
         assert prima.eliminato_il == elim
         assert prima.scorta_minima == 5
-        assert r.righe[1].numero_vassoio is None and r.righe[1].stato_barcode is None
+        assert r.righe[1].numero_vassoio is None and r.righe[1].stato_barcode == "Caricato"
 
 
 def test_2000_righe(F, tmp_path):

@@ -7,6 +7,7 @@ __pycache__/
 dist/
 build/
 *.spec
+!MagazzinoProfili.spec
 
 # Dati di sessione e artefatti locali
 session_data.json
@@ -30,3 +31,23 @@ firme/chiave_privata.pem
 
 # Rilasci (eseguibili): non in git
 release/
+
+# Stato locale: mai includerlo nei sorgenti condivisi o nel pacchetto.
+pg_data/
+pgsql/
+*.log
+*.log.*
+**/chiave_privata.key
+**/chiave_privata.pem
+**/server.key
+
+# Materiale locale e dati mai destinati alla pubblicazione.
+node_modules/
+.vercel/
+Documenti personali/
+*.db
+*.sqlite
+*.sqlite3
+/nul
+/scan_work/
+/tmp_terminal_pg.ps1

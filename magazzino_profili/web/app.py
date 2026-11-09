@@ -22,7 +22,7 @@ ESPOSIZIONE SU INTERNET (fuori dal perimetro di questo modulo)
 Il telefono si collega SEMPRE da remoto (rete dati mobile): il PC che
 gira questo server deve essere raggiungibile da internet. Il modo in
 cui accade — port forwarding sul router, VPN o un servizio di tunnel
-(es. Cloudflare Tunnel, Tailscale, ngrok) — è una configurazione di
+(es. servizi di collegamento remoto) — è una configurazione di
 RETE esterna al codice e NON è compito di questo modulo. Questo file
 si limita a ascoltare su ``host:porta`` con TLS.
 """
@@ -50,7 +50,6 @@ from .routes_update import crea_router as crea_router_aggiornamenti
 from .sicurezza_web import (
     ProtezioneLogin,
     installa_protezioni_http,
-    valida_segrete_token,
 )
 
 logger = logging.getLogger(__name__)
@@ -76,12 +75,8 @@ def _candidati_config() -> list[Path]:
     esplicito del file), ha la precedenza: utile ai test e a installazioni
     non standard.
     """
-    candidati: list[Path] = []
-    variabile = os.environ.get("MAGAZZINO_CONFIG")
-    if variabile:
-        candidati.append(Path(variabile))
-    radice_progetto = Path(__file__).resolve().parents[2]
-    return [*candidati, Path.cwd() / "config.toml", radice_progetto / "config.toml"]
+    from ..db.config import _candidati_config as candidati_comuni
+    return candidati_comuni(None)
 
 
 def leggi_sezione_web(percorso: str | Path | None = None) -> dict[str, Any]:
@@ -112,16 +107,25 @@ def leggi_sezione_web(percorso: str | Path | None = None) -> dict[str, Any]:
                 sezione.get("durata_token_secondi", _DEFAULT_WEB["durata_token_secondi"])
             ),
             "segrete_token": sezione.get("segrete_token"),
+            "tls_proxy_locale": sezione.get("tls_proxy_locale", False),
             "url_pubblico": sezione.get("url_pubblico"),  # informativa: QR "Collega telefono"
         }
     )
     # I percorsi relativi dei certificati sono risolti rispetto alla cartella
+    if os.environ.get('MAGAZZINO_TELEFONO_PORTA_LOCALE'):
+        configurazione.update(host='127.0.0.1',porta=int(os.environ['MAGAZZINO_TELEFONO_PORTA_LOCALE']),tls_proxy_locale=True)
     # del file di configurazione (non alla cwd): il server può partire da
     # qualsiasi directory.
     for chiave in ("certificato_pem", "chiave_privata"):
         valore = configurazione.get(chiave)
         if valore and not Path(valore).is_absolute():
             configurazione[chiave] = str(file.parent / valore)
+    if not 1 <= configurazione["porta"] <= 65535:
+        raise ValueError("Porta web non valida")
+    if not isinstance(configurazione["tls_proxy_locale"], bool):
+        raise ValueError("tls_proxy_locale deve essere true oppure false")
+    if configurazione["tls_proxy_locale"] and configurazione["host"] not in ("127.0.0.1", "::1"):
+        raise ValueError("Il proxy HTTPS locale consente HTTP solo su 127.0.0.1 oppure ::1")
     return configurazione
 
 
@@ -180,7 +184,8 @@ def _messaggio_422(exc: RequestValidationError) -> str:
             else:
                 problemi.append("la quantità deve essere un numero intero positivo")
         elif "barcode" in campo:
-            problemi.append("il barcode non può essere vuoto")
+            problema = errore.get("ctx", {}).get("error")
+            problemi.append(str(problema) if problema else "il barcode deve essere un testo non vuoto, massimo 255 caratteri")
         else:
             problemi.append(f"il campo '{campo}' non è valido")
     unici = list(dict.fromkeys(problemi))  # dedup preservando l'ordine
@@ -212,15 +217,7 @@ def crea_app(
         engine = crea_engine(config=leggi_config())
         session_factory = crea_session_factory(engine)
 
-    if segrete_token is None:
-        segrete_token = secrets.token_hex(32)
-        print(
-            "AVVISO: [web] segrete_token non definito in config.toml: "
-            "i token saranno validi solo per la durata di questo avvio."
-        )
-    else:
-        valida_segrete_token(segrete_token)
-    segrete = segrete_token.encode("utf-8")
+    segrete = b""  # compatibilità della factory: nessun token richiesto
 
     app = FastAPI(
         title="Magazzino Profili — scansione da telefono",
@@ -231,6 +228,10 @@ def crea_app(
         redoc_url=None,
         openapi_url=None,
     )
+    from fastapi.middleware.cors import CORSMiddleware
+    from ..services.collegamento_remoto import PAGINA_TELEFONO
+    app.add_middleware(CORSMiddleware,allow_origins=[PAGINA_TELEFONO],
+        allow_methods=['GET','POST'],allow_headers=['Content-Type'],allow_credentials=False)
 
     @app.exception_handler(RequestValidationError)
     async def gestore_validazione(
@@ -264,6 +265,21 @@ def crea_app(
     def pagina_scansione() -> FileResponse:
         """Pagina mobile di scansione (HTML + JS statico)."""
         return FileResponse(_TEMPLATE_SCANSIONE, media_type="text/html")
+
+    @app.get("/api/salute", include_in_schema=False)
+    def salute():
+        from sqlalchemy import text
+        from .. import __version__
+        try:
+            with session_factory() as sessione:
+                sessione.execute(text("SELECT 1"))
+            disponibile = True
+        except Exception:
+            logger.exception("Controllo disponibilità database")
+            disponibile = False
+        return JSONResponse(status_code=200 if disponibile else 503,
+                            content={"servizio": "magazzino_profili", "versione": __version__,
+                                     "database_disponibile": disponibile})
 
     app.mount("/static", StaticFiles(directory=_CARTELLA_STATIC), name="static")
 
@@ -301,25 +317,20 @@ def main() -> int:
         print(f"ERRORE: {errore}")
         return 1
 
-    # La segrete dei token deve essere lunga, casuale e non il valore di esempio:
-    # senza di ciò i token potrebbero essere falsificati.
-    if web["segrete_token"] is not None:
-        try:
-            valida_segrete_token(web["segrete_token"])
-        except ValueError as errore:
-            print(f"ERRORE: {errore}")
-            return 1
-
     # HTTPS obbligatorio: senza i due file il server NON parte in chiaro.
     certificato = Path(web["certificato_pem"]) if web["certificato_pem"] else None
     chiave = Path(web["chiave_privata"]) if web["chiave_privata"] else None
-    if certificato is None or chiave is None:
+    proxy_locale = web.get("tls_proxy_locale", False)
+    if proxy_locale and web["host"] not in ("127.0.0.1", "::1"):
+        print("ERRORE: HTTP dietro tunnel consentito solo su loopback")
+        return 1
+    if not proxy_locale and (certificato is None or chiave is None):
         print(
             "ERRORE: HTTPS obbligatorio. Definire in config.toml la sezione [web] "
             "con le chiavi 'certificato_pem' e 'chiave_privata' (percorso dei file)."
         )
         return 1
-    if not Path(certificato).is_file() or not Path(chiave).is_file():
+    if not proxy_locale and (not Path(certificato).is_file() or not Path(chiave).is_file()):
         print(f"ERRORE: certificati non trovati: '{certificato}' / '{chiave}'")
         return 1
 
@@ -342,6 +353,15 @@ def main() -> int:
         print(f"ERRORE: impossibile creare l'engine del database: {errore}")
         return 1
     factory = crea_session_factory(engine)
+    if engine.dialect.name == "postgresql":
+        from ..db.migrazioni import migrazioni_pendenti
+        try:
+            if migrazioni_pendenti(engine):
+                raise RuntimeError("Schema non aggiornato: avviare prima il programma desktop per il backup e le migrazioni")
+        except Exception as errore:
+            print(f"ERRORE: {errore}")
+            engine.dispose()
+            return 1
 
     pianificatore = PianificatoreScadenze(
         factory, parametri_scadenze.intervallo_secondi
@@ -363,25 +383,43 @@ def main() -> int:
             segrete_token=web["segrete_token"],
             cartella_rilasci=cartella_rilasci,
         )
-        print(
-            f"Server web Magazzino Profili: https://{web['host']}:{web['porta']}/ "
-            "(accesso solo remoto, HTTPS)"
-        )
-        uvicorn.run(
-            app,
-            host=web["host"],
-            port=web["porta"],
-            ssl_certfile=str(certificato),
-            ssl_keyfile=str(chiave),
-            timeout_keep_alive=10,
-            timeout_graceful_shutdown=10,
-        )
+        protocollo = "http" if proxy_locale else "https"
+        modalita = "origine locale per tunnel HTTPS" if proxy_locale else "HTTPS diretto"
+        print(f"Server web Magazzino Profili: {protocollo}://{web['host']}:{web['porta']}/ ({modalita})")
+        opzioni = dict(host=web["host"], port=web["porta"],
+            ssl_certfile=None if proxy_locale else str(certificato),
+            ssl_keyfile=None if proxy_locale else str(chiave), proxy_headers=False,
+            timeout_keep_alive=10, timeout_graceful_shutdown=10, access_log=False)
+        if os.environ.get("MAGAZZINO_CONTROLLO_STDIN") == "1" or os.environ.get("MAGAZZINO_EVENTO_ARRESTO"):
+            import sys
+            import threading
+            server = uvicorn.Server(uvicorn.Config(app, **opzioni))
+            def attendi_arresto():
+                if os.name == "nt" and os.environ.get("MAGAZZINO_EVENTO_ARRESTO"):
+                    from ..evento_windows import EventoArresto
+                    evento = EventoArresto(os.environ["MAGAZZINO_EVENTO_ARRESTO"])
+                    try:
+                        evento.attendi()
+                        server.should_exit = True
+                    finally:
+                        evento.chiudi()
+                    return
+                for riga in sys.stdin:
+                    if riga.strip() == "arresta":
+                        server.should_exit = True
+                        return
+            threading.Thread(target=attendi_arresto, daemon=True).start()
+            server.run()
+        else:
+            uvicorn.run(app, **opzioni)
     except KeyboardInterrupt:
         print("Server web arrestato.")
     except Exception as errore:  # es. certificato non valido: il messaggio è leggibile
         print(f"ERRORE: il server web non è partito: {errore}")
+        return 1
     finally:
         ferma(pianificatore)  # sempre: nessun worker sopravvive al processo
+        engine.dispose()
     return 0
 
 

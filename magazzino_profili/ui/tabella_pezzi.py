@@ -2,7 +2,7 @@
 
 Layout (come nel mockup):
 
-- riga di 4 card KPI (pezzi a magazzino, referenze, peso complessivo,
+- riga di 3 card KPI (pezzi a magazzino, referenze,
   da riordinare/scorte ok — l'ultima è cliccabile e attiva il filtro);
 - chip colore: "Tutti" + un chip per colore con pallino e conteggio;
 - card tabella: barra strumenti (cerca, Profilo, Ubicazione, Stato,
@@ -22,14 +22,13 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
-from decimal import Decimal
 
 from sqlalchemy.exc import SQLAlchemyError
 
 from PySide6.QtCore import QEvent, QRect, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
+from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QIcon
 from PySide6.QtWidgets import (
-    QStyle,
+    QStyle, QScrollArea, QDialog,
     QAbstractItemView,
     QComboBox,
     QFileDialog,
@@ -38,6 +37,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QInputDialog,
+    QMenu,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -59,8 +59,8 @@ from ..services import (
     imposta_stato,
 )
 from ..services.eccezioni import BarcodeDuplicatoError, PezzoEliminatoError, PezzoNonTrovatoError
-from . import animazioni, tema
-from .tema import M, colore_di_codice, rem, tema_attivo
+from . import animazioni, registro_colori, tema
+from .tema import M, rem, tema_attivo
 from .icone import ic_px, icona_svg, pixmap_icona
 from .componenti import (
     CardKPI,
@@ -71,11 +71,10 @@ from .componenti import (
     icona_tessera,
 )
 
-_COLONNE = ["Barcode", "Profilo", "Colore", "Lunghezza", "Pezzi", "Peso tot.", "Ubicazione", "Stato", "Vassoio", "Stato barcode"]
+_COLONNE = ["Barcode", "Profilo", "Colore", "Lunghezza", "Pezzi", "Ubicazione", "Stato", "Richiamo vassoio"]
 _COLORE = 2  # indice colonna "Colore" (contratto test: item(0, 2))
 _BARCODE = 0
-_VASSOIO = 8   # Fase 7: numero di vassoio (testo libero)
-_STATO_BARCODE = 9  # Fase 8: Caricato / Scaricato (colonna propria, distinta dallo stato di scorta)
+_RICHIAMO = 7
 _TUTTE_UBICAZIONI = "Tutte le ubicazioni"
 _FLAG_CELLA = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
 _ALLINEA_SX = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
@@ -99,20 +98,6 @@ _STATO_INFO = {
 logger = logging.getLogger(__name__)
 
 
-def _testo_peso(peso: Decimal | float) -> str:
-    """Peso in formato italiano: ≥ 1000 kg → "3,4 t", altrimenti "112,5 kg"."""
-    peso = Decimal(str(peso or 0))
-    if peso >= 1000:
-        valore = f"{float(peso) / 1000.0:,.1f}"
-        unita = "t"
-    elif peso == peso.to_integral_value():
-        valore = f"{int(peso):,}"
-        unita = "kg"
-    else:
-        valore = f"{float(peso):,.1f}"
-        unita = "kg"
-    return valore.replace(",", "@").replace(".", ",").replace("@", ".") + " " + unita
-
 
 class DelegatoProfilo(QStyledItemDelegate):
     """Colonna Profilo: codice in grassetto sopra la descrizione (testo_dim).
@@ -124,14 +109,19 @@ class DelegatoProfilo(QStyledItemDelegate):
     def paint(self, painter, option, index) -> None:
         t = tema_attivo()
         testo = str(index.data(Qt.ItemDataRole.DisplayRole) or "")
-        descrizione = str(index.data(Qt.ItemDataRole.UserRole + 1) or "")
+        descrizione = ""  # la descrizione non è mostrata nella tabella
         codice = testo.split(" — ", 1)[0] if " — " in testo else testo
 
         if option.state & QStyle.StateFlag.State_Selected:
-            painter.fillRect(option.rect, QColor(t.accento_vel))
+            painter.fillRect(option.rect, tema.colore_da_css(t.accento_vel))
             painter.fillRect(option.rect.x(), option.rect.y(), 3, option.rect.height(), QColor(t.accento))
 
         riga = option.rect.adjusted(M.TD_PH, 0, -M.TD_PH // 2, 0)  # stesso padding delle altre colonne
+        immagine = index.data(Qt.ItemDataRole.DecorationRole)
+        if isinstance(immagine, QIcon) and not immagine.isNull():
+            lato = rem(1.75)
+            immagine.paint(painter, QRect(riga.x(), riga.center().y() - lato // 2, lato, lato))
+            riga.adjust(lato + rem(.375), 0, 0, 0)
         painter.setPen(QColor(t.bordo))
         painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())  # linea di riga come QSS ::item
         fm = painter.fontMetrics()
@@ -164,24 +154,29 @@ class DelegatoProfilo(QStyledItemDelegate):
 
 
 class DelegatoColore(QStyledItemDelegate):
-    """Colonna Colore: pallino (colore_di_codice) + nome."""
+    """Colonna Colore: pallino del registro unico (Fase 8) + nome.
+
+    Il pallino viene da :func:`.registro_colori.dipingi_swatch`: colore
+    confermato → suggerimento dal codice → non definito (tratteggiato con «?»).
+    Tinta unita ESATTA, bicolore diviso a metà; nessun colore da hash.
+    """
 
     def paint(self, painter, option, index) -> None:
         t = tema_attivo()
         nome = str(index.data(Qt.ItemDataRole.DisplayRole) or "")
         codice = str(index.data(Qt.ItemDataRole.UserRole + 1) or "")
-        hx = colore_di_codice(codice) if codice else t.testo_dim
         if option.state & QStyle.StateFlag.State_Selected:
-            painter.fillRect(option.rect, QColor(t.accento_vel))
+            painter.fillRect(option.rect, tema.colore_da_css(t.accento_vel))
         painter.setPen(QColor(t.bordo))
         painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
         d = int(M.PILL_PUNTO) + ic_px(1)
         cx = option.rect.x() + M.TD_PH
         cy = option.rect.y() + option.rect.height() // 2 - d // 2
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)  # noqa
-        painter.setPen(QPen(QColor(t.bordo_campo), 1))
-        painter.setBrush(QColor(hx))
-        painter.drawEllipse(cx, cy, d, d)
+        # Fase 8: lo swatch dal registro (nessuna query, nessun pixmap)
+        registro_colori.dipingi_swatch(
+            painter, cx, cy, d, registro_colori.registro().swatch(codice), t
+        )
         painter.setPen(QColor(t.testo))
         painter.drawText(
             option.rect.adjusted(int(M.TD_PH + d + rem(0.5)), 0, -2, 0),
@@ -203,16 +198,21 @@ def _cella_pillola(testo: str, variante: str) -> QWidget:
 class TabellaPezzi(QWidget):
     """Scheda Inventario con card KPI, chip colore, tabella e pannello laterale."""
 
+    richiamo_richiesto = Signal(str, int)
     cambiato = Signal()  # emesso dopo ogni aggiornamento completo
     vai_a_scheda = Signal(str, str)  # (nome scheda, barcode)
 
-    def __init__(self, factory, parent: QWidget | None = None) -> None:
+    def __init__(self, factory, parent: QWidget | None = None, *, sola_lettura: bool = False) -> None:
         super().__init__(parent)
         self._factory = factory
+        self._sola_lettura = sola_lettura
+        self._pagina = 0
+        self._dimensione_pagina = 200
         # Soglia globale di sotto scorta (rilessa in ``aggiorna``).
         self._soglia = impostazioni.SOGLIA_DEFAULT
         self._colore_selezionato: int | None = None  # None = "Tutti"
         self._id_tab: list[int | None] = []
+        self._codice_tab: list[str | None] = []  # Fase 8: codice colore di ogni tab (menu contestuale)
         self._barcode_selezionato: str | None = None
         self._liste_mov: list = []
 
@@ -222,22 +222,42 @@ class TabellaPezzi(QWidget):
 
         root.addLayout(self._costruisci_kpi())
         self._tabbar = self._costruisci_tabbar()
-        root.addWidget(self._tabbar)
+        colori = QHBoxLayout()
+        colori.addWidget(self._tabbar, 1)
+        self.modifica_colore = bottone("Modifica tonalità", parent=self)
+        self.modifica_colore.setEnabled(not self._sola_lettura)
+        self.modifica_colore.clicked.connect(self._modifica_tonalita)
+        colori.addWidget(self.modifica_colore)
+        root.addLayout(colori)
 
-        riga = QHBoxLayout()
-        riga.setContentsMargins(0, 0, 0, 0)
-        riga.setSpacing(M.GAP)
-        riga.addWidget(self._costruisci_card_tabella(), 1)
-        riga.addWidget(self._costruisci_laterale(), 0, Qt.AlignmentFlag.AlignTop)
-        root.addLayout(riga, 1)
+        tabella = self._costruisci_card_tabella()
+        tabella.setMinimumWidth(M.COLONNA_MIN)
+        self._pannello_dettagli = self._costruisci_laterale()
+        self.dettagli.setChecked(True)
+        from .pannelli import dividi_pannelli
+        self.divisione = dividi_pannelli(tabella, self._pannello_dettagli, (60, 40), self)
+        root.addWidget(self.divisione, 1)
 
         self._tabbar.currentChanged.connect(self._su_cambio_tab)
-        self.cerca.textChanged.connect(lambda _t: self._rinfresca_tabella())
-        self.combo_ubicazione.editTextChanged.connect(lambda _t: self._rinfresca_tabella())
-        for c in (self.combo_profilo, self.combo_stato, self.combo_stato_barcode):
-            c.currentIndexChanged.connect(lambda _i: self._rinfresca_tabella())
+        from PySide6.QtCore import QTimer
+        self._ritardo_ricerca = QTimer(self)
+        self._ritardo_ricerca.setSingleShot(True)
+        self._ritardo_ricerca.setInterval(250)
+        self._ritardo_ricerca.timeout.connect(self._filtri_cambiati)
+        self.cerca.textChanged.connect(lambda _t: self._ritardo_ricerca.start())
+        self.combo_ubicazione.editTextChanged.connect(lambda _t: self._ritardo_ricerca.start())
+        for c in (self.combo_profilo, self.combo_stato):
+            c.currentIndexChanged.connect(lambda _i: self._filtri_cambiati())
 
         self.aggiorna()
+
+    def _filtri_cambiati(self):
+        self._pagina = 0
+        self._rinfresca_tabella()
+
+    def _cambia_pagina(self, delta):
+        self._pagina = max(0, self._pagina + delta)
+        self._rinfresca_tabella()
 
     # ------------------------------------------------------------------
     # KPI
@@ -248,11 +268,10 @@ class TabellaPezzi(QWidget):
 
         self.kpi_pezzi = CardKPI("layers", "0", "Pezzi a magazzino")
         self.kpi_profili = CardKPI("tag", "0", "Referenze")
-        self.kpi_peso = CardKPI("weight", "0 kg", "Peso complessivo")
         self.kpi_riordino = CardKPI("alert", "0", "Da riordinare", "bad", cliccabile=True)
         self.kpi_riordino.cliccata.connect(self._filtrare_da_riordinare)
 
-        for card in (self.kpi_pezzi, self.kpi_profili, self.kpi_peso, self.kpi_riordino):
+        for card in (self.kpi_pezzi, self.kpi_profili, self.kpi_riordino):
             h.addWidget(card, 1)
         return h
 
@@ -265,7 +284,6 @@ class TabellaPezzi(QWidget):
         # i numeri "salgono" dal valore precedente (a fine corsa il testo è esattamente quello di prima)
         animazioni.conta_su(self.kpi_pezzi, int(r["pezzi_totali"]), lambda v: f"{int(v):,}")
         animazioni.conta_su(self.kpi_profili, int(r["referenze"]), lambda v: f"{int(v):,}")
-        animazioni.conta_su(self.kpi_peso, float(r["peso_kg"] or 0), _testo_peso)
         n_riordino = int(r["da_riordinare"])
         animazioni.conta_su(self.kpi_riordino, n_riordino, lambda v: f"{int(v):,}")
         if n_riordino > 0:
@@ -285,7 +303,48 @@ class TabellaPezzi(QWidget):
         bar.setDrawBase(False)
         bar.setUsesScrollButtons(True)
         bar.setElideMode(Qt.TextElideMode.ElideNone)
+        # Fase 8: menu contestuale sui chip colore (non su "Tutti")
+        bar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        bar.customContextMenuRequested.connect(self._menu_contestuale_tab)
         return bar
+
+    def _modifica_tonalita(self):
+        from .gestione_colori import scegli_colore, GestioneColori
+        indice = self._tabbar.currentIndex()
+        codice = self._codice_tab[indice] if 0 <= indice < len(self._codice_tab) else None
+        if codice:
+            scegli_colore(self, self._factory, codice)
+        else:
+            dialogo = GestioneColori(self._factory, self)
+            dialogo.exec()
+            dialogo.deleteLater()
+
+    def _menu_contestuale_tab(self, pos) -> None:
+        """Menu contestuale sul chip colore: «Scegli colore…», «Conferma suggerito» (se
+        suggerito a tinta unita), «Ripristina automatico». Sul chip «Tutti» nessun menu."""
+        if self._sola_lettura:
+            return
+        bar = self._tabbar
+        indice = bar.tabAt(pos)
+        if indice is None or indice < 1 or indice >= len(self._id_tab):
+            return
+        colore_id = self._id_tab[indice]
+        codice = self._codice_tab[indice]
+        if colore_id is None or not codice:
+            return
+        from . import gestione_colori
+
+        menu = QMenu(self)
+        azione_scegli = menu.addAction("Scegli colore…")
+        azione_scegli.triggered.connect(lambda: gestione_colori.scegli_colore(self, self._factory, codice))
+        swatch = registro_colori.registro().swatch(codice)
+        if swatch.origine == registro_colori.SUGGERITO and len(swatch.colori) == 1:
+            azione_conf = menu.addAction("Conferma suggerito")
+            azione_conf.triggered.connect(lambda: gestione_colori.conferma_suggerito(self, self._factory, codice))
+        menu.addSeparator()
+        azione_ripr = menu.addAction("Ripristina automatico")
+        azione_ripr.triggered.connect(lambda: gestione_colori.ripristina_automatico(self, self._factory, codice))
+        menu.exec(bar.mapToGlobal(pos))
 
     def _aggiorna_tab_colori(self, colori: list) -> None:
         bar = self._tabbar
@@ -294,6 +353,7 @@ class TabellaPezzi(QWidget):
         while bar.count():
             bar.removeTab(0)
         self._id_tab = []
+        self._codice_tab = [None]  # la tab 0 è "Tutti": nessun codice
 
         bar.addTab(icona_tessera("T", tema_attivo().testo_dim), "Tutti")
         self._id_tab.append(None)
@@ -301,9 +361,12 @@ class TabellaPezzi(QWidget):
         for colore, referenze, _pezzi in colori:
             nome = colore.nome_visualizzato or colore.codice_normalizzato
             etichetta = f"{nome} ({referenze})"
+            swatch = registro_colori.registro().swatch(colore.codice_normalizzato)
             icone = icona_colore(colore.codice_normalizzato, sbiadita=(referenze == 0))
-            bar.addTab(icone, etichetta)
+            indice = bar.addTab(icone, etichetta)
+            bar.setTabToolTip(indice, swatch.descrizione())
             self._id_tab.append(colore.id)
+            self._codice_tab.append(colore.codice_normalizzato)
 
         indice = 0
         if precedente is not None and precedente in self._id_tab:
@@ -326,53 +389,90 @@ class TabellaPezzi(QWidget):
 
         barra = QFrame(card)
         barra.setObjectName("BarraStrumenti")
-        h = QHBoxLayout(barra)
-        h.setContentsMargins(M.TOOLBAR_PAD, M.TOOLBAR_PAD, M.TOOLBAR_PAD, M.TOOLBAR_PAD)
+        contenuto_barra = QVBoxLayout(barra)
+        contenuto_barra.setContentsMargins(M.TOOLBAR_PAD, M.TOOLBAR_GAP, M.TOOLBAR_PAD, M.TOOLBAR_GAP)
+        contenuto_barra.setSpacing(rem(0.333))
+        h = QHBoxLayout()
+        h.setContentsMargins(0, 0, 0, 0)
         h.setSpacing(M.TOOLBAR_GAP)
+        contenuto_barra.addLayout(h)
 
         self.cerca = QLineEdit(barra)
         self.cerca.setPlaceholderText("Cerca per profilo, colore, barcode, ubicazione…")
         self.cerca.setClearButtonEnabled(True)
         self.cerca.setMinimumWidth(rem(12.5))
-        self.cerca.addAction(icona_svg("search", t.testo_debole, ic_px(15)), QLineEdit.ActionPosition.LeadingPosition)
+        self._icona_ricerca = self.cerca.addAction(icona_svg("search", t.testo_debole, ic_px(15)), QLineEdit.ActionPosition.LeadingPosition)
         h.addWidget(self.cerca, 3)
 
+        self.filtri = bottone("Filtri", parent=barra)
+        self.filtri.setCheckable(True)
+        self.filtri.setToolTip("Mostra profilo, ubicazione, scorta e stato. Azzera rimuove tutti i filtri.")
+        self.filtri.toggled.connect(lambda aperti: self._contenitore_filtri.setVisible(aperti))
+        h.addWidget(self.filtri)
+        azioni = QHBoxLayout()
+        azioni.setSpacing(M.TOOLBAR_GAP)
+        contenuto_barra.addLayout(azioni)
+
+        self.dettagli = bottone("Mostra dettagli", dim="sm", parent=barra)
+        self.dettagli.setCheckable(True)
+        self.dettagli.toggled.connect(self._mostra_dettagli)
+        azioni.addWidget(self.dettagli)
+        self.gestisci_profili = bottone("Gestisci profili", dim="sm", parent=barra)
+        self.gestisci_profili.setEnabled(not self._sola_lettura)
+        self.gestisci_profili.clicked.connect(self._gestisci_profili)
+        azioni.addWidget(self.gestisci_profili)
+        filtri = QGridLayout()
+        filtri.setSpacing(M.TOOLBAR_GAP)
+
         self.combo_profilo = QComboBox(barra)
-        h.addWidget(self.combo_profilo)
+        filtri.addWidget(self.combo_profilo, 0, 0)
+        self.combo_profilo.setAccessibleName("Filtra per profilo")
 
         self.combo_ubicazione = QComboBox(barra)
         self.combo_ubicazione.setEditable(True)
         self.combo_ubicazione.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.combo_ubicazione.lineEdit().setPlaceholderText("Ubicazione")
-        h.addWidget(self.combo_ubicazione)
+        filtri.addWidget(self.combo_ubicazione, 0, 1)
+        self.combo_ubicazione.setAccessibleName("Filtra per ubicazione")
 
         self.combo_stato = QComboBox(barra)
         for etichetta, valore in _STATI_COMBO:
             self.combo_stato.addItem(etichetta, valore)
-        h.addWidget(self.combo_stato)
+        filtri.addWidget(self.combo_stato, 1, 0)
+        self.combo_stato.setAccessibleName("Filtra per scorta")
 
-        # Fase 8: filtro sullo stato del barcode (Caricato / Scaricato)
-        self.combo_stato_barcode = QComboBox(barra)
-        for etichetta, valore in (("Stato barcode: tutti", None), ("Caricato", "Caricato"), ("Scaricato", "Scaricato")):
-            self.combo_stato_barcode.addItem(etichetta, valore)
-        h.addWidget(self.combo_stato_barcode)
-
-        self.azzera = bottone("Azzera", icona="refresh", parent=barra)
+        self.azzera = bottone("Azzera", dim="sm", icona="refresh", parent=barra)
         self.azzera.clicked.connect(self._azzera_filtri)
-        h.addWidget(self.azzera)
+        azioni.addWidget(self.azzera)
+        azioni.addStretch(1)
         # i filtri si accorciano invece di sovrapporsi alla ricerca quando la card è stretta
-        for combo in (self.combo_profilo, self.combo_ubicazione, self.combo_stato, self.combo_stato_barcode):
+        for combo in (self.combo_profilo, self.combo_ubicazione, self.combo_stato):
             combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
             combo.setMinimumContentsLength(11)
             combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.cerca.setMinimumWidth(rem(10))
 
         v.addWidget(barra)
+        self._contenitore_filtri = QWidget(card)
+        contenitore_filtri = QVBoxLayout(self._contenitore_filtri)
+        contenitore_filtri.setContentsMargins(M.TOOLBAR_PAD, 0, M.TOOLBAR_PAD, M.TOOLBAR_PAD)
+        contenitore_filtri.addLayout(filtri)
+        self._contenitore_filtri.hide()
+        v.addWidget(self._contenitore_filtri)
         v.addWidget(self._costruisci_tabella(), 1)
 
         self._footer = QLabel(card)
+        self._footer.setWordWrap(True)
         self._footer.setObjectName("Piede")
-        v.addWidget(self._footer)
+        piede = QHBoxLayout()
+        piede.addWidget(self._footer, 1)
+        self._precedente = bottone("Precedente", dim="sm", parent=card)
+        self._successiva = bottone("Successiva", dim="sm", parent=card)
+        self._precedente.clicked.connect(lambda: self._cambia_pagina(-1))
+        self._successiva.clicked.connect(lambda: self._cambia_pagina(1))
+        piede.addWidget(self._precedente)
+        piede.addWidget(self._successiva)
+        v.addLayout(piede)
 
         # vuoto centrato (lista vuota con filtri attivi)
         self._vuoto = QWidget(card)
@@ -409,12 +509,13 @@ class TabellaPezzi(QWidget):
         header = tab.horizontalHeader()
         header.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Profilo assorbe lo spazio
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
+        tab.setColumnWidth(1, rem(10))  # il codice resta leggibile anche con molte colonne
         header.setMinimumSectionSize(rem(3))
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
         # larghezza = pillola più lunga ("Sotto scorta") + margini della cella, qualunque sia il font
-        tab.setColumnWidth(7, Pillola("Sotto scorta", "pericolo").sizeHint().width() + 2 * rem(0.375) + M.TD_PH)
+        tab.setColumnWidth(6, Pillola("Sotto scorta", "pericolo").sizeHint().width() + 2 * rem(0.375) + M.TD_PH)
         tab.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         tab.setItemDelegateForColumn(1, DelegatoProfilo(tab))
         tab.setItemDelegateForColumn(_COLORE, DelegatoColore(tab))
@@ -442,8 +543,8 @@ class TabellaPezzi(QWidget):
     def _costruisci_laterale(self) -> QFrame:
         card = QFrame(self)
         card.setObjectName("Card")
-        card.setFixedWidth(M.ASIDE_W)
-        card.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
+        card.setMinimumWidth(M.ASIDE_MIN)
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         v = QVBoxLayout(card)
         v.setContentsMargins(0, 0, 0, 0)
         v.setSpacing(0)
@@ -451,9 +552,34 @@ class TabellaPezzi(QWidget):
         self._pannello_l = QVBoxLayout(self._pannello)
         self._pannello_l.setContentsMargins(0, 0, 0, 0)
         self._pannello_l.setSpacing(0)
-        v.addWidget(self._pannello)
-        v.addStretch(1)
+        area = QScrollArea(card)
+        area.setWidgetResizable(True)
+        area.setWidget(self._pannello)
+        v.addWidget(area, 1)
         return card
+
+    def _gestisci_profili(self):
+        from .scheda_profilo import SchedaProfilo
+        dialogo = QDialog(self)
+        dialogo.setWindowTitle("Gestisci profili")
+        dialogo.resize(rem(53), rem(32))
+        layout = QVBoxLayout(dialogo)
+        editor = SchedaProfilo(self._factory, dialogo)
+        editor.cambiato.connect(self.aggiorna)
+        layout.addWidget(editor)
+        chiudi = bottone("Chiudi", parent=dialogo)
+        chiudi.clicked.connect(dialogo.accept)
+        layout.addWidget(chiudi)
+        dialogo.exec()
+        dialogo.deleteLater()
+
+    def _mostra_dettagli(self, visibile):
+        self._pannello_dettagli.setVisible(visibile)
+        self.dettagli.setText("Nascondi dettagli" if visibile else "Mostra dettagli")
+
+    def aggiorna_tema(self):
+        self._icona_ricerca.setIcon(icona_svg("search", tema_attivo().testo_debole, ic_px(15)))
+        self.aggiorna()
 
     def _sezioni_laterali(self) -> None:
         """Ricostruisce il pannello laterale (selezione corrente)."""
@@ -461,6 +587,7 @@ class TabellaPezzi(QWidget):
             elemento = self._pannello_l.takeAt(0)
             w = elemento.widget()
             if w is not None:
+                w.hide()
                 w.deleteLater()
         self._riempi_laterale()
 
@@ -494,16 +621,22 @@ class TabellaPezzi(QWidget):
         colonna.setContentsMargins(0, 0, 0, 0)
         colonna.setSpacing(1)
         codice = QLabel(pezzo.profilo.codice or "", s1)
+        codice.setTextFormat(Qt.TextFormat.PlainText)
         codice.setObjectName("LatTitolo")
         descrizione = QLabel(pezzo.profilo.descrizione or "", s1)
+        descrizione.setTextFormat(Qt.TextFormat.PlainText)
         descrizione.setObjectName("Dim")
+        descrizione.setWordWrap(True)
         colonna.addWidget(codice)
         colonna.addWidget(descrizione)
         riga.addLayout(colonna, 1)
         stato = consultazione.stato_scorta(pezzo, self._soglia)
         testo_stato, variante = _STATO_INFO.get(stato, ("OK", "ok"))
-        riga.addWidget(Pillola(testo_stato, variante), 0, Qt.AlignmentFlag.AlignTop)
         v1.addLayout(riga)
+        v1.addWidget(Pillola(testo_stato, variante), 0, Qt.AlignmentFlag.AlignLeft)
+        from .visualizzatore_immagine import AnteprimaSezione
+        self.anteprima_sezione = AnteprimaSezione(pezzo.profilo, s1)
+        v1.addWidget(self.anteprima_sezione)
 
         cb = QFrame(s1)
         cb.setObjectName("CasellaBarcode")
@@ -518,7 +651,9 @@ class TabellaPezzi(QWidget):
             from ..barcode import generazione as bc_gen
 
             bc_gen.genera_immagine_barcode(barcode, percorso)
-            img.setPixmap(QPixmap(percorso))
+            img.setPixmap(QPixmap(percorso).scaled(
+                M.ASIDE_MIN - 2 * M.LAT_PH - 2 * M.GAP_SM - rem(.5), rem(4),
+                Qt.KeepAspectRatio, Qt.SmoothTransformation))
         # ``genera_immagine_barcode`` documenta ValueError; i guasti di
         # Pillow/ImageWriter non sono esaustibili: si mantiene il catch largo
         # e si registra il traceback (B-03).
@@ -527,6 +662,7 @@ class TabellaPezzi(QWidget):
             img.clear()
         lab_bc = QLabel(barcode or "", cb)
         lab_bc.setObjectName("Debole")
+        lab_bc.setWordWrap(True)
         lab_bc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         if img.pixmap() is not None:
             vc.addWidget(img)
@@ -552,8 +688,6 @@ class TabellaPezzi(QWidget):
             ("Colore", self._etichetta_colore(pezzo)),
             ("Lunghezza", f"{pezzo.lunghezza_mm:,}".replace(",", "X").replace(".", ",").replace("X", ".") + " mm"),
             ("Giacenza", f"{pezzo.quantita or 0} pezzi"),
-            ("Peso unitario", _testo_peso(consultazione.peso_unitario_kg(pezzo))),
-            ("Peso totale", _testo_peso(consultazione.peso_totale_kg(pezzo))),
             ("Ubicazione", pezzo.ubicazione or "—"),
         ]
         for i, (etichetta, valore) in enumerate(righe):
@@ -564,6 +698,7 @@ class TabellaPezzi(QWidget):
                 griglia.addWidget(valore, i, 1)
             else:
                 lab_v = QLabel(valore, s2)
+                lab_v.setWordWrap(True)
                 lab_v.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
                 griglia.addWidget(lab_v, i, 1)
         v2.addLayout(griglia)
@@ -602,35 +737,48 @@ class TabellaPezzi(QWidget):
         val_st = QLabel(pezzo.stato or "—", s3)
         griglia3.addWidget(lab_st, 0, 0)
         griglia3.addWidget(val_st, 0, 1)
+        data_stato = pezzo.data_ultimo_cambio_stato
+        if data_stato is not None:
+            from datetime import timezone
+            if data_stato.tzinfo is None:
+                data_stato = data_stato.replace(tzinfo=timezone.utc)
+            val_st.setToolTip("Ultimo cambio: " + data_stato.astimezone().isoformat(timespec="seconds"))
         lab_v = QLabel("Vassoio", s3)
         lab_v.setObjectName("Debole")
         griglia3.addWidget(lab_v, 1, 0)
         griglia3.addWidget(QLabel(pezzo.numero_vassoio or "—", s3), 1, 1)
+        griglia3.addWidget(QLabel('Commessa',s3),2,0)
+        griglia3.addWidget(QLabel(getattr(pezzo,'_commessa_cognome','') or '—',s3),2,1)
         v3.addLayout(griglia3)
 
-        riga_st = QHBoxLayout()
+        riga_st = QVBoxLayout()
         riga_st.setContentsMargins(0, 0, 0, 0)
         riga_st.setSpacing(M.GAP_SM)
         btn_caricato = bottone("Caricato", "ok", icona="up", parent=s3)
         btn_scaricato = bottone("Scaricato", "pericolo", icona="down", parent=s3)
+        btn_caricato.setEnabled(not self._sola_lettura)
+        btn_scaricato.setEnabled(not self._sola_lettura)
         btn_caricato.clicked.connect(lambda: self._imposta_stato("Caricato"))
         btn_scaricato.clicked.connect(lambda: self._imposta_stato("Scaricato"))
         riga_st.addWidget(btn_caricato)
         riga_st.addWidget(btn_scaricato)
         v3.addLayout(riga_st)
 
-        riga_az = QHBoxLayout()
+        riga_az = QVBoxLayout()
         riga_az.setContentsMargins(0, 0, 0, 0)
         riga_az.setSpacing(M.GAP_SM)
         btn_vassoio = bottone("Imposta vassoio…", icona="layers", parent=s3)
         btn_vassoio.clicked.connect(self._imposta_vassoio)
         btn_barcode = bottone("Modifica barcode…", icona="tag", parent=s3)
+        btn_vassoio.setEnabled(not self._sola_lettura)
+        btn_barcode.setEnabled(not self._sola_lettura)
         btn_barcode.clicked.connect(self._modifica_barcode)
         riga_az.addWidget(btn_vassoio)
         riga_az.addWidget(btn_barcode)
         v3.addLayout(riga_az)
 
         btn_elimina = bottone("Elimina barcode", "pericolo", icona="x", parent=s3)
+        btn_elimina.setEnabled(not self._sola_lettura)
         btn_elimina.clicked.connect(self._elimina_barcode)
         v3.addWidget(btn_elimina)
         self._pannello_l.addWidget(s3)
@@ -640,6 +788,8 @@ class TabellaPezzi(QWidget):
 
     def _etichetta_colore(self, pezzo) -> QLabel:
         lab = QLabel(pezzo.colore.nome_visualizzato or pezzo.colore.codice_normalizzato, self._pannello)
+        lab.setTextFormat(Qt.TextFormat.PlainText)
+        lab.setWordWrap(True)
         return lab
 
     def _sezione_vuota(self) -> None:
@@ -657,7 +807,7 @@ class TabellaPezzi(QWidget):
         titolo = QLabel("Nessun pezzo selezionato", s)
         titolo.setObjectName("LatTitolo")
         v.addWidget(titolo, 0, Qt.AlignmentFlag.AlignHCenter)
-        sotto = QLabel("Scegli una riga per vedere barcode, peso e movimenti.", s)
+        sotto = QLabel("Scegli una riga per vedere sezione, barcode, vassoio e movimenti.", s)
         sotto.setObjectName("Dim")
         sotto.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sotto.setWordWrap(True)
@@ -725,6 +875,8 @@ class TabellaPezzi(QWidget):
 
     def _imposta_stato(self, stato: str) -> None:
         """Fase 8: imposta Caricato/Scaricato; in caso di errore l'UI resta invariata."""
+        if self._sola_lettura:
+            return
         pezzo_id = self._id_selezionato()
         if pezzo_id is None:
             return
@@ -740,6 +892,8 @@ class TabellaPezzi(QWidget):
 
     def _elimina_barcode(self) -> None:
         """Fase 8: eliminazione logica manuale con conferma (default: No)."""
+        if self._sola_lettura:
+            return
         pezzo_id = self._id_selezionato()
         if pezzo_id is None:
             return
@@ -763,6 +917,8 @@ class TabellaPezzi(QWidget):
 
     def _modifica_barcode(self) -> None:
         """Fase 7: cambia il codice del barcode (id, movimenti, vassoio invariati)."""
+        if self._sola_lettura:
+            return
         pezzo_id = self._id_selezionato()
         if pezzo_id is None:
             return
@@ -782,6 +938,8 @@ class TabellaPezzi(QWidget):
 
     def _imposta_vassoio(self) -> None:
         """Fase 7: imposta (o cancella, lasciando il campo vuoto) il numero di vassoio."""
+        if self._sola_lettura:
+            return
         pezzo_id = self._id_selezionato()
         if pezzo_id is None:
             return
@@ -817,6 +975,8 @@ class TabellaPezzi(QWidget):
             colori = consultazione.lista_colori_con_conteggio(sessione)
             profili = [(p.id, p.codice, p.descrizione) for p in consultazione.lista_profilo(sessione)]
             ubicazioni = list(consultazione.lista_ubicazioni(sessione))
+            # Fase 8: registro colori con UNA query, PRIMA di aggiornare i chip
+            registro_colori.ricarica_da_database(sessione)
         finally:
             sessione.close()
 
@@ -882,16 +1042,18 @@ class TabellaPezzi(QWidget):
                     if c.id == self._colore_selezionato
                 ]
                 conteggio_riferimento = conteggio_riferimento[0] if conteggio_riferimento else 0
-            pezzi = consultazione.cerca_pezzi(
-                sessione,
+            parametri = dict(
                 testo=self.cerca.text(),
                 colore_id=filtri_colori,
                 stato=stato,
                 profilo_id=self.combo_profilo.currentData(),
                 ubicazione=ubicazione,
                 soglia_globale=self._soglia,
-                stato_barcode=self.combo_stato_barcode.currentData(),
             )
+            numero_filtrati = consultazione.cerca_pezzi(sessione, **parametri, conteggio=True)
+            self._pagina = min(self._pagina, max(0, (numero_filtrati - 1) // self._dimensione_pagina))
+            pezzi = consultazione.cerca_pezzi(sessione, **parametri,
+                limite=self._dimensione_pagina, offset=self._pagina * self._dimensione_pagina)
         finally:
             sessione.close()
 
@@ -917,14 +1079,27 @@ class TabellaPezzi(QWidget):
                 descrizione = z.profilo.descrizione or ""
                 prof_item = _item(codice + ((" — " + descrizione) if descrizione else ""))
                 prof_item.setData(Qt.ItemDataRole.UserRole + 1, descrizione)
+                from ..services.immagini import immagine_del_profilo
+                from .visualizzatore_immagine import miniatura_sezione
+                percorso = immagine_del_profilo(z.profilo)
+                if percorso:
+                    try:
+                        stato_png = percorso.stat()
+                        prof_item.setIcon(QIcon(miniatura_sezione(str(percorso), stato_png.st_mtime_ns, stato_png.st_size)))
+                    except OSError:
+                        prof_item.setToolTip("PNG non disponibile: seleziona la riga per i dettagli.")
                 tab.setItem(riga, 1, prof_item)
 
                 colore_txt = z.colore.nome_visualizzato or z.colore.codice_normalizzato
                 col_item = _item(colore_txt)
                 col_item.setData(Qt.ItemDataRole.UserRole + 1, z.colore.codice_normalizzato)
+                # Fase 8: tooltip del pallino (valore esadecimale + stato)
+                col_item.setData(
+                    Qt.ItemDataRole.ToolTipRole,
+                    registro_colori.registro().swatch(z.colore.codice_normalizzato).descrizione(),
+                )
                 tab.setItem(riga, _COLORE, col_item)
 
-                peso_tot = consultazione.peso_totale_kg(z)
                 tab.setItem(riga, 3, _item(self._numero_it(z.lunghezza_mm) + " mm" if z.lunghezza_mm else "—", _ALLINEA_DX))
                 stato_riga = consultazione.stato_scorta(z, self._soglia)
                 pz_item = _item(f"{z.quantita:,}".replace(",", "X").replace(".", ",").replace("X", ".") if z.quantita is not None else "—", _ALLINEA_DX)
@@ -934,24 +1109,21 @@ class TabellaPezzi(QWidget):
                     f.setBold(True)
                     pz_item.setFont(f)
                 tab.setItem(riga, 4, pz_item)
-                tab.setItem(riga, 5, _item(_testo_peso(peso_tot), _ALLINEA_DX))
-                tab.setItem(riga, 6, _item(z.ubicazione or "—"))
+                tab.setItem(riga, 5, _item(z.ubicazione or "—"))
 
-                # Fase 7: numero di vassoio (testo libero, "—" se non impostato)
-                tab.setItem(riga, _VASSOIO, _item(z.numero_vassoio or "—"))
-
-                # Fase 8: stato del barcode (NULL = record storico senza stato)
-                testo_sb = z.stato or "—"
-                sb_item = _item(testo_sb)
-                if z.stato == "Scaricato":
-                    sb_item.setForeground(QColor(t.pericolo))
-                tab.setItem(riga, _STATO_BARCODE, sb_item)
+                richiama = bottone("Chiama vassoio", dim="sm", parent=tab)
+                richiama.setEnabled(not self._sola_lettura)
+                richiama.clicked.connect(
+                    lambda _=False, barcode=z.barcode, ident=z.id:
+                    self.richiamo_richiesto.emit(barcode, ident)
+                )
+                tab.setCellWidget(riga, _RICHIAMO, richiama)
 
                 testo_stato, chiave = _STATO_INFO.get(stato_riga, ("OK", "ok"))
                 stato_item = _item("")
                 stato_item.setData(Qt.ItemDataRole.UserRole, testo_stato)
-                tab.setItem(riga, 7, stato_item)
-                tab.setCellWidget(riga, 7, _cella_pillola(testo_stato, chiave))
+                tab.setItem(riga, 6, stato_item)
+                tab.setCellWidget(riga, 6, _cella_pillola(testo_stato, chiave))
         finally:
             tab.setUpdatesEnabled(True)
         tab.blockSignals(False)
@@ -963,6 +1135,11 @@ class TabellaPezzi(QWidget):
             else len(pezzi)
         )
         self._footer.setText(f"{len(pezzi):,} di {int(totale or 0):,} referenze")
+        if numero_filtrati > self._dimensione_pagina:
+            inizio = self._pagina * self._dimensione_pagina + 1
+            self._footer.setText(f"{inizio}–{inizio + len(pezzi) - 1} di {numero_filtrati} referenze")
+        self._precedente.setEnabled(self._pagina > 0)
+        self._successiva.setEnabled((self._pagina + 1) * self._dimensione_pagina < numero_filtrati)
 
         filtri_attivi = bool(
             (self.cerca.text() or "").strip()
@@ -989,6 +1166,7 @@ class TabellaPezzi(QWidget):
     # interazione
     # ------------------------------------------------------------------
     def _su_cambio_tab(self, indice: int) -> None:
+        self._pagina = 0
         self._colore_selezionato = self._id_tab[indice] if 0 <= indice < len(self._id_tab) else None
         self._applica_colonna_colore()
         self._rinfresca_tabella()
@@ -1003,6 +1181,8 @@ class TabellaPezzi(QWidget):
         else:
             self._barcode_selezionato = None
         self._sezioni_laterali()
+        if self._barcode_selezionato:
+            self.dettagli.setChecked(True)
         animazioni.dissolvenza(self._pannello, animazioni.DURATA_BREVE)
 
     def _azzera_filtri(self) -> None:
@@ -1010,7 +1190,6 @@ class TabellaPezzi(QWidget):
         self.combo_profilo.setCurrentIndex(0)
         self.combo_ubicazione.setCurrentIndex(0)
         self.combo_stato.setCurrentIndex(0)
-        self.combo_stato_barcode.setCurrentIndex(0)
         self._rinfresca_tabella()
 
     def vai_a_colore(self, colore_id: int) -> None:

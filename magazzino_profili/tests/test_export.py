@@ -56,8 +56,8 @@ def test_export_contains_a_row_per_piece(session, tmp_path):
     assert out.exists()
 
     wb = load_workbook(out)
-    assert wb.sheetnames == ["Inventario"]
-    ws = wb["Inventario"]
+    assert wb.sheetnames == ["AN007"]
+    ws = wb["AN007"]
 
     headers = tuple(cell.value for cell in ws[1])
     assert headers == tuple(INTESTAZIONI)
@@ -65,6 +65,6 @@ def test_export_contains_a_row_per_piece(session, tmp_path):
 
     righe = [[cell.value for cell in row] for row in ws.iter_rows(min_row=2)]
     assert len(righe) == 2
-    assert {row[3] for row in righe} == {6000, 3000}
+    assert {row[INTESTAZIONI.index("Lunghezza (mm)")] for row in righe} == {6000, 3000}
     assert {row[-1] for row in righe} == {piece_1.barcode, piece_2.barcode}
-    assert sum(row[4] for row in righe) == piece_1.quantita + piece_2.quantita
+    assert sum(row[INTESTAZIONI.index("Quantità")] for row in righe) == piece_1.quantita + piece_2.quantita

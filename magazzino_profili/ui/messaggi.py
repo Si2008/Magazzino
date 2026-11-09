@@ -24,7 +24,7 @@ def testo_per_utente(errore: BaseException, azione: str) -> str:
     if isinstance(errore, ProfiloNonTrovatoError):
         return (
             f"Il profilo {errore.codice_normalizzato} non è in anagrafica. "
-            "Crealo nella scheda Profili, poi riprova."
+            "Crealo in Inventario → Gestisci profili, poi riprova."
         )
     if isinstance(errore, QuantitaInsufficienteError):
         return (

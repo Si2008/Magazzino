@@ -21,8 +21,9 @@ from sqlalchemy.orm import Session
 from ..db.normalizzazione import normalizza_codice
 from ..domain import Profilo
 from ..services.carico import _carica_in_transazione, carica
-from ..services.consultazione import lista_pezzi
+from ..services.consultazione import itera_pezzi
 from ..services.eccezioni import ProfiloNonTrovatoError
+from ..file_sicuri import destinazione_atomica
 
 INTESTAZIONI = (
     "Codice profil",
@@ -44,10 +45,10 @@ def esporta_inventario_csv(session: Session, percorso_output: str | Path) -> Pat
     percorso = Path(percorso_output)
     percorso.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(percorso, "w", encoding="utf-8", newline="") as file:
+    with destinazione_atomica(percorso) as temporaneo, open(temporaneo, "w", encoding="utf-8-sig", newline="") as file:
         writer = csv.writer(file, delimiter=";")
         writer.writerow(INTESTAZIONI)
-        for pezzo in lista_pezzi(session):
+        for pezzo in itera_pezzi(session):
             writer.writerow(
                 (
                     pezzo.profilo.codice,
@@ -102,8 +103,8 @@ def _leggi_righe(percorso: Path) -> list[tuple[int, str, str, int, int, str | No
             for nome, testo in (("lunghezza", lung_t), ("quantità", qta_t)):
                 if not _INTERO.fullmatch(testo):
                     problemi.append(f"{nome} non è un intero (trovato '{testo}')")
-                elif int(testo) <= 0:
-                    problemi.append(f"{nome} deve essere maggiore di zero")
+                elif int(testo) < (0 if nome == "quantità" else 1):
+                    problemi.append(f"{nome} non valido")
             if problemi:
                 errori.append(f"riga {numero_riga}: " + "; ".join(problemi))
                 continue
@@ -122,6 +123,7 @@ def importa_peczi_csv(
     percorso_input: str | Path,
     utente: str = "",
     causale: str = "Importazione csv",
+    *, unitari: bool = False, vassoio_predefinito: str | None = None,
 ) -> int:
     """Importa un inventario CSV legacy: ogni riga è un ``carica`` (CARICO).
 
@@ -137,6 +139,13 @@ def importa_peczi_csv(
         raise FileNotFoundError(f"File CSV non trovato: {percorso}")
 
     righe = _leggi_righe(percorso)
+    if unitari:
+        visti = set()
+        for numero, *dati in righe:
+            chiave = tuple(str(v).strip().upper() for v in dati)
+            if chiave in visti:
+                raise ValueError(f"CSV, riga {numero}: riga duplicata; nessun pezzo importato")
+            visti.add(chiave)
 
     # Lettura su una sessione separata: la sessione del chiamante non deve
     # avere una transazione già aperta, perché sotto si usa session.begin().
@@ -150,9 +159,21 @@ def importa_peczi_csv(
     try:
         with session.begin():
             for riga_corrente, codice, colore, lunghezza, quantita, ubicazione in righe:
-                _carica_in_transazione(
-                    session, codice, colore, lunghezza, quantita, utente, causale, ubicazione
-                )
+                if quantita == 0:
+                    # Un export con giacenza zero non è un nuovo carico.
+                    continue
+                if unitari:
+                    from ..services.pezzi_unitari import _crea_in_transazione
+                    rimanenti = quantita
+                    while rimanenti:
+                        lotto = min(rimanenti, 1000)
+                        _crea_in_transazione(session, codice, colore, lunghezza, lotto, utente,
+                                             causale, ubicazione, vassoio_predefinito)
+                        rimanenti -= lotto
+                else:
+                    _carica_in_transazione(
+                        session, codice, colore, lunghezza, quantita, utente, causale, ubicazione
+                    )
     except Exception as errore:
         raise RuntimeError(
             f"Importazione annullata alla riga {riga_corrente} del CSV: {errore}. "

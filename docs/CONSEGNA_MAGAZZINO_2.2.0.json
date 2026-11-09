@@ -1,0 +1,23 @@
+{
+  "versione": "2.2.0",
+  "eseguibile": "C:\\Users\\Simone\\Desktop\\MagazzinoProfili-2.2.0.exe",
+  "cartella": "C:\\Users\\Simone\\Desktop\\MagazzinoProfili-2.2.0",
+  "file_verificati": 1533,
+  "sha256_lanciatore": "d6a34a4b16ffdd9f45be51000e9a31414f0f4ec3d19aaae7792a62e05deac737",
+  "database_operativo_modificato": false,
+  "versioni_precedenti_non_modificate_dalla_consegna": true,
+  "presenza_versioni_precedenti_al_controllo": {
+    "2.0.0": {
+      "cartella": false,
+      "lanciatore": false
+    },
+    "2.0.1": {
+      "cartella": false,
+      "lanciatore": false
+    },
+    "2.1.0": {
+      "cartella": true,
+      "lanciatore": false
+    }
+  }
+}

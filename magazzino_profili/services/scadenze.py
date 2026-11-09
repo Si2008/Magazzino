@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Callable
 
 from sqlalchemy.orm import Session
+from ..db.config import leggi_sezione
 
 from .stati import elimina_scaduto as _elimina_scaduto_stati
 from .stati import lista_scaduti_per_eliminazione as _lista_scaduti_stati
@@ -38,14 +39,14 @@ def ids_scaduti(session: Session, adesso: datetime) -> list[int]:
     return list(_lista_scaduti_stati(session, now=lambda: adesso))
 
 
-def elimina_scaduto(session: Session, id_: int) -> None:
+def elimina_scaduto(session: Session, id_: int, *, adesso=None) -> None:
     """Elimina logicamente il barcode ``id_`` solo se risulta ancora scaduto.
 
     Verifica e scrittura restano una singola ``UPDATE ... WHERE`` atomica: se lo
     stato è cambiato nel frattempo la condizione non è più vera e non accade
     nulla (non si elimina mai un barcode diventato «Caricato»).
     """
-    _elimina_scaduto_stati(session, id_)
+    _elimina_scaduto_stati(session, id_, now=(lambda: adesso) if adesso is not None else _utc_now)
 
 
 # ---------------------------------------------------------------------------
@@ -69,21 +70,8 @@ def leggi_config_scadenze(
     radice del progetto. Se il file (o la sezione) non c'è, valgono i
     default.
     """
-    intervallo = 300
-    if percorso is not None:
-        candidati = [Path(percorso)]
-    else:
-        candidati = []
-        variabile = os.environ.get("MAGAZZINO_CONFIG")
-        if variabile:
-            candidati.append(Path(variabile))
-        candidati.append(PERCORSO_CONFIG_PREDEFINITO)
-    file = next((p for p in candidati if p.is_file()), None)
-    if file is not None:
-        with open(file, "rb") as fonte:
-            dati = tomllib.load(fonte)
-        sezione = dati.get("scadenze", {})
-        intervallo = int(sezione.get("intervallo_secondi", intervallo))
+    sezione, _ = leggi_sezione("scadenze", percorso)
+    intervallo = int(sezione.get("intervallo_secondi", 300))
     if intervallo <= 0:
         raise ValueError("intervallo_secondi deve essere maggiore di zero")
     return ParametriScadenze(intervallo_secondi=intervallo)
@@ -105,6 +93,8 @@ class PianificatoreScadenze:
         now: Callable[[], datetime] | None = None,
     ) -> None:
         self._factory = factory
+        if intervallo_secondi <= 0:
+            raise ValueError("L'intervallo scadenze deve essere positivo")
         self._intervallo = intervallo_secondi
         self._now = now or _utc_now
         self._fermo = threading.Event()
@@ -113,12 +103,18 @@ class PianificatoreScadenze:
 
     def _elimina_scaduti(self) -> None:
         try:
+            momento = self._now()
             sessione = self._factory()
             with sessione:
-                ids = list(ids_scaduti(sessione, self._now()))
+                ids = list(ids_scaduti(sessione, momento))
             for id_ in ids:
-                with self._factory() as s2:
-                    elimina_scaduto(s2, id_)
+                if self._fermo.is_set():
+                    break
+                try:
+                    with self._factory() as s2:
+                        elimina_scaduto(s2, id_, adesso=momento)
+                except Exception:
+                    logger.exception("Scadenza non elaborata per id %s", id_)
         except Exception:
             logger.exception(
                 "Controllo scadenze: errore (prossimo giro tra l'intervallo)"
@@ -136,9 +132,7 @@ class PianificatoreScadenze:
             if istanza._fermo.is_set():
                 break
             # Sleep spezzato: ferma() resta reattivo (max ~1 secondo)
-            for _ in range(int(istanza._intervallo)):
-                if istanza._fermo.wait(1.0):
-                    break
+            istanza._fermo.wait(istanza._intervallo)
 
     def avvia(self) -> None:
         """Avvia il thread (idempotente: una chiamata multipla non duplica).
@@ -159,3 +153,5 @@ class PianificatoreScadenze:
         with self._blocco:
             if self._thread is not None:
                 self._thread.join(timeout)
+                if self._thread.is_alive():
+                    raise TimeoutError("Il controllo scadenze non si è ancora arrestato")

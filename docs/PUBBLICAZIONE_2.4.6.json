@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/Si2008/Magazzino",
+  "versione": "2.4.6",
+  "release": "https://github.com/Si2008/Magazzino/releases/tag/v2.4.6",
+  "installer": "https://github.com/Si2008/Magazzino/releases/download/v2.4.6/MagazzinoProfili-2.4.6-setup.exe",
+  "sha256": "02cd614e9f27b8454a31a3fd9f7347b4407aade442897b70b876f102915d538a",
+  "dimensione": 81564257,
+  "download_pubblico": "superato",
+  "manifest_firmato": "superato",
+  "commit": "0b18fbebdc2d522ec7e77cce4090339359db29c8",
+  "telefono": "https://magazzino-profili-telefono.vercel.app",
+  "deploy": "dpl_2WqhrprXw3ed5AhNPu1v177DXUy3",
+  "stato_deploy": "READY production"
+}

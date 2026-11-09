@@ -63,8 +63,18 @@ def esegui(engine, funzione, *args, **kw):
         return funzione(s, *args, **kw)
 
 
-def nuovo(engine, lunghezza=6000, quantita=5) -> int:
-    return esegui(engine, carica, "AB12", "NERO", lunghezza, quantita, "t", "prova").id
+def nuovo(engine, lunghezza=6000, quantita=0) -> int:
+    """Riga legacy vuota: verifica le transizioni manuali e l'espirazione.
+
+    I nuovi carichi, invece, vengono verificati con i test del ciclo completo.
+    Una riga con saldo positivo non è mai eliminabile automaticamente.
+    """
+    with Session(engine) as s, s.begin():
+        p = Pezzo(profilo_id=1, colore_id=1, lunghezza_mm=lunghezza,
+                  quantita=quantita, barcode=f"AB12-NERO-{lunghezza}")
+        s.add(p)
+        s.flush()
+        return p.id
 
 
 def leggi(engine, pezzo_id):
@@ -119,12 +129,14 @@ def test_imposta_stato_pezzo_assente_o_eliminato(engine) -> None:
         esegui(engine, imposta_stato, pid, "Caricato", now=Orologio())
 
 
-def test_carico_e_scarico_non_cambiano_lo_stato(engine) -> None:
+def test_ricarico_ripristina_caricato_e_scarico_parziale_lo_conserva(engine) -> None:
     pid = nuovo(engine)
     esegui(engine, imposta_stato, pid, "Scaricato", now=Orologio(T0))
     carica_ = esegui(engine, carica, "AB12", "NERO", 6000, 2, "t", "prova")
     esegui(engine, scarica, carica_.barcode, 1, "t", "prova")
-    assert leggi(engine, pid) == ("Scaricato", T0, None)  # quantità e stato sono eventi distinti
+    assert leggi(engine, pid)[0] == "Caricato"
+    assert leggi(engine, pid)[1] != T0
+    assert leggi(engine, pid)[2] is None
 
 
 # ---- regola delle 48 ore ----------------------------------------------------

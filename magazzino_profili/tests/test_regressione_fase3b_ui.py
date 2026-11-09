@@ -26,6 +26,7 @@ def _self_minimo(qapp) -> SimpleNamespace:
             pass
 
     f = SimpleNamespace()
+    f._secondario = False
     f._factory = lambda: _SessioneFinta()
     f._stato_db = QLabel()
     f._pallino_db = QLabel()

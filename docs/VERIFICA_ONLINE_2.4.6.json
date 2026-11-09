@@ -1,0 +1,26 @@
+[
+  {
+    "url": "https://magazzino-profili-telefono.vercel.app/",
+    "stato": 200,
+    "identico_al_sorgente": true,
+    "cache": "no-store",
+    "permessi": "camera=(self)",
+    "sha256": "90b7c5a5a3905528477d7009935097421d9eae11fbdff47077616bb94d854c8d"
+  },
+  {
+    "url": "https://magazzino-profili-telefono.vercel.app/static/scansione.js",
+    "stato": 200,
+    "identico_al_sorgente": true,
+    "cache": "no-store",
+    "permessi": "camera=(self)",
+    "sha256": "2822846370d1d92b8bd079df98852da4048a60069a7c6e1e6b640656c1e92afe"
+  },
+  {
+    "url": "https://magazzino-profili-telefono.vercel.app/static/telefono.css",
+    "stato": 200,
+    "identico_al_sorgente": true,
+    "cache": "no-store",
+    "permessi": "camera=(self)",
+    "sha256": "3a5cc46940134e3d27f4af7d79129fe2e94decc15fecfc85a4b00fe3d8988677"
+  }
+]

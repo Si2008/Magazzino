@@ -50,7 +50,7 @@ def test_ubicazione_non_scelta_non_salva_il_segnaposto(qtbot, factory) -> None:
     w.quantita.setText("1")
     w.salva_carico()
     s = factory()
-    pz = s.scalar(select(Pezzo).where(Pezzo.barcode == "AB12-ROSSO-3000"))
+    pz = s.scalar(select(Pezzo).where(Pezzo.lunghezza_mm == 3000))
     s.close()
     assert pz is not None and pz.ubicazione is None
 
@@ -116,7 +116,6 @@ def test_scarico_totale_richiede_conferma_e_puo_essere_annullato(qtbot, factory,
     w.barcode.setText("AB12-AN007-6000")
     w.quantita.clear()
     QTest.keyClicks(w.quantita, "12")
-    w.causale.setText("Vendita")
     w.salva_scarico()
     assert len(chiamate) == 1, "lo scarico totale deve chiedere conferma"
     assert _pezzi(factory)["AB12-AN007-6000"] == 12, "annullando non deve cambiare la giacenza"
@@ -132,7 +131,6 @@ def test_scarico_totale_confermato_azzera_la_giacenza(qtbot, factory, monkeypatc
     w.barcode.setText("AB12-AN007-6000")
     w.quantita.clear()
     QTest.keyClicks(w.quantita, "12")
-    w.causale.setText("Vendita")
     w.salva_scarico()
     assert _pezzi(factory)["AB12-AN007-6000"] == 0
 
@@ -151,7 +149,6 @@ def test_scarico_parziale_non_chiede_conferma(qtbot, factory, monkeypatch) -> No
     w.barcode.setText("AB12-AN007-6000")
     w.quantita.clear()
     QTest.keyClicks(w.quantita, "5")
-    w.causale.setText("Vendita")
     w.salva_scarico()
     assert _pezzi(factory)["AB12-AN007-6000"] == 7
 

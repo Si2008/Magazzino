@@ -167,10 +167,10 @@ H = ["Profilo", "Colore", "Vassoio", "Dimensione_mm", "Pezzi"]
 
 def test_ods_non_tronca(F, tmp_path):
     _ods(tmp_path / "a.ods", [H, ["AB12", "RAL7016", 4, 6000, 3.7], ["AB12", "RAL7016", 4, 3000, 2]])
-    st = importa_ods_file(F(), tmp_path / "a.ods", "t")
-    assert st["importate"] == 1 and st["saltate"] == 1
+    with pytest.raises(ValueError, match="nessuna riga importata"):
+        importa_ods_file(F(), tmp_path / "a.ods", "t")
     with F() as s:
-        assert s.scalar(select(Pezzo.quantita)) == 2
+        assert s.scalar(select(Pezzo.quantita)) is None
 
 
 def test_ods_float_formattata(F, tmp_path):

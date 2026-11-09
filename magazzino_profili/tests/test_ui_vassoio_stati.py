@@ -1,4 +1,4 @@
-"""Test UI offscreen Fasi 7-8: colonne Vassoio/Stato barcode, filtri, azioni laterali.
+"""Test UI offscreen Fasi 7-8: richiamo vassoio e azioni laterali.
 
 Stile di ``test_ui_smoke.py``: QApplication offscreen, SQLite in memoria,
 ``QMessageBox`` sostituito con uno stub (niente dialoghi modali).
@@ -6,10 +6,11 @@ Stile di ``test_ui_smoke.py``: QApplication offscreen, SQLite in memoria,
 
 import pytest
 
-from magazzino_profili.services import carica, imposta_numero_vassoio, imposta_stato
+from magazzino_profili.domain import Pezzo
 
-_VASSOIO = 8
-_STATO_BARCODE = 9
+from magazzino_profili.services import carica
+
+_RICHIAMO = 7
 
 
 @pytest.fixture()
@@ -64,66 +65,28 @@ def _seleziona(scheda, barcode: str) -> None:
     scheda._su_selezione()
 
 
-def test_colonne_vassoio_e_stato_barcode(qapp, factory, dati) -> None:
+def test_colonna_richiamo_usa_il_pezzo_della_riga(qapp, factory, dati) -> None:
     scheda = _scheda(factory)
     tabella = scheda._tabella
-    assert tabella.columnCount() == 10
-    assert tabella.horizontalHeaderItem(0).text() == "BARCODE"  # contratto
-    assert tabella.horizontalHeaderItem(2).text() == "COLORE"  # contratto
-    assert tabella.horizontalHeaderItem(_VASSOIO).text() == "VASSOIO"
-    assert tabella.horizontalHeaderItem(_STATO_BARCODE).text() == "STATO BARCODE"
-    # record storico: vassoio e stato vuoti → "—"
-    assert tabella.item(0, _VASSOIO).text() == "—"
-    assert tabella.item(0, _STATO_BARCODE).text() == "—"
-
-
-def test_vassoio_in_tabella_e_aggiornato_dallazione(qapp, factory, dati) -> None:
-    scheda = _scheda(factory)
-    sessione = factory()
-    try:
-        imposta_numero_vassoio(sessione, dati["pezzo"], "Vassoio 4")
-    finally:
-        sessione.close()
-    scheda.aggiorna()
-    assert scheda._tabella.item(0, _VASSOIO).text() == "Vassoio 4"
-
-    # azione laterale (senza dialogo: il metodo di servizio è lo stesso usato dal pulsante)
-    sessione = factory()
-    try:
-        imposta_numero_vassoio(sessione, dati["pezzo"], None)  # cancella
-    finally:
-        sessione.close()
-    scheda.aggiorna()
-    assert scheda._tabella.item(0, _VASSOIO).text() == "—"
-
-
-def test_filtro_stato_barcode(qapp, factory, dati) -> None:
-    scheda = _scheda(factory)
-    sessione = factory()
-    try:
-        imposta_stato(sessione, dati["pezzo"], "Scaricato")
-    finally:
-        sessione.close()
-    scheda.aggiorna()
-    assert scheda._tabella.item(0, _STATO_BARCODE).text() == "Scaricato"
-
-    i = scheda.combo_stato_barcode.findData("Scaricato")
-    scheda.combo_stato_barcode.setCurrentIndex(i)
-    assert scheda._tabella.rowCount() == 1
-    i = scheda.combo_stato_barcode.findData("Caricato")
-    scheda.combo_stato_barcode.setCurrentIndex(i)
-    assert scheda._tabella.rowCount() == 0
-    scheda.azzera.clicked.emit()
-    assert scheda._tabella.rowCount() == 1
+    assert tabella.columnCount() == 8
+    assert tabella.horizontalHeaderItem(0).text() == "BARCODE"
+    assert tabella.horizontalHeaderItem(2).text() == "COLORE"
+    assert tabella.horizontalHeaderItem(_RICHIAMO).text() == "RICHIAMO VASSOIO"
+    chiamate = []
+    scheda.richiamo_richiesto.connect(lambda barcode, ident: chiamate.append((barcode, ident)))
+    tabella.cellWidget(0, _RICHIAMO).click()
+    assert chiamate == [(dati["barcode"], dati["pezzo"])]
 
 
 def test_imposta_stato_dallazione_laterale(qapp, factory, dati) -> None:
     scheda = _scheda(factory)
     _seleziona(scheda, dati["barcode"])
     scheda._imposta_stato("Scaricato")
-    assert scheda._tabella.item(0, _STATO_BARCODE).text() == "Scaricato"
+    with factory() as sessione:
+        assert sessione.get(Pezzo, dati["pezzo"]).stato == "Scaricato"
     scheda._imposta_stato("Caricato")
-    assert scheda._tabella.item(0, _STATO_BARCODE).text() == "Caricato"
+    with factory() as sessione:
+        assert sessione.get(Pezzo, dati["pezzo"]).stato == "Caricato"
 
 
 def test_stato_non_valido_da_errore_e_ui_invariata(qapp, factory, dati, monkeypatch) -> None:
@@ -143,7 +106,8 @@ def test_stato_non_valido_da_errore_e_ui_invariata(qapp, factory, dati, monkeypa
     )
     scheda._imposta_stato("Rotto")
     assert avvisi, "l'errore deve essere mostrato all'utente"
-    assert scheda._tabella.item(0, _STATO_BARCODE).text() == "—"  # UI non aggiornata
+    with factory() as sessione:
+        assert sessione.get(Pezzo, dati["pezzo"]).stato is None
 
 
 def test_elimina_barcode_rifiutata_il_recordResta(qapp, factory, dati, monkeypatch) -> None:

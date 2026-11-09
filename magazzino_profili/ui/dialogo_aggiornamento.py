@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QThread, QTimer, Signal
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
@@ -40,11 +40,12 @@ class _Worker(QThread):
     fine = Signal(str)
     errore = Signal(str)
 
-    def __init__(self, manifest, cartella: Path, scarica, parent=None) -> None:
+    def __init__(self, manifest, cartella: Path, scarica, parent=None, prepara=False) -> None:
         super().__init__(parent)
         self._manifest = manifest
         self._cartella = cartella
         self._scarica = scarica
+        self._prepara=prepara
 
     def run(self) -> None:  # thread Qt
         try:
@@ -53,6 +54,7 @@ class _Worker(QThread):
                 self._cartella,
                 avanzamento=lambda fatti, totali: self.progresso.emit(fatti, totali),
             )
+            if self._prepara:percorso=ag.prepara_versione(self._manifest,percorso)
             self.fine.emit(str(percorso))
         except __ERR__ as errore:
             self.errore.emit(str(errore))
@@ -83,6 +85,8 @@ class DialogoAggiornamento(QDialog):
         scarica=_scarica_reale,
         esegui=None,
         attesa_secondi: int = 2,
+        prima_del_riavvio=None,
+        ripristina_servizi=None,
     ) -> None:
         super().__init__(parent)
         self._manifest = manifest
@@ -90,6 +94,11 @@ class DialogoAggiornamento(QDialog):
         self._esegui = esegui
         self._attesa_secondi = attesa_secondi
         self._worker: _Worker | None = None
+        self._prima_del_riavvio = prima_del_riavvio or (lambda: True)
+        self._ripristina_servizi = ripristina_servizi or (lambda: None)
+        self._preparazione_iniziata = False
+        self._annullato = False
+        self._riavvio_avviato = False
 
         self.setWindowTitle("Aggiornamento disponibile")
         self.setModal(True)
@@ -140,7 +149,7 @@ class DialogoAggiornamento(QDialog):
         self._barra.setVisible(True)
         self._stato.setText("Download dell'installer…")
         self._worker = _Worker(
-            self._manifest, ag.cartella_cache(), self._scarica
+            self._manifest, ag.cartella_cache(), self._scarica,prepara=self._esegui is None
         )
         self._worker.progresso.connect(self._on_progresso)
         self._worker.fine.connect(self._on_fine)
@@ -152,12 +161,52 @@ class DialogoAggiornamento(QDialog):
             self._barra.setValue(int(fatti * 100 / totali))
 
     def _on_fine(self, percorso: str) -> None:
+        if self._annullato:
+            return
+        self._preparazione_iniziata = True
+        if not self._prima_del_riavvio():
+            self._stato.setText("Download verificato. Attendo la fine delle operazioni e del backup prima di riavviare…")
+            QTimer.singleShot(1000, lambda: self._on_fine(percorso))
+            return
         self._barra.setValue(100)
         self._stato.setText("Download completato e verificato: preparo il riavvio…")
         # Lancia la nuova versione staccata, poi chiudi questa finestra.
-        ag.lancia_aggiornamento(percorso, self._attesa_secondi, esegui=self._esegui)
+        try:
+            opzioni = {"setup": True} if (self._manifest.firmato or {}).get("tipo") == "setup" else {}
+            ag.lancia_aggiornamento(percorso, self._attesa_secondi, esegui=self._esegui, **opzioni)
+        except Exception as errore:
+            self._on_errore(f"Avvio della nuova versione non riuscito: {errore}")
+            return
+        # Il segnale fine precede di poco l'uscita effettiva del QThread.
+        if self._worker is not None:
+            self._worker.wait(2000)
+        self._riavvio_avviato = True
         self.accept()
 
     def _on_errore(self, messaggio: str) -> None:
+        if self._preparazione_iniziata and not self._riavvio_avviato:
+            self._ripristina_servizi()
+            self._preparazione_iniziata = False
         self._stato.setText(f"Download non riuscito: {messaggio}\n\n" + ag.testo_recupero())
         self._btn_ora.setEnabled(True)
+
+    def reject(self) -> None:
+        if self._worker is not None and self._worker.isRunning():
+            self._stato.setText("Download in corso: attendi la fine prima di chiudere.")
+            return
+        self._annullato = True
+        if self._preparazione_iniziata and not self._riavvio_avviato:
+            self._ripristina_servizi()
+            self._preparazione_iniziata = False
+        super().reject()
+
+    def closeEvent(self, evento) -> None:
+        if self._worker is not None and self._worker.isRunning():
+            evento.ignore()
+            self._stato.setText("Download in corso: attendi la fine prima di chiudere.")
+            return
+        self._annullato = True
+        if self._preparazione_iniziata and not self._riavvio_avviato:
+            self._ripristina_servizi()
+            self._preparazione_iniziata = False
+        super().closeEvent(evento)

@@ -21,24 +21,27 @@ pytestmark = pytest.mark.skipif(
 def _engine():
     from magazzino_profili.db import crea_engine
 
-    return crea_engine(
-        {"url": pg_url, "echo": False, "pool_pre_ping": False}
-    )
+    from sqlalchemy.engine import make_url
+    nome = make_url(pg_url).database or ""
+    if not (nome.endswith("_test") or nome.startswith("test_")):
+        pytest.fail("È obbligatorio un database dedicato ai test")
+    engine = crea_engine(url=pg_url.replace("postgresql://", "postgresql+psycopg://", 1))
+    from magazzino_profili.db import crea_tabelle
+    crea_tabelle(engine)
+    return engine
 
 
 def test_migrazioni_004_005_postgres():
     from sqlalchemy import inspect, text
 
-    from magazzino_profili.db.migrazioni import applica_migrazazioni
+    from magazzino_profili.db.migrazioni import applica_migrazioni
     from magazzino_profili.domain import Pezzo
 
     engine = _engine()
-    applica_migrazazioni(engine)
+    applica_migrazioni(engine)
     sessione = engine.connect()
     try:
-        info = dict(
-            sessione.execute(text("SELECT name FROM migrazioni_applicate")).fetchall()
-        )
+        info = set(sessione.scalars(text("SELECT nome FROM migrazioni_applicate")))
         assert "004_campi_giacenza.sql" in info
         assert "005_vincolo_stato.sql" in info
         # le quattro colonne devono esistere nella tabella
@@ -51,6 +54,14 @@ def test_migrazioni_004_005_postgres():
         nomi = {r[0] for r in righe}
         for campo in ("numero_vassoio", "stato", "data_ultimo_cambio_stato", "eliminato_il"):
             assert campo in nomi, f"manca {campo}"
+        # migrazione 006 (Fase 8): colonna colore_hex sulla tabella colori
+        righe = sessione.execute(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name = 'colori'"
+            )
+        ).fetchall()
+        assert "colore_hex" in {r[0] for r in righe}
         # il vincolo deve chiamarsi ck_pezzi_stato_valido
         vincoli = {
             r[0]
@@ -71,13 +82,17 @@ def test_lock_avvio_simultaneo_postgres():
     """Due applica_migrazazioni simultanei: nessuna IntegrityError."""
     import threading
 
-    from magazzino_profili.db.migrazioni import applica_migrazazioni
+    from magazzino_profili.db.migrazioni import applica_migrazioni
 
     errori = []
 
     def _lancia():
         try:
-            applica_migrazazioni(_engine())
+            engine = _engine()
+            try:
+                applica_migrazioni(engine)
+            finally:
+                engine.dispose()
         except Exception as e:  # noqa: BLE001
             errori.append(e)
 

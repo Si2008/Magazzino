@@ -1,0 +1,82 @@
+[
+  {
+    "schermata": "inventario",
+    "tema": "chiaro",
+    "file": "inventario-chiaro.png",
+    "larghezza": 1366,
+    "altezza": 768,
+    "dati": "sintetici"
+  },
+  {
+    "schermata": "inventario-senza-immagine",
+    "tema": "chiaro",
+    "file": "inventario-senza-immagine-chiaro.png",
+    "larghezza": 1366,
+    "altezza": 768,
+    "dati": "sintetici"
+  },
+  {
+    "schermata": "carico",
+    "tema": "chiaro",
+    "file": "carico-chiaro.png",
+    "larghezza": 1366,
+    "altezza": 768,
+    "dati": "sintetici"
+  },
+  {
+    "schermata": "scarico",
+    "tema": "chiaro",
+    "file": "scarico-chiaro.png",
+    "larghezza": 1366,
+    "altezza": 768,
+    "dati": "sintetici"
+  },
+  {
+    "schermata": "gestione-profili",
+    "tema": "chiaro",
+    "file": "gestione-profili-chiaro.png",
+    "larghezza": 1280,
+    "altezza": 740,
+    "dati": "sintetici"
+  },
+  {
+    "schermata": "inventario",
+    "tema": "scuro",
+    "file": "inventario-scuro.png",
+    "larghezza": 1366,
+    "altezza": 768,
+    "dati": "sintetici"
+  },
+  {
+    "schermata": "inventario-senza-immagine",
+    "tema": "scuro",
+    "file": "inventario-senza-immagine-scuro.png",
+    "larghezza": 1366,
+    "altezza": 768,
+    "dati": "sintetici"
+  },
+  {
+    "schermata": "carico",
+    "tema": "scuro",
+    "file": "carico-scuro.png",
+    "larghezza": 1366,
+    "altezza": 768,
+    "dati": "sintetici"
+  },
+  {
+    "schermata": "scarico",
+    "tema": "scuro",
+    "file": "scarico-scuro.png",
+    "larghezza": 1366,
+    "altezza": 768,
+    "dati": "sintetici"
+  },
+  {
+    "schermata": "gestione-profili",
+    "tema": "scuro",
+    "file": "gestione-profili-scuro.png",
+    "larghezza": 1280,
+    "altezza": 740,
+    "dati": "sintetici"
+  }
+]

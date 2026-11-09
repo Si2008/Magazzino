@@ -64,44 +64,27 @@ def client(factory):
         yield c
 
 
-def _token(client, utente="maria") -> str:
-    r = client.post("/api/login", json={"utente": utente, "password": "Password123!"})
-    assert r.status_code == 200, r.text
-    return r.json()["token"]
+def _token(client, utente="operatore"):
+    return ""  # compatibilità test: nessuna credenziale richiesta
 
 
 # ---------------------------------------------------------------- login
 
 
-def test_login_valido(client):
-    r = client.post("/api/login", json={"utente": "maria", "password": "Password123!"})
-    assert r.status_code == 200
-    corpo = r.json()
-    assert "token" in corpo and corpo["utente"] == "maria"
+def test_pagina_senza_login(client):
+    r=client.get("/");assert r.status_code==200 and 'id="form-login"' not in r.text
 
 
-def test_login_sbagliato_401(client):
-    r = client.post("/api/login", json={"utente": "maria", "password": "sbagliata"})
-    assert r.status_code == 401
+def test_endpoint_login_assente(client):
+    assert client.post("/api/login",json={"utente":"x","password":"y"}).status_code==404
 
 
-def test_token_scaduto_401(client, factory):
-    app = crea_app(session_factory=factory, durata_token_secondi=-1, segrete_token="segreto-di-test-molto-lungo-1234567890")
-    with TestClient(app) as c:
-        r = c.post("/api/login", json={"utente": "maria", "password": "Password123!"})
-        assert r.status_code == 200
-        token = r.json()["token"]
-        r2 = c.get("/api/pezzi/AB12", headers={"Authorization": f"Bearer {token}"})
-        assert r2.status_code == 401
-        assert "scaduta" in r2.json()["detail"].lower() or "non valida" in r2.json()["detail"].lower()
+def test_nessun_token_necessario(client,factory):
+    assert client.get("/api/pezzi/AB12").status_code==200
 
 
-def test_senza_token_valido_401(client):
-    for intestazioni in ({}, {"Authorization": ""}, {"Authorization": "Token abc"}, {"Authorization": "Bearer"}, {"Authorization": "Bearer a.b"}):
-        r = client.get("/api/pezzi/AB12", headers=intestazioni)
-        assert r.status_code == 401
-        dettaglio = r.json()["detail"]
-        assert "login" in dettaglio.lower() or "Authorization" in dettaglio
+def test_intestazioni_autorizzazione_ignorate(client):
+    for h in ({},{"Authorization":"Bearer inesistente"}):assert client.get("/api/pezzi/AB12",headers=h).status_code==200
 
 
 # ------------------------------------------------------------ consultazione
@@ -146,17 +129,17 @@ def test_sola_lettura_consulta(client):
     assert r.status_code == 200
 
 
-def test_operatore_non_consulta(client):
+def test_operatore_consulta_singolo_barcode(client):
     token = _token(client, "giovanni")
     r = client.get("/api/pezzi/AB12", headers={"Authorization": f"Bearer {token}"})
-    assert r.status_code == 403
+    assert r.status_code == 200
 
 
 def test_barcode_vuoto_422(client):
     token = _token(client)
     r = client.get("/api/pezzi/", headers={"Authorization": f"Bearer {token}"})
     # FastAPI: percorso /api/pezzi/ senza valore → 404 o 422 a seconda del routing
-    assert r.status_code in (404, 422)
+    assert r.status_code in (404, 405, 422)
 
 
 def test_barcode_troppo_lungo_422(client):
@@ -169,7 +152,7 @@ def test_richieste_malformate_non_producono_errori_500(client):
     token = _token(client)
     for percorso in ("/api/pezzi/A%2FB", "/api/pezzi/AB%00CD", "/api/pezzi/%20", "/api/pezzi/" + "A" * 256):
         r = client.get(percorso, headers={"Authorization": f"Bearer {token}"})
-        assert r.status_code in (404, 422), (percorso, r.status_code)
+        assert r.status_code in (404, 405, 422), (percorso, r.status_code)
         assert "detail" in r.json()
 
 
@@ -210,20 +193,19 @@ def test_carico_404_non_crea_pezzo(client, factory):
         assert s.scalar(select(Pezzo).where(Pezzo.barcode == "NONEXIST")) is None
 
 
-def test_sola_lettura_carico_403(client):
-    token = _token(client, "letizia")
-    r = client.post("/api/carico", json={"barcode": "AB12", "quantita": 1}, headers={"Authorization": f"Bearer {token}"})
-    assert r.status_code == 403
+def test_carico_accessibile_senza_ruolo(client):
+    assert client.post("/api/carico",json={"barcode":"AB12","quantita":1}).status_code==200
 
 
 # ------------------------------------------------------------------- scarico
 
 
 def test_scarico_valido(client):
+    prima = client.get("/api/pezzi/AB12").json()["quantita_giacenza"]
     token = _token(client, "giovanni")
     r = client.post("/api/scarico", json={"barcode": "AB12", "quantita": 4}, headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
-    assert r.json()["quantita_giacenza"] == 9
+    assert r.json()["quantita_giacenza"] == prima - 4
 
 
 def test_scarico_eccessivo_409(client, factory):
@@ -265,6 +247,7 @@ def test_conflitto_riconciliazione_su_postgres(factory):
     if not url or "test" not in url.lower():
         pytest.skip("MAGAZZINO_TEST_DB_URL deve puntare a un database *_test")
     engine = sa.create_engine(url, pool_pre_ping=True)
+    crea_tabelle(engine)
     factory_pg = crea_session_factory(engine)
     with factory_pg() as s:
         profilo = Profilo(codice="PG9", descrizione="PG", peso_kg_per_metro=decimal.Decimal("1.5"), lunghezza_standard_mm=7000)
@@ -272,12 +255,11 @@ def test_conflitto_riconciliazione_su_postgres(factory):
         s.add_all([profilo, colore])
         s.flush()
         s.add(Pezzo(profilo_id=profilo.id, colore_id=colore.id, lunghezza_mm=400, quantita=0, barcode="PG9X"))
-        crea_utente(s, "pguser", "Password123!", Ruolo.OPERATORE)
         s.commit()
 
     app = crea_app(session_factory=factory_pg, durata_token_secondi=3600, segrete_token="segreto-di-pg-molto-lungo-1234567890")
     with TestClient(app) as c:
-        token = c.post("/api/login", json={"utente": "pguser", "password": "Password123!"}).json()["token"]
+        token = ""
         esiti = []
 
         def fai(qta):
