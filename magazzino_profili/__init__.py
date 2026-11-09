@@ -4,4 +4,4 @@
 la confronta il controllore aggiornamenti e la incrocia il manifest firmato.
 """
 
-__version__ = "2.4.6"
+__version__ = "2.4.7"
